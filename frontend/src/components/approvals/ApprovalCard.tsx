@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { ShieldAlert, Check, X, Hash, ChevronDown, ChevronUp } from "lucide-react";
 import { ApprovalRequest } from "@/lib/api";
 import { useChatStore } from "@/store/use-chat-store";
+import { DiffViewer } from "@/components/chat/DiffViewer";
 
 interface ApprovalCardProps {
   approval: ApprovalRequest;
@@ -45,6 +46,16 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
         <span className="font-semibold text-foreground">Signature:</span>
         <span className="truncate">{approval.action_hash}</span>
       </div>
+
+      {/* Code Diff Viewer if patch is present */}
+      {(approval.payload?.structured_diff || approval.payload?.diff) && (
+        <div className="mt-3">
+          <DiffViewer
+            structuredDiff={approval.payload.structured_diff}
+            rawDiff={approval.payload.diff}
+          />
+        </div>
+      )}
 
       {/* Payload Inspector Accordion */}
       <div className="mt-3">

@@ -11,6 +11,7 @@ from app.agent.tools.mcp_github import (
     is_mutating_tool as is_mutating_github_tool,
 )
 from app.agent.tools.test_runner import TestRunner
+from app.services.coding_agent import AutonomousCodingService
 from app.services.repo_intelligence import RepoIntelligenceService
 
 
@@ -29,6 +30,9 @@ class ToolRegistry:
         self.test_runner = test_runner or TestRunner()
         self.intelligence_service = intelligence_service or RepoIntelligenceService(
             self.git_manager
+        )
+        self.coding_service = AutonomousCodingService(
+            intelligence_service=self.intelligence_service,
         )
 
         self._local_tools: dict[str, Callable] = {}
@@ -111,6 +115,18 @@ class ToolRegistry:
             handler=self.intelligence_service.generate_architecture_summary,
             is_mutating=False,
             description="Generate structured architecture assessment with facts and inferences.",
+        )
+        self.register_local_tool(
+            name="coding_investigate",
+            handler=self.coding_service.investigate,
+            is_mutating=False,
+            description="Investigate codebase files and related tests for a coding task.",
+        )
+        self.register_local_tool(
+            name="autonomous_code_fix",
+            handler=self.coding_service.execute_task_in_worktree,
+            is_mutating=True,
+            description="Safely modify code in an isolated worktree, run tests, and generate diff for approval.",
         )
 
     def register_local_tool(

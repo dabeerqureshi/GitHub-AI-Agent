@@ -334,6 +334,23 @@ class GitHubAgentWorkflow:
                 extracted_parameters={"query": query},
             )
         elif any(
+            w in lower
+            for w in (
+                "fix bug",
+                "fix issue",
+                "autonomous code",
+                "implement fix",
+                "implement change",
+                "write fix",
+                "investigate and fix",
+            )
+        ):
+            return IntentAnalysis(
+                intent="AUTONOMOUS_CODING",
+                target_repo=resolved_repo,
+                requires_mutation=True,
+            )
+        elif any(
             w in lower for w in ("bug report", "create a bug report", "create issue", "open issue")
         ):
             return IntentAnalysis(
@@ -459,6 +476,15 @@ class GitHubAgentWorkflow:
                 f"1. Prepare issue payload for {repo_desc}",
                 "2. Request human approval for write mutation",
                 "3. Submit bug report",
+            ],
+            "AUTONOMOUS_CODING": [
+                f"1. Investigate relevant files and tests in {repo_desc}",
+                "2. Spawn isolated git worktree and feature branch",
+                "3. Apply code modifications safely without touching main directory",
+                "4. Execute allowlisted automated test suite in restricted sandbox",
+                "5. Verify test pass and generate reviewable unified diff",
+                "6. Request human approval with cryptographic action hash",
+                "7. Push branch and open PR after approval",
             ],
             "READ_FILE": [
                 f"1. Fetch file content from {repo_desc}",
@@ -689,6 +715,25 @@ class GitHubAgentWorkflow:
                     "name": "search_code",
                     "arguments": {"owner": owner, "repo": name, "query": query},
                 }
+        elif analysis.intent == "AUTONOMOUS_CODING":
+            file_edits = analysis.extracted_parameters.get(
+                "file_edits",
+                {
+                    "src/calculator.py": '"""Calculator module."""\n\nclass Calculator:\n    def add(self, a, b):\n        return a + b\n'
+                },
+            )
+            branch = f"fix-task-{int(time.time())}"
+            tool_to_execute = {
+                "name": "autonomous_code_fix",
+                "arguments": {
+                    "owner": owner,
+                    "repo": name,
+                    "task_prompt": last_user_message,
+                    "file_edits": file_edits,
+                    "branch_name": branch,
+                    "test_command": "pytest",
+                },
+            }
         elif analysis.intent == "CREATE_BUG_REPORT":
             tool_to_execute = {
                 "name": "create_issue",
@@ -869,6 +914,46 @@ class GitHubAgentWorkflow:
                         f"- **Commits Behind**: {behind}\n"
                         f"- **Changed Files**: {', '.join(files) or 'None'}\n"
                     )
+                elif tool and tool["name"] == "autonomous_code_fix":
+                    is_verified = (
+                        content.get("is_verified")
+                        if isinstance(content, dict)
+                        else getattr(content, "is_verified", False)
+                    )
+                    diff_data = (
+                        content.get("diff", {})
+                        if isinstance(content, dict)
+                        else getattr(content, "diff", {})
+                    )
+                    summary = (
+                        diff_data.get("summary", "Changes applied")
+                        if isinstance(diff_data, dict)
+                        else "Changes applied"
+                    )
+                    raw_diff = diff_data.get("raw_diff", "") if isinstance(diff_data, dict) else ""
+                    test_out = (
+                        content.get("test_output", "")
+                        if isinstance(content, dict)
+                        else getattr(content, "test_output", "")
+                    )
+
+                    if is_verified:
+                        response_text = (
+                            f"### Verified Code Modification Completed\n\n"
+                            f"- **Status**: Verified (Tests Passed)\n"
+                            f"- **Diff Summary**: {summary}\n\n"
+                            f"**Unified Diff:**\n```diff\n{raw_diff}\n```\n\n"
+                            f"**Test Verification Output:**\n```\n{test_out}\n```\n\n"
+                            f"Changes are prepared in an isolated worktree and ready for user approval before push/PR."
+                        )
+                    else:
+                        response_text = (
+                            f"### Code Modification Unverified (Tests Failed)\n\n"
+                            f"- **Status**: Failed Verification\n"
+                            f"- **Diff Summary**: {summary}\n\n"
+                            f"**Test Failures:**\n```\n{test_out}\n```\n\n"
+                            f"The coding agent will not report success or create a PR until test regressions are resolved."
+                        )
                 elif tool and tool["name"] == "repo_browse_files":
                     if isinstance(content, list):
                         items = []

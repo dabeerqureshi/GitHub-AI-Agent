@@ -11,6 +11,7 @@ from app.agent.tools.mcp_github import (
     is_mutating_tool as is_mutating_github_tool,
 )
 from app.agent.tools.test_runner import TestRunner
+from app.services.repo_intelligence import RepoIntelligenceService
 
 
 class ToolRegistry:
@@ -21,10 +22,14 @@ class ToolRegistry:
         mcp_client: GitHubMCPClient | None = None,
         git_manager: LocalGitManager | None = None,
         test_runner: TestRunner | None = None,
+        intelligence_service: RepoIntelligenceService | None = None,
     ):
         self.mcp_client = mcp_client or GitHubMCPClient()
         self.git_manager = git_manager or LocalGitManager()
         self.test_runner = test_runner or TestRunner()
+        self.intelligence_service = intelligence_service or RepoIntelligenceService(
+            self.git_manager
+        )
 
         self._local_tools: dict[str, Callable] = {}
         self._mutating_local_tools: set[str] = set()
@@ -76,6 +81,36 @@ class ToolRegistry:
             handler=self.test_runner.run_tests,
             is_mutating=False,
             description="Execute automated tests in repository.",
+        )
+        self.register_local_tool(
+            name="repo_browse_files",
+            handler=self.intelligence_service.browse_files,
+            is_mutating=False,
+            description="Browse files and directories in repository.",
+        )
+        self.register_local_tool(
+            name="repo_read_file",
+            handler=self.intelligence_service.get_file_content_with_lines,
+            is_mutating=False,
+            description="Read file content with line numbers and citations.",
+        )
+        self.register_local_tool(
+            name="repo_compare_branches",
+            handler=self.intelligence_service.compare_branches,
+            is_mutating=False,
+            description="Compare commits and changes between two branches.",
+        )
+        self.register_local_tool(
+            name="repo_search_code",
+            handler=self.intelligence_service.search_code,
+            is_mutating=False,
+            description="Search code symbols, tokens, or text across repository files with line citations.",
+        )
+        self.register_local_tool(
+            name="repo_architecture_summary",
+            handler=self.intelligence_service.generate_architecture_summary,
+            is_mutating=False,
+            description="Generate structured architecture assessment with facts and inferences.",
         )
 
     def register_local_tool(

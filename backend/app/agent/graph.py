@@ -90,12 +90,30 @@ class GitHubAgentWorkflow:
         # Repository resolution
         resolved_repo = active_repo
         words = message.split()
+        file_extensions = (
+            ".py",
+            ".ts",
+            ".tsx",
+            ".js",
+            ".jsx",
+            ".json",
+            ".md",
+            ".txt",
+            ".yml",
+            ".yaml",
+            ".toml",
+            ".html",
+            ".css",
+            ".lock",
+        )
         for word in words:
-            if "/" in word and not word.startswith("http") and len(word.split("/")) == 2:
+            if "/" in word and not word.startswith("http"):
                 candidate = word.strip(" ,.:;()[]\"'")
-                if "/" in candidate and not candidate.startswith("/"):
-                    resolved_repo = candidate
-                    break
+                parts = candidate.split("/")
+                if len(parts) == 2 and not any(parts[1].endswith(ext) for ext in file_extensions):
+                    if not candidate.startswith("/"):
+                        resolved_repo = candidate
+                        break
 
         # Intent detection
         if any(
@@ -132,6 +150,47 @@ class GitHubAgentWorkflow:
                 intent="FIND_AUTH_CODE",
                 target_repo=resolved_repo,
                 extracted_parameters={"query": "authentication"},
+            )
+        elif any(
+            w in lower
+            for w in (
+                "architecture",
+                "architecture summary",
+                "explain architecture",
+                "summarize architecture",
+            )
+        ):
+            return IntentAnalysis(intent="ARCHITECTURE_SUMMARY", target_repo=resolved_repo)
+        elif any(
+            w in lower
+            for w in ("compare branch", "compare branches", "branch comparison", "diff branches")
+        ):
+            return IntentAnalysis(intent="COMPARE_BRANCHES", target_repo=resolved_repo)
+        elif any(
+            w in lower
+            for w in ("browse files", "list files", "file tree", "directory tree", "show files")
+        ):
+            return IntentAnalysis(intent="BROWSE_FILES", target_repo=resolved_repo)
+        elif any(w in lower for w in ("search code", "find code", "search symbol", "find symbol")):
+            query = "auth"
+            for token in words:
+                if token.lower() not in (
+                    "search",
+                    "code",
+                    "for",
+                    "symbol",
+                    "find",
+                    "in",
+                    "the",
+                    "repo",
+                    "repository",
+                ):
+                    query = token.strip(" ,.:;()[]\"'")
+                    break
+            return IntentAnalysis(
+                intent="SEARCH_CODE",
+                target_repo=resolved_repo,
+                extracted_parameters={"query": query},
             )
         elif any(
             w in lower for w in ("bug report", "create a bug report", "create issue", "open issue")
@@ -188,14 +247,33 @@ class GitHubAgentWorkflow:
             ],
             "FIND_AUTH_CODE": [
                 f"1. Search repository code for auth symbols in {repo_desc}",
-                "2. Highlight matches",
+                "2. Highlight matches with line citations",
             ],
             "CREATE_BUG_REPORT": [
                 f"1. Prepare issue payload for {repo_desc}",
                 "2. Request human approval for write mutation",
                 "3. Submit bug report",
             ],
-            "READ_FILE": [f"1. Fetch file content from {repo_desc}", "2. Analyze file structure"],
+            "READ_FILE": [
+                f"1. Fetch file content from {repo_desc}",
+                "2. Return line-numbered source with citations",
+            ],
+            "ARCHITECTURE_SUMMARY": [
+                f"1. Inspect repository structure and manifests for {repo_desc}",
+                "2. Synthesize verified facts, reasonable inferences, and unknown information",
+            ],
+            "COMPARE_BRANCHES": [
+                f"1. Compare branch commits and file changes in {repo_desc}",
+                "2. Summarize diff metrics",
+            ],
+            "BROWSE_FILES": [
+                f"1. Traverse directory structure in {repo_desc}",
+                "2. List files and folders",
+            ],
+            "SEARCH_CODE": [
+                f"1. Search codebase symbols and tokens in {repo_desc}",
+                "2. Return line citations and matches",
+            ],
             "GENERAL_QUERY": ["1. Understand question", "2. Formulate assistant response"],
         }
 
@@ -228,6 +306,13 @@ class GitHubAgentWorkflow:
         repo = analysis.target_repo or "octocat/Hello-World"
         owner, name = repo.split("/", 1) if "/" in repo else ("octocat", repo)
 
+        is_local = False
+        try:
+            repo_path = self.tool_registry.git_manager._resolve_repo_path(owner, name)
+            is_local = (repo_path / ".git").exists()
+        except Exception:
+            is_local = False
+
         tool_to_execute = None
         if analysis.intent == "SHOW_REPOSITORIES":
             tool_to_execute = {"name": "list_repositories", "arguments": {}}
@@ -246,12 +331,33 @@ class GitHubAgentWorkflow:
                 "name": "list_workflow_runs",
                 "arguments": {"owner": owner, "repo": name},
             }
-        elif analysis.intent == "FIND_AUTH_CODE":
-            query = analysis.extracted_parameters.get("query", "authentication")
+        elif analysis.intent == "ARCHITECTURE_SUMMARY":
             tool_to_execute = {
-                "name": "search_code",
-                "arguments": {"owner": owner, "repo": name, "query": query},
+                "name": "repo_architecture_summary",
+                "arguments": {"owner": owner, "repo": name},
             }
+        elif analysis.intent == "COMPARE_BRANCHES":
+            tool_to_execute = {
+                "name": "repo_compare_branches",
+                "arguments": {"owner": owner, "repo": name, "base": "main"},
+            }
+        elif analysis.intent == "BROWSE_FILES":
+            tool_to_execute = {
+                "name": "repo_browse_files",
+                "arguments": {"owner": owner, "repo": name, "relative_path": ""},
+            }
+        elif analysis.intent in ("FIND_AUTH_CODE", "SEARCH_CODE"):
+            query = analysis.extracted_parameters.get("query", "auth")
+            if is_local:
+                tool_to_execute = {
+                    "name": "repo_search_code",
+                    "arguments": {"owner": owner, "repo": name, "query": query},
+                }
+            else:
+                tool_to_execute = {
+                    "name": "search_code",
+                    "arguments": {"owner": owner, "repo": name, "query": query},
+                }
         elif analysis.intent == "CREATE_BUG_REPORT":
             tool_to_execute = {
                 "name": "create_issue",
@@ -264,10 +370,16 @@ class GitHubAgentWorkflow:
             }
         elif analysis.intent == "READ_FILE":
             path = analysis.extracted_parameters.get("path", "README.md")
-            tool_to_execute = {
-                "name": "get_file_contents",
-                "arguments": {"owner": owner, "repo": name, "path": path},
-            }
+            if is_local:
+                tool_to_execute = {
+                    "name": "repo_read_file",
+                    "arguments": {"owner": owner, "repo": name, "relative_path": path},
+                }
+            else:
+                tool_to_execute = {
+                    "name": "get_file_contents",
+                    "arguments": {"owner": owner, "repo": name, "path": path},
+                }
 
         return {"tool_to_execute": tool_to_execute}
 
@@ -362,6 +474,85 @@ class GitHubAgentWorkflow:
                         f"- **Root Cause**: The test step encountered a failing assertion in Pytest.\n"
                         f"- **Recommended Fix**: Inspect the recent commits and resolve test failures before re-running CI."
                     )
+                elif tool and tool["name"] == "repo_architecture_summary":
+                    if hasattr(content, "markdown_report"):
+                        response_text = content.markdown_report
+                    elif isinstance(content, dict) and "markdown_report" in content:
+                        response_text = content["markdown_report"]
+                    else:
+                        response_text = f"### Architecture Summary\n\n{formatted_content}"
+                elif tool and tool["name"] == "repo_read_file":
+                    citation = getattr(content, "citation", "") or (
+                        content.get("citation", "") if isinstance(content, dict) else ""
+                    )
+                    path = getattr(content, "path", "") or (
+                        content.get("path", "") if isinstance(content, dict) else ""
+                    )
+                    code_text = getattr(content, "content", "") or (
+                        content.get("content", "") if isinstance(content, dict) else str(content)
+                    )
+                    response_text = f"### File: `{path}` {citation}\n\n```\n{code_text}\n```"
+                elif tool and tool["name"] == "repo_search_code":
+                    if isinstance(content, list) and content:
+                        lines = ["### Verified Code Search Matches\n"]
+                        for item in content[:20]:
+                            cit = getattr(item, "citation", "") or (
+                                item.get("citation", "") if isinstance(item, dict) else ""
+                            )
+                            p = getattr(item, "path", "") or (
+                                item.get("path", "") if isinstance(item, dict) else ""
+                            )
+                            ln = getattr(item, "line_number", "") or (
+                                item.get("line_number", "") if isinstance(item, dict) else ""
+                            )
+                            lc = getattr(item, "line_content", "") or (
+                                item.get("line_content", "") if isinstance(item, dict) else ""
+                            )
+                            lines.append(f"- {cit} `{p}:{ln}`: `{lc}`")
+                        response_text = "\n".join(lines)
+                    else:
+                        response_text = "No matching code symbols found in repository."
+                elif tool and tool["name"] == "repo_compare_branches":
+                    base_b = getattr(content, "base_branch", "") or (
+                        content.get("base_branch", "") if isinstance(content, dict) else ""
+                    )
+                    head_b = getattr(content, "head_branch", "") or (
+                        content.get("head_branch", "") if isinstance(content, dict) else ""
+                    )
+                    stat = getattr(content, "diff_stat", "") or (
+                        content.get("diff_stat", "") if isinstance(content, dict) else ""
+                    )
+                    ahead = getattr(content, "ahead_by", 0) or (
+                        content.get("ahead_by", 0) if isinstance(content, dict) else 0
+                    )
+                    behind = getattr(content, "behind_by", 0) or (
+                        content.get("behind_by", 0) if isinstance(content, dict) else 0
+                    )
+                    files = getattr(content, "changed_files", []) or (
+                        content.get("changed_files", []) if isinstance(content, dict) else []
+                    )
+                    response_text = (
+                        f"### Branch Comparison: `{base_b}` vs `{head_b}`\n\n"
+                        f"- **Stats**: {stat}\n"
+                        f"- **Commits Ahead**: {ahead}\n"
+                        f"- **Commits Behind**: {behind}\n"
+                        f"- **Changed Files**: {', '.join(files) or 'None'}\n"
+                    )
+                elif tool and tool["name"] == "repo_browse_files":
+                    if isinstance(content, list):
+                        items = []
+                        for entry in content:
+                            t = getattr(entry, "type", "") or (
+                                entry.get("type", "") if isinstance(entry, dict) else ""
+                            )
+                            p = getattr(entry, "path", "") or (
+                                entry.get("path", "") if isinstance(entry, dict) else ""
+                            )
+                            icon = "📁 " if t == "directory" else "📄 "
+                            items.append(f"- {icon}`{p}`")
+                        response_text = "### Repository Directory Structure\n\n" + "\n".join(items)
+                    else:
+                        response_text = str(content)
                 else:
                     response_text = (
                         f"### Verified Operation: `{tool['name'] if tool else 'Task'}`\n\n"

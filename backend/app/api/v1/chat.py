@@ -294,7 +294,11 @@ async def stream_message(
                 yield {
                     "event": "approval_required",
                     "data": json.dumps(
-                        {"approval": ApprovalResponse.model_validate(approval).model_dump(mode="json")}
+                        {
+                            "approval": ApprovalResponse.model_validate(approval).model_dump(
+                                mode="json"
+                            )
+                        }
                     ),
                 }
                 yield {
@@ -345,7 +349,9 @@ async def stream_message(
             "data": json.dumps(
                 {
                     "content": assistant_text,
-                    "message": MessageResponse.model_validate(assistant_msg).model_dump(mode="json"),
+                    "message": MessageResponse.model_validate(assistant_msg).model_dump(
+                        mode="json"
+                    ),
                 }
             ),
         }

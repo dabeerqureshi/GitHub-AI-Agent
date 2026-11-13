@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { fetchAuditEvents, AuditEvent } from "@/lib/api";
 import { ShieldCheck, RefreshCw, Hash, Calendar, CheckCircle2, AlertCircle } from "lucide-react";
@@ -10,7 +10,7 @@ export default function AuditPage() {
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState<string>("");
 
-  const loadEvents = async () => {
+  const loadEvents = useCallback(async () => {
     try {
       setLoading(true);
       const data = await fetchAuditEvents(filterType || undefined);
@@ -20,11 +20,11 @@ export default function AuditPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filterType]);
 
   useEffect(() => {
     loadEvents();
-  }, [filterType]);
+  }, [loadEvents]);
 
   return (
     <div className="flex flex-col min-h-screen bg-background">

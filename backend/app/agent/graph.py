@@ -121,6 +121,82 @@ class GitHubAgentWorkflow:
             for w in ("show my repos", "list repos", "list repositories", "my repositories")
         ):
             return IntentAnalysis(intent="SHOW_REPOSITORIES", target_repo=resolved_repo)
+        elif any(w in lower for w in ("assigned to me", "my assigned issues", "assigned issues")):
+            return IntentAnalysis(
+                intent="LIST_ASSIGNED_ISSUES",
+                target_repo=resolved_repo,
+                extracted_parameters={"assignee": "dabeer"},
+            )
+        elif any(
+            w in lower for w in ("search issue", "search issues", "find issue", "find issues")
+        ):
+            q = "memory"
+            for token in words:
+                if token.lower() not in (
+                    "search",
+                    "find",
+                    "issue",
+                    "issues",
+                    "in",
+                    "for",
+                    "the",
+                    "repo",
+                ):
+                    q = token.strip(" ,.:;()[]\"'")
+                    break
+            return IntentAnalysis(
+                intent="SEARCH_ISSUES",
+                target_repo=resolved_repo,
+                extracted_parameters={"query": q},
+            )
+        elif any(w in lower for w in ("close issue", "close ticket")):
+            m = re.search(r"(?:issue|ticket)?\s*#?(\d+)", lower)
+            num = int(m.group(1)) if m else 101
+            return IntentAnalysis(
+                intent="CLOSE_ISSUE",
+                target_repo=resolved_repo,
+                extracted_parameters={"issue_number": num},
+                requires_mutation=True,
+            )
+        elif any(w in lower for w in ("reopen issue", "re-open issue", "reopen ticket")):
+            m = re.search(r"(?:issue|ticket)?\s*#?(\d+)", lower)
+            num = int(m.group(1)) if m else 101
+            return IntentAnalysis(
+                intent="REOPEN_ISSUE",
+                target_repo=resolved_repo,
+                extracted_parameters={"issue_number": num},
+                requires_mutation=True,
+            )
+        elif any(w in lower for w in ("add label", "label issue", "add labels")):
+            m = re.search(r"(?:issue|ticket)?\s*#?(\d+)", lower)
+            num = int(m.group(1)) if m else 101
+            return IntentAnalysis(
+                intent="ADD_LABEL_ISSUE",
+                target_repo=resolved_repo,
+                extracted_parameters={"issue_number": num, "labels": ["enhancement"]},
+                requires_mutation=True,
+            )
+        elif any(w in lower for w in ("assign issue", "assign user", "assign to")):
+            m = re.search(r"(?:issue|ticket)?\s*#?(\d+)", lower)
+            num = int(m.group(1)) if m else 101
+            return IntentAnalysis(
+                intent="ASSIGN_ISSUE",
+                target_repo=resolved_repo,
+                extracted_parameters={"issue_number": num, "assignees": ["dabeer"]},
+                requires_mutation=True,
+            )
+        elif any(w in lower for w in ("comment on issue", "add comment", "comment on pr")):
+            m = re.search(r"#?(\d+)", lower)
+            num = int(m.group(1)) if m else 101
+            return IntentAnalysis(
+                intent="ADD_COMMENT",
+                target_repo=resolved_repo,
+                extracted_parameters={
+                    "issue_number": num,
+                    "comment": "Automated update from agent.",
+                },
+                requires_mutation=True,
+            )
         elif any(
             w in lower for w in ("open issues", "find my open issues", "my issues", "list issues")
         ):
@@ -129,6 +205,48 @@ class GitHubAgentWorkflow:
             w in lower for w in ("latest commit", "explain the latest commit", "recent commit")
         ):
             return IntentAnalysis(intent="EXPLAIN_LATEST_COMMIT", target_repo=resolved_repo)
+        elif any(
+            w in lower for w in ("create pull request", "open pull request", "create pr", "open pr")
+        ):
+            return IntentAnalysis(
+                intent="CREATE_PULL_REQUEST",
+                target_repo=resolved_repo,
+                extracted_parameters={
+                    "title": "feat: automated feature branch PR",
+                    "head": "feature-branch",
+                    "base": "main",
+                },
+                requires_mutation=True,
+            )
+        elif any(w in lower for w in ("merge pull request", "merge pr")):
+            pr_match = re.search(r"(?:pr|pull request)\s*(?:#|\b)?(\d+)", lower)
+            pr_num = int(pr_match.group(1)) if pr_match else 42
+            return IntentAnalysis(
+                intent="MERGE_PULL_REQUEST",
+                target_repo=resolved_repo,
+                extracted_parameters={"pull_number": pr_num},
+                requires_mutation=True,
+            )
+        elif any(
+            w in lower
+            for w in ("approve pr", "approve pull request", "submit review", "request changes")
+        ):
+            pr_match = re.search(r"(?:pr|pull request)\s*(?:#|\b)?(\d+)", lower)
+            pr_num = int(pr_match.group(1)) if pr_match else 42
+            return IntentAnalysis(
+                intent="SUBMIT_PR_REVIEW",
+                target_repo=resolved_repo,
+                extracted_parameters={"pull_number": pr_num, "event": "APPROVE"},
+                requires_mutation=True,
+            )
+        elif any(w in lower for w in ("pr diff", "pr files", "changed files in pr", "diff for pr")):
+            pr_match = re.search(r"(?:pr|pull request)\s*(?:#|\b)?(\d+)", lower)
+            pr_num = int(pr_match.group(1)) if pr_match else 42
+            return IntentAnalysis(
+                intent="GET_PR_FILES",
+                target_repo=resolved_repo,
+                extracted_parameters={"pull_number": pr_num},
+            )
         elif any(w in lower for w in ("review pull request", "review pr", "pull request")):
             # Extract PR number if present
             pr_match = re.search(r"(?:pr|pull request)\s*(?:#|\b)?(\d+)", lower)
@@ -137,6 +255,29 @@ class GitHubAgentWorkflow:
                 intent="REVIEW_PULL_REQUEST",
                 target_repo=resolved_repo,
                 extracted_parameters={"pull_number": pr_num},
+            )
+        elif any(
+            w in lower for w in ("rerun workflow", "re-run workflow", "retry workflow", "rerun run")
+        ):
+            m = re.search(r"(?:run|workflow)?\s*#?(\d+)", lower)
+            run_id = int(m.group(1)) if m else 89
+            return IntentAnalysis(
+                intent="RERUN_WORKFLOW",
+                target_repo=resolved_repo,
+                extracted_parameters={"run_id": run_id},
+                requires_mutation=True,
+            )
+        elif any(w in lower for w in ("list workflows", "show workflows", "get workflows")):
+            return IntentAnalysis(intent="LIST_WORKFLOWS", target_repo=resolved_repo)
+        elif any(
+            w in lower for w in ("diagnose workflow", "why did workflow fail", "diagnose failure")
+        ):
+            m = re.search(r"(?:run|workflow)?\s*#?(\d+)", lower)
+            run_id = int(m.group(1)) if m else 89
+            return IntentAnalysis(
+                intent="DIAGNOSE_WORKFLOW_FAILURE",
+                target_repo=resolved_repo,
+                extracted_parameters={"run_id": run_id},
             )
         elif any(
             w in lower
@@ -233,9 +374,74 @@ class GitHubAgentWorkflow:
                 f"1. Query open issues in {repo_desc}",
                 "2. Summarize open tickets by priority",
             ],
+            "LIST_ASSIGNED_ISSUES": [
+                f"1. Query issues assigned to user in {repo_desc}",
+                "2. Present assigned work items",
+            ],
+            "SEARCH_ISSUES": [
+                f"1. Search issues in {repo_desc}",
+                "2. Format matching results",
+            ],
+            "CLOSE_ISSUE": [
+                f"1. Prepare close payload for issue in {repo_desc}",
+                "2. Request human approval for mutating action",
+                "3. Close issue on GitHub",
+            ],
+            "REOPEN_ISSUE": [
+                f"1. Prepare reopen payload for issue in {repo_desc}",
+                "2. Request human approval for mutating action",
+                "3. Reopen issue on GitHub",
+            ],
+            "ADD_LABEL_ISSUE": [
+                f"1. Prepare label payload for issue in {repo_desc}",
+                "2. Request human approval for mutating action",
+                "3. Apply labels on GitHub",
+            ],
+            "ASSIGN_ISSUE": [
+                f"1. Prepare assignee payload for issue in {repo_desc}",
+                "2. Request human approval for mutating action",
+                "3. Assign user on GitHub",
+            ],
+            "ADD_COMMENT": [
+                f"1. Draft comment for issue/PR in {repo_desc}",
+                "2. Request human approval for comment mutation",
+                "3. Publish comment on GitHub",
+            ],
             "EXPLAIN_LATEST_COMMIT": [
                 f"1. Fetch latest commit metadata in {repo_desc}",
                 "2. Analyze changes and explain commit impact",
+            ],
+            "CREATE_PULL_REQUEST": [
+                f"1. Prepare pull request manifest for {repo_desc}",
+                "2. Request human approval for PR creation",
+                "3. Submit pull request to GitHub",
+            ],
+            "MERGE_PULL_REQUEST": [
+                f"1. Verify merge conditions and diff for PR in {repo_desc}",
+                "2. Request human approval for merge mutation",
+                "3. Execute merge on GitHub",
+            ],
+            "SUBMIT_PR_REVIEW": [
+                f"1. Prepare review evaluation for PR in {repo_desc}",
+                "2. Request human approval for review submission",
+                "3. Post review on GitHub",
+            ],
+            "GET_PR_FILES": [
+                f"1. Fetch changed files and diff for PR in {repo_desc}",
+                "2. Analyze code modifications",
+            ],
+            "RERUN_WORKFLOW": [
+                f"1. Identify target workflow run in {repo_desc}",
+                "2. Request human approval for re-running workflow",
+                "3. Trigger workflow re-run on GitHub Actions",
+            ],
+            "LIST_WORKFLOWS": [
+                f"1. Query GitHub Actions workflows in {repo_desc}",
+                "2. List active automation pipelines",
+            ],
+            "DIAGNOSE_WORKFLOW_FAILURE": [
+                f"1. Fetch workflow run logs and job steps in {repo_desc}",
+                "2. Diagnose failure root cause and recommend fix",
             ],
             "REVIEW_PULL_REQUEST": [
                 f"1. Retrieve PR details and diff in {repo_desc}",
@@ -318,6 +524,131 @@ class GitHubAgentWorkflow:
             tool_to_execute = {"name": "list_repositories", "arguments": {}}
         elif analysis.intent == "FIND_OPEN_ISSUES":
             tool_to_execute = {"name": "list_issues", "arguments": {"owner": owner, "repo": name}}
+        elif analysis.intent == "LIST_ASSIGNED_ISSUES":
+            tool_to_execute = {
+                "name": "list_issues",
+                "arguments": {
+                    "owner": owner,
+                    "repo": name,
+                    "assignee": analysis.extracted_parameters.get("assignee", "dabeer"),
+                },
+            }
+        elif analysis.intent == "SEARCH_ISSUES":
+            tool_to_execute = {
+                "name": "search_issues",
+                "arguments": {
+                    "owner": owner,
+                    "repo": name,
+                    "query": analysis.extracted_parameters.get("query", ""),
+                },
+            }
+        elif analysis.intent == "CLOSE_ISSUE":
+            tool_to_execute = {
+                "name": "close_issue",
+                "arguments": {
+                    "owner": owner,
+                    "repo": name,
+                    "issue_number": analysis.extracted_parameters.get("issue_number", 101),
+                },
+            }
+        elif analysis.intent == "REOPEN_ISSUE":
+            tool_to_execute = {
+                "name": "reopen_issue",
+                "arguments": {
+                    "owner": owner,
+                    "repo": name,
+                    "issue_number": analysis.extracted_parameters.get("issue_number", 101),
+                },
+            }
+        elif analysis.intent == "ADD_LABEL_ISSUE":
+            tool_to_execute = {
+                "name": "add_labels_to_issue",
+                "arguments": {
+                    "owner": owner,
+                    "repo": name,
+                    "issue_number": analysis.extracted_parameters.get("issue_number", 101),
+                    "labels": analysis.extracted_parameters.get("labels", ["enhancement"]),
+                },
+            }
+        elif analysis.intent == "ASSIGN_ISSUE":
+            tool_to_execute = {
+                "name": "assign_issue",
+                "arguments": {
+                    "owner": owner,
+                    "repo": name,
+                    "issue_number": analysis.extracted_parameters.get("issue_number", 101),
+                    "assignees": analysis.extracted_parameters.get("assignees", ["dabeer"]),
+                },
+            }
+        elif analysis.intent == "ADD_COMMENT":
+            tool_to_execute = {
+                "name": "add_issue_comment",
+                "arguments": {
+                    "owner": owner,
+                    "repo": name,
+                    "issue_number": analysis.extracted_parameters.get("issue_number", 101),
+                    "comment": analysis.extracted_parameters.get(
+                        "comment", "Automated update from agent."
+                    ),
+                },
+            }
+        elif analysis.intent == "CREATE_PULL_REQUEST":
+            tool_to_execute = {
+                "name": "create_pull_request",
+                "arguments": {
+                    "owner": owner,
+                    "repo": name,
+                    "title": analysis.extracted_parameters.get("title", "New PR"),
+                    "head": analysis.extracted_parameters.get("head", "feature-branch"),
+                    "base": analysis.extracted_parameters.get("base", "main"),
+                },
+            }
+        elif analysis.intent == "MERGE_PULL_REQUEST":
+            pr_num = analysis.extracted_parameters.get("pull_number", 42)
+            tool_to_execute = {
+                "name": "merge_pull_request",
+                "arguments": {
+                    "owner": owner,
+                    "repo": name,
+                    "pull_number": pr_num,
+                    "merge_method": "merge",
+                },
+            }
+        elif analysis.intent == "SUBMIT_PR_REVIEW":
+            pr_num = analysis.extracted_parameters.get("pull_number", 42)
+            tool_to_execute = {
+                "name": "submit_pull_request_review",
+                "arguments": {
+                    "owner": owner,
+                    "repo": name,
+                    "pull_number": pr_num,
+                    "event": analysis.extracted_parameters.get("event", "APPROVE"),
+                    "body": "Approved by GitHub management agent.",
+                },
+            }
+        elif analysis.intent == "GET_PR_FILES":
+            pr_num = analysis.extracted_parameters.get("pull_number", 42)
+            tool_to_execute = {
+                "name": "get_pull_request_files",
+                "arguments": {"owner": owner, "repo": name, "pull_number": pr_num},
+            }
+        elif analysis.intent == "RERUN_WORKFLOW":
+            run_id = analysis.extracted_parameters.get("run_id", 89)
+            tool_to_execute = {
+                "name": "rerun_workflow",
+                "arguments": {"owner": owner, "repo": name, "run_id": run_id},
+            }
+        elif analysis.intent == "LIST_WORKFLOWS":
+            tool_to_execute = {
+                "name": "list_workflows",
+                "arguments": {"owner": owner, "repo": name},
+            }
+        elif analysis.intent == "DIAGNOSE_WORKFLOW_FAILURE":
+            run_id = analysis.extracted_parameters.get("run_id", 89)
+            tool_to_execute = {
+                "name": "analyze_failing_workflow_steps",
+                "arguments": {"owner": owner, "repo": name, "run_id": run_id},
+            }
         elif analysis.intent == "EXPLAIN_LATEST_COMMIT":
             tool_to_execute = {"name": "get_commit", "arguments": {"owner": owner, "repo": name}}
         elif analysis.intent == "REVIEW_PULL_REQUEST":

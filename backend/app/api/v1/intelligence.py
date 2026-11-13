@@ -31,7 +31,9 @@ async def get_repository_context(
     except FileNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e)) from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to analyze repository: {str(e)}") from e
+        raise HTTPException(
+            status_code=500, detail=f"Failed to analyze repository: {str(e)}"
+        ) from e
 
 
 @router.get("/{owner}/{repo}/files", response_model=list[FileBrowseItem])

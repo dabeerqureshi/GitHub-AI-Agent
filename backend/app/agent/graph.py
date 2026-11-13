@@ -20,9 +20,11 @@ class GitHubAgentWorkflow:
         self,
         llm_client: BaseLLMClient | None = None,
         tool_registry: ToolRegistry | None = None,
+        checkpointer: Any | None = None,
     ):
         self.llm_client = llm_client
         self.tool_registry = tool_registry or ToolRegistry()
+        self.checkpointer = checkpointer
         self._router = ModelRouter()
         self.graph = self._build_graph()
 
@@ -69,7 +71,7 @@ class GitHubAgentWorkflow:
         builder.add_edge("execute_tool", "verify_and_respond")
         builder.add_edge("verify_and_respond", END)
 
-        return builder.compile()
+        return builder.compile(checkpointer=self.checkpointer)
 
     def _route_after_tool_selection(self, state: AgentState) -> str:
         """Route to approval gate if a tool is needed, else respond directly."""

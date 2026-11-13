@@ -7,6 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1 import api_v1_router
 from app.core.config import get_settings
+from app.core.database import AsyncSessionLocal
+from app.services.recovery_service import ExecutionRecoveryService
 
 
 @asynccontextmanager
@@ -16,6 +18,19 @@ async def lifespan(_app: FastAPI):
     settings = get_settings()
     # Log startup state
     print(f"[STARTUP] GitHub AI Workspace Backend initialized (env={settings.APP_ENV})")
+
+    # Restart recovery: scan for interrupted execution runs from prior process lifecycle
+    try:
+        async with AsyncSessionLocal() as db:
+            recovery = ExecutionRecoveryService(db)
+            interrupted = await recovery.detect_and_handle_interrupted_runs()
+            if interrupted:
+                print(
+                    f"[RECOVERY] Flagged {len(interrupted)} interrupted run(s) from prior session for recovery."
+                )
+    except Exception as e:
+        print(f"[RECOVERY_WARNING] Could not check interrupted runs on startup: {e}")
+
     yield
     print("[SHUTDOWN] GitHub AI Workspace Backend stopping")
 

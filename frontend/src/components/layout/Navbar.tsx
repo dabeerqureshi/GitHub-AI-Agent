@@ -68,6 +68,18 @@ export function Navbar() {
             Workspace
           </Link>
           <Link
+            href="/approvals"
+            className="px-3 py-1.5 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+          >
+            Approvals
+          </Link>
+          <Link
+            href="/runs"
+            className="px-3 py-1.5 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+          >
+            Runs & Timeline
+          </Link>
+          <Link
             href="/audit"
             className="px-3 py-1.5 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
           >

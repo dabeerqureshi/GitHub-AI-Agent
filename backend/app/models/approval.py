@@ -4,7 +4,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Any
 
-from sqlalchemy import JSON, DateTime, ForeignKey, String, Text
+from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -18,6 +18,7 @@ class ApprovalStatus(StrEnum):
     APPROVED = "APPROVED"
     REJECTED = "REJECTED"
     EXPIRED = "EXPIRED"
+    EXECUTED = "EXECUTED"
 
 
 class ApprovalRequest(Base, TimestampMixin):
@@ -32,6 +33,10 @@ class ApprovalRequest(Base, TimestampMixin):
         nullable=False,
         index=True,
     )
+    user_id: Mapped[str] = mapped_column(
+        String(64), default="local-user", nullable=False, index=True
+    )
+    repo_name: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
     step_id: Mapped[str] = mapped_column(String(64), nullable=False)
     tool_name: Mapped[str] = mapped_column(String(128), nullable=False)
     action_hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
@@ -43,6 +48,16 @@ class ApprovalRequest(Base, TimestampMixin):
         nullable=False,
         index=True,
     )
+    execution_nonce: Mapped[str] = mapped_column(
+        String(64),
+        default=generate_uuid,
+        unique=True,
+        nullable=False,
+        index=True,
+    )
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    is_executed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    executed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     reviewer_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 

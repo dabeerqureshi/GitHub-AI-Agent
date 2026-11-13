@@ -29,6 +29,11 @@ class Conversation(Base, TimestampMixin):
         back_populates="conversation",
         cascade="all, delete-orphan",
     )
+    runs: Mapped[list["ExecutionRun"]] = relationship(  # noqa: F821
+        "ExecutionRun",
+        back_populates="conversation",
+        cascade="all, delete-orphan",
+    )
 
 
 class ConversationMessage(Base, TimestampMixin):

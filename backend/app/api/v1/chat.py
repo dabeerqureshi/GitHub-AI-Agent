@@ -10,7 +10,6 @@ from sse_starlette.sse import EventSourceResponse
 
 from app.agent.graph import GitHubAgentWorkflow
 from app.core.database import get_db
-from app.models.approval import ApprovalRequest, ApprovalStatus
 from app.models.audit import AuditEvent
 from app.models.conversation import Conversation, ConversationMessage
 from app.schemas.approval import ApprovalResponse
@@ -20,6 +19,8 @@ from app.schemas.chat import (
     MessageCreate,
     MessageResponse,
 )
+from app.services.approval_service import ApprovalManager
+from app.services.audit_service import AuditService
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
 workflow = GitHubAgentWorkflow()
@@ -133,18 +134,18 @@ async def send_message(
     # Check if workflow paused for HITL approval
     pending = final_state.get("pending_approval")
     if pending and final_state.get("approval_status") == "PENDING":
-        approval = ApprovalRequest(
+        approval_manager = ApprovalManager(db)
+        approval = await approval_manager.create_approval_request(
             conversation_id=conversation_id,
-            step_id=pending["step_id"],
             tool_name=pending["tool_name"],
-            action_hash=pending["action_hash"],
+            step_id=pending["step_id"],
             description=pending["description"],
             payload=pending["arguments"],
-            status=ApprovalStatus.PENDING.value,
+            repo_name=conv.active_repo,
         )
-        db.add(approval)
 
-        audit = AuditEvent(
+        audit_service = AuditService(db)
+        await audit_service.log_event(
             event_type="APPROVAL_REQUESTED",
             conversation_id=conversation_id,
             action_hash=pending["action_hash"],
@@ -152,9 +153,6 @@ async def send_message(
             status="PENDING",
             details=pending,
         )
-        db.add(audit)
-        await db.commit()
-        await db.refresh(approval)
 
         return {
             "status": "NEEDS_APPROVAL",
@@ -278,18 +276,25 @@ async def stream_message(
 
             pending = state.get("pending_approval")
             if pending and state.get("approval_status") == "PENDING":
-                approval = ApprovalRequest(
+                approval_manager = ApprovalManager(db)
+                approval = await approval_manager.create_approval_request(
                     conversation_id=conversation_id,
-                    step_id=pending["step_id"],
                     tool_name=pending["tool_name"],
-                    action_hash=pending["action_hash"],
+                    step_id=pending["step_id"],
                     description=pending["description"],
                     payload=pending["arguments"],
-                    status=ApprovalStatus.PENDING.value,
+                    repo_name=conv.active_repo,
                 )
-                db.add(approval)
-                await db.commit()
-                await db.refresh(approval)
+
+                audit_service = AuditService(db)
+                await audit_service.log_event(
+                    event_type="APPROVAL_REQUESTED",
+                    conversation_id=conversation_id,
+                    action_hash=pending["action_hash"],
+                    tool_name=pending["tool_name"],
+                    status="PENDING",
+                    details=pending,
+                )
 
                 yield {
                     "event": "approval_required",

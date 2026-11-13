@@ -26,15 +26,51 @@ export interface ConversationMessage {
 export interface ApprovalRequest {
   id: string;
   conversation_id: string;
+  user_id?: string;
+  repo_name?: string | null;
   step_id: string;
   tool_name: string;
   action_hash: string;
   description: string;
   payload: Record<string, any>;
-  status: "PENDING" | "APPROVED" | "REJECTED" | "EXPIRED";
+  status: "PENDING" | "APPROVED" | "REJECTED" | "EXPIRED" | "EXECUTED";
+  execution_nonce?: string | null;
+  expires_at?: string | null;
+  is_executed?: boolean;
+  executed_at?: string | null;
   reviewer_notes?: string | null;
   created_at: string;
   resolved_at?: string | null;
+}
+
+export interface ExecutionStep {
+  step: string;
+  status: string;
+  details?: Record<string, any>;
+  message?: string;
+  timestamp: string;
+}
+
+export interface ExecutionRun {
+  id: string;
+  conversation_id: string;
+  thread_id: string;
+  repo_name?: string | null;
+  status:
+    | "PENDING"
+    | "RUNNING"
+    | "WAITING_APPROVAL"
+    | "COMPLETED"
+    | "FAILED"
+    | "INTERRUPTED"
+    | "CANCELLED";
+  user_request: string;
+  current_step?: string | null;
+  step_history: ExecutionStep[];
+  error_message?: string | null;
+  retry_count: number;
+  created_at: string;
+  completed_at?: string | null;
 }
 
 export interface RepositoryRecord {
@@ -215,6 +251,23 @@ export async function submitApprovalDecision(
   return res.json();
 }
 
+export async function decideApproval(
+  approvalId: string,
+  params: {
+    action_hash: string;
+    decision: "APPROVE" | "REJECT";
+    reviewer_notes?: string;
+    user_id?: string;
+  }
+): Promise<ApprovalRequest> {
+  return submitApprovalDecision(
+    approvalId,
+    params.action_hash,
+    params.decision,
+    params.reviewer_notes
+  );
+}
+
 export async function fetchRepositories(): Promise<RepositoryRecord[]> {
   const res = await fetch(`${API_BASE_URL}/api/v1/repos`);
   if (!res.ok) throw new Error("Failed to fetch repositories");
@@ -310,5 +363,89 @@ export async function fetchRepoArchitectureSummary(
   const url = `${API_BASE_URL}/api/v1/intelligence/${owner}/${repo}/summary`;
   const res = await fetch(url);
   if (!res.ok) throw new Error("Failed to fetch architecture summary");
+  return res.json();
+}
+
+export async function fetchAllApprovals(
+  status?: string,
+  conversationId?: string,
+  limit: number = 50
+): Promise<ApprovalRequest[]> {
+  const url = new URL(`${API_BASE_URL}/api/v1/approvals`);
+  if (status) url.searchParams.set("status", status);
+  if (conversationId) url.searchParams.set("conversation_id", conversationId);
+  url.searchParams.set("limit", limit.toString());
+  const res = await fetch(url.toString());
+  if (!res.ok) throw new Error("Failed to fetch approvals");
+  return res.json();
+}
+
+export async function fetchExecutionRuns(
+  status?: string,
+  conversationId?: string,
+  limit: number = 50
+): Promise<ExecutionRun[]> {
+  const url = new URL(`${API_BASE_URL}/api/v1/runs`);
+  if (status) url.searchParams.set("status", status);
+  if (conversationId) url.searchParams.set("conversation_id", conversationId);
+  url.searchParams.set("limit", limit.toString());
+  const res = await fetch(url.toString());
+  if (!res.ok) throw new Error("Failed to fetch execution runs");
+  return res.json();
+}
+
+export async function fetchRunDetails(runId: string): Promise<ExecutionRun> {
+  const res = await fetch(`${API_BASE_URL}/api/v1/runs/${runId}`);
+  if (!res.ok) throw new Error("Failed to fetch run details");
+  return res.json();
+}
+
+export async function resumeExecutionRun(runId: string): Promise<ExecutionRun> {
+  const res = await fetch(`${API_BASE_URL}/api/v1/runs/${runId}/resume`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!res.ok) throw new Error("Failed to resume execution run");
+  return res.json();
+}
+
+export async function cancelExecutionRun(
+  runId: string,
+  reason: string = "User cancelled execution"
+): Promise<ExecutionRun> {
+  const res = await fetch(`${API_BASE_URL}/api/v1/runs/${runId}/cancel`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ reason }),
+  });
+  if (!res.ok) throw new Error("Failed to cancel execution run");
+  return res.json();
+}
+
+export async function fetchUserPreferences(): Promise<Record<string, any>> {
+  const res = await fetch(`${API_BASE_URL}/api/v1/memory/preferences`);
+  if (!res.ok) throw new Error("Failed to fetch user preferences");
+  return res.json();
+}
+
+export async function updateUserPreference(
+  key: string,
+  value: any,
+  summary?: string
+): Promise<any> {
+  const res = await fetch(`${API_BASE_URL}/api/v1/memory/preferences`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ key, value, summary }),
+  });
+  if (!res.ok) throw new Error("Failed to update user preference");
+  return res.json();
+}
+
+export async function fetchTaskHistory(repo?: string): Promise<any[]> {
+  const url = new URL(`${API_BASE_URL}/api/v1/memory/tasks`);
+  if (repo) url.searchParams.set("repo", repo);
+  const res = await fetch(url.toString());
+  if (!res.ok) throw new Error("Failed to fetch task history");
   return res.json();
 }

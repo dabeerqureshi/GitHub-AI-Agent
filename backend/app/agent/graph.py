@@ -11,7 +11,7 @@ from app.agent.prompts import SYSTEM_AGENT_PROMPT
 from app.agent.router import BaseLLMClient, ModelRouter
 from app.agent.state import AgentState, IntentAnalysis
 from app.agent.tools.registry import ToolRegistry
-from app.core.security import generate_action_hash
+from app.core.security import detect_prompt_injection, generate_action_hash
 
 
 class GitHubAgentWorkflow:
@@ -88,6 +88,15 @@ class GitHubAgentWorkflow:
 
     def _classify_intent(self, message: str, active_repo: str | None) -> IntentAnalysis:
         """Classify user intent and extract target repository and parameters."""
+        # 0. Prompt injection defense guardrail
+        injection_check = detect_prompt_injection(message)
+        if injection_check.get("is_injection"):
+            return IntentAnalysis(
+                intent="SECURITY_INJECTION_BLOCKED",
+                target_repo=active_repo,
+                extracted_parameters=injection_check,
+            )
+
         lower = message.lower()
 
         # Repository resolution
@@ -652,6 +661,10 @@ class GitHubAgentWorkflow:
                 f"1. Search codebase symbols and tokens in {repo_desc}",
                 "2. Return line citations and matches",
             ],
+            "SECURITY_INJECTION_BLOCKED": [
+                "1. Safety alert: Adversarial prompt injection pattern detected",
+                "2. Enforce policy and terminate execution without executing external actions",
+            ],
             "GENERAL_QUERY": ["1. Understand question", "2. Formulate assistant response"],
         }
 
@@ -1059,6 +1072,12 @@ class GitHubAgentWorkflow:
 
         if error:
             response_text = f"An error occurred while executing the operation: {error}"
+        elif intent == "SECURITY_INJECTION_BLOCKED":
+            response_text = (
+                "🛡️ **Security Policy Enforcement**: An adversarial prompt injection, system prompt override, "
+                "or unauthorized exfiltration pattern was detected. In accordance with production security guardrails, "
+                "this request has been halted and no actions were executed."
+            )
         elif tool_result:
             if tool_result.get("is_error"):
                 response_text = f"Operation failed: {tool_result.get('error', 'Unknown error')}"

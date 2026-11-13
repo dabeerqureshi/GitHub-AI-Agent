@@ -87,7 +87,7 @@ export function ChatContainer() {
       )}
 
       {/* Message List */}
-      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-2">
+      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-2" role="log" aria-live="polite">
         {activeConversation.messages.map((msg) => (
           <MessageItem key={msg.id} message={msg} />
         ))}
@@ -99,7 +99,7 @@ export function ChatContainer() {
 
         {/* Loading / Streaming Indicator */}
         {isSending && (
-          <div className="flex items-center space-x-2 text-muted-foreground text-xs py-3 animate-pulse">
+          <div className="flex items-center space-x-2 text-muted-foreground text-xs py-3 animate-pulse" role="status">
             <Loader2 className="h-4 w-4 animate-spin text-primary" />
             <span>{streamingStatus || "Agent is executing instructions and verifying GitHub state..."}</span>
           </div>
@@ -110,12 +110,13 @@ export function ChatContainer() {
 
       {/* Input Form */}
       <div className="p-4 border-t bg-card">
-        <form onSubmit={handleSubmit} className="flex items-end space-x-3 max-w-5xl mx-auto">
+        <form onSubmit={handleSubmit} className="flex items-end space-x-3 max-w-5xl mx-auto" aria-label="Message input form">
           <div className="flex-1 rounded-lg border bg-background focus-within:ring-1 focus-within:ring-primary">
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
+              aria-label="Instruction input"
               placeholder="Give natural language instructions, e.g. 'List my repositories', 'Create issue for auth bug', 'Inspect README.md'..."
               rows={2}
               className="w-full resize-none bg-transparent p-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
@@ -125,6 +126,7 @@ export function ChatContainer() {
           <button
             type="submit"
             disabled={!input.trim() || isSending}
+            aria-label="Send instruction"
             className="h-10 px-4 bg-primary text-primary-foreground hover:bg-primary/90 font-medium rounded-lg text-sm flex items-center space-x-1.5 transition-colors disabled:opacity-40 shrink-0"
           >
             {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}

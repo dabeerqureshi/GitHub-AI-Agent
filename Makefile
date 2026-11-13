@@ -29,8 +29,8 @@ test-frontend:
 test: test-backend test-frontend
 
 lint-backend:
-	$(RUFF) check backend/
-	$(RUFF) format --check backend/
+	$(RUFF) check backend/ scripts/
+	$(RUFF) format --check backend/ scripts/
 
 lint-frontend:
 	cd frontend && npm run lint
@@ -38,8 +38,20 @@ lint-frontend:
 lint: lint-backend lint-frontend
 
 format:
-	$(RUFF) format backend/
+	$(RUFF) format backend/ scripts/
 	cd frontend && npm run format || true
+
+backup:
+	./scripts/backup_database.sh
+
+verify:
+	./scripts/verify_deployment.sh
+
+docker-prod:
+	docker compose -f docker-compose.prod.yml up --build -d
+
+docker-prod-down:
+	docker compose -f docker-compose.prod.yml down
 
 clean:
 	rm -rf $(VENV) frontend/node_modules frontend/.next

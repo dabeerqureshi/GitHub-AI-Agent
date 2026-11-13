@@ -186,6 +186,7 @@ class AdvancedWorkflowsService:
     def analyze_commit_regressions(self, owner: str, repo: str, limit: int = 10) -> dict[str, Any]:
         """Inspect recent commits for risky changes or regression patterns."""
         import git
+
         repo_dir = self.git_manager._resolve_repo_path(owner, repo)
         commits_data = []
 

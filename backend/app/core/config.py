@@ -39,8 +39,17 @@ class Settings(BaseSettings):
     WORKSPACE_DIR: str = str(DEFAULT_STORAGE_DIR / "workspaces")
     AUDIT_LOG_RETENTION_DAYS: int = 90
 
-    # AI Providers
+    # AI Providers & Model Routing
     DEFAULT_AI_PROVIDER: str = "ollama"  # ollama | openai | anthropic
+    DEFAULT_TEMPERATURE: float = 0.2
+    REQUEST_TIMEOUT_SECONDS: int = 45
+    MAX_RETRY_COUNT: int = 3
+    MAX_TOOL_CALLS: int = 5
+
+    # Cloud Privacy Guardrail: Never transmit private code without explicit consent
+    ALLOW_CLOUD_CODE_ANALYSIS: bool = False
+    ENABLE_CLOUD_FALLBACK: bool = False
+
     OLLAMA_BASE_URL: str = "http://localhost:11434"
     OLLAMA_MODEL: str = "qwen2.5-coder:7b"
 

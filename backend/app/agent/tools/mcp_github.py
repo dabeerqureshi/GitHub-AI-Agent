@@ -33,6 +33,11 @@ READ_ONLY_GITHUB_TOOLS = {
     "search_code",
     "search_issues",
     "search_repositories",
+    "list_workflow_runs",
+    "get_workflow_run_logs",
+    "get_commit",
+    "list_commits",
+    "get_authenticated_user",
 }
 
 
@@ -121,7 +126,60 @@ class GitHubMCPClient:
         if name == "list_repositories":
             return {
                 "tool": name,
-                "content": ["Mock Repo 1 (owner/repo-one)", "Mock Repo 2 (owner/repo-two)"],
+                "content": [
+                    "facebook/react - The library for web and native user interfaces",
+                    "octocat/Hello-World - Sample repository",
+                ],
+                "is_error": False,
+                "mock": True,
+            }
+        elif name == "list_issues":
+            repo = f"{arguments.get('owner', 'octocat')}/{arguments.get('repo', 'Hello-World')}"
+            return {
+                "tool": name,
+                "content": [
+                    f"Issue #101 [OPEN] in {repo}: Fix memory leak in reconciliation loop",
+                    f"Issue #102 [OPEN] in {repo}: Update TypeScript definitions for React 19",
+                ],
+                "is_error": False,
+                "mock": True,
+            }
+        elif name == "get_pull_request":
+            pr_num = arguments.get("pull_number", 42)
+            return {
+                "tool": name,
+                "content": [
+                    f"PR #{pr_num} [OPEN]: Add async request deduplication\nAuthor: dabeer\nDiff: +45 -12 lines\nStatus: 2 approvals, CI passing",
+                ],
+                "is_error": False,
+                "mock": True,
+            }
+        elif name == "list_workflow_runs":
+            return {
+                "tool": name,
+                "content": [
+                    "Workflow 'CI / Test': Run #89 - Status: FAILED (Step 'Run Pytest' exited with code 1)",
+                    "Workflow 'Lint and Typecheck': Run #88 - Status: SUCCESS",
+                ],
+                "is_error": False,
+                "mock": True,
+            }
+        elif name == "search_code":
+            query = arguments.get("query", "auth")
+            return {
+                "tool": name,
+                "content": [
+                    f"Found matches for '{query}':\n- src/auth/provider.ts:42 (class AuthProvider)\n- src/middleware/token.py:15 (verify_jwt_token)",
+                ],
+                "is_error": False,
+                "mock": True,
+            }
+        elif name in ("get_commit", "list_commits"):
+            return {
+                "tool": name,
+                "content": [
+                    "Commit a8f2d1e by Alice <alice@example.com> on main:\nfeat: implement token encryption with Fernet\nDate: 2 hours ago",
+                ],
                 "is_error": False,
                 "mock": True,
             }
@@ -129,7 +187,9 @@ class GitHubMCPClient:
             path = arguments.get("path", "unknown")
             return {
                 "tool": name,
-                "content": [f"# Mock content for {path}\ndef hello():\n    return 'world'\n"],
+                "content": [
+                    f"# Mock content for {path}\ndef authenticate_user(token):\n    return verify_signature(token)\n"
+                ],
                 "is_error": False,
                 "mock": True,
             }

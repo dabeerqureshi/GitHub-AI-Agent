@@ -12,6 +12,7 @@ export function ChatContainer() {
     pendingApprovals,
     isSending,
     currentPlan,
+    streamingStatus,
     sendUserMessage,
   } = useChatStore();
 
@@ -96,11 +97,11 @@ export function ChatContainer() {
           <ApprovalCard key={approval.id} approval={approval} />
         ))}
 
-        {/* Loading Indicator */}
+        {/* Loading / Streaming Indicator */}
         {isSending && (
-          <div className="flex items-center space-x-2 text-muted-foreground text-xs py-3">
+          <div className="flex items-center space-x-2 text-muted-foreground text-xs py-3 animate-pulse">
             <Loader2 className="h-4 w-4 animate-spin text-primary" />
-            <span>Agent is executing instructions and verifying GitHub state...</span>
+            <span>{streamingStatus || "Agent is executing instructions and verifying GitHub state..."}</span>
           </div>
         )}
 

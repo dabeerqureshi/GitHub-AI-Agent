@@ -31,12 +31,9 @@ engine = create_async_engine(
 # SQLite PRAGMA listener for foreign keys and Write-Ahead-Logging (WAL) mode
 @event.listens_for(engine.sync_engine, "connect")
 def set_sqlite_pragma(dbapi_connection, _connection_record):
-    raw_conn = getattr(dbapi_connection, "_connection", dbapi_connection)
-    cursor = raw_conn.cursor()
-    cursor.execute("PRAGMA journal_mode=WAL")
-    cursor.execute("PRAGMA foreign_keys=ON")
-    cursor.execute("PRAGMA synchronous=NORMAL")
-    cursor.close()
+    dbapi_connection.execute("PRAGMA journal_mode=WAL")
+    dbapi_connection.execute("PRAGMA foreign_keys=ON")
+    dbapi_connection.execute("PRAGMA synchronous=NORMAL")
 
 
 # Async sessionmaker factory

@@ -10,6 +10,7 @@ import {
   sendMessage,
   submitApprovalDecision,
 } from "@/lib/api";
+import { streamMessage } from "@/lib/sse";
 
 interface ChatState {
   conversations: Conversation[];
@@ -20,6 +21,7 @@ interface ChatState {
   isLoading: boolean;
   isSending: boolean;
   currentPlan: string[];
+  streamingStatus: string | null;
   error: string | null;
 
   // Actions
@@ -46,6 +48,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   isLoading: false,
   isSending: false,
   currentPlan: [],
+  streamingStatus: null,
   error: null,
 
   loadConversations: async () => {
@@ -115,6 +118,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
     set((state) => ({
       isSending: true,
+      streamingStatus: "Analyzing natural language instruction...",
       error: null,
       activeConversation: state.activeConversation
         ? {
@@ -125,6 +129,45 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }));
 
     try {
+      await streamMessage(activeConversationId, content, activeRepo, {
+        onStatus: (data) => {
+          set({ streamingStatus: data.message || `Executing: ${data.tool || data.step}` });
+        },
+        onPlan: (data) => {
+          set({ currentPlan: data.plan });
+        },
+        onApprovalRequired: (data) => {
+          if (data.approval) {
+            set((state) => ({
+              pendingApprovals: [data.approval, ...state.pendingApprovals],
+            }));
+          }
+        },
+        onResponse: (data) => {
+          // Add verified assistant response
+          set((state) => ({
+            activeConversation: state.activeConversation
+              ? {
+                  ...state.activeConversation,
+                  messages: [
+                    ...state.activeConversation.messages.filter(
+                      (m) => m.id !== data.message.id
+                    ),
+                    data.message,
+                  ],
+                }
+              : null,
+          }));
+        },
+        onError: (err) => {
+          set({ error: err.detail || "Stream execution error" });
+        },
+      });
+
+      // Refresh final state
+      await get().selectConversation(activeConversationId);
+    } catch {
+      // Fallback to standard request
       const response = await sendMessage(activeConversationId, content, activeRepo);
       set({ currentPlan: response.plan || [] });
 
@@ -134,12 +177,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
         }));
       }
 
-      // Refresh full conversation state
       await get().selectConversation(activeConversationId);
-    } catch (err: any) {
-      set({ error: err.message });
     } finally {
-      set({ isSending: false });
+      set({ isSending: false, streamingStatus: null });
     }
   },
 

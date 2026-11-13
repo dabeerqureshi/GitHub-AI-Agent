@@ -66,6 +66,15 @@ def verify_secret_token(provided_token: str, expected_token: str) -> bool:
     return hmac.compare_digest(provided_token.strip(), expected_token.strip())
 
 
+def mask_secret(secret: str, visible_start: int = 10, visible_end: int = 4) -> str:
+    """Mask sensitive tokens preserving prefix and suffix characters for UI inspection."""
+    if not secret:
+        return ""
+    if len(secret) <= visible_start + visible_end:
+        return "********"
+    return f"{secret[:visible_start]}...{secret[-visible_end:]}"
+
+
 SECRET_PATTERNS = [
     re.compile(r"ghp_[A-Za-z0-9_]{36,255}"),  # GitHub Personal Access Token (classic)
     re.compile(r"github_pat_[A-Za-z0-9_]{82}"),  # GitHub Fine-Grained Token

@@ -3,10 +3,17 @@ import {
   ApprovalRequest,
   Conversation,
   ConversationMessage,
+  GitHubUserProfile,
+  RepositoryRecord,
+  connectGitHubToken,
   createConversation,
+  disconnectGitHub,
   fetchConversation,
   fetchConversations,
+  fetchGitHubAuthStatus,
   fetchPendingApprovals,
+  fetchRepositories,
+  refreshRepositories,
   sendMessage,
   submitApprovalDecision,
 } from "@/lib/api";
@@ -17,6 +24,10 @@ interface ChatState {
   activeConversationId: string | null;
   activeConversation: Conversation | null;
   activeRepo: string;
+  repositories: RepositoryRecord[];
+  githubUser: GitHubUserProfile | null;
+  isAuthModalOpen: boolean;
+  isConnectingToken: boolean;
   pendingApprovals: ApprovalRequest[];
   isLoading: boolean;
   isSending: boolean;
@@ -29,6 +40,11 @@ interface ChatState {
   selectConversation: (id: string) => Promise<void>;
   startNewConversation: (title?: string) => Promise<string>;
   setActiveRepo: (repo: string) => void;
+  setAuthModalOpen: (open: boolean) => void;
+  loadRepositories: () => Promise<void>;
+  loadAuthStatus: () => Promise<void>;
+  connectToken: (token: string) => Promise<void>;
+  disconnectAccount: () => Promise<void>;
   sendUserMessage: (content: string) => Promise<void>;
   loadPendingApprovals: () => Promise<void>;
   handleApprovalDecision: (
@@ -44,6 +60,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
   activeConversationId: null,
   activeConversation: null,
   activeRepo: "octocat/Hello-World",
+  repositories: [],
+  githubUser: null,
+  isAuthModalOpen: false,
+  isConnectingToken: false,
   pendingApprovals: [],
   isLoading: false,
   isSending: false,
@@ -101,6 +121,63 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   setActiveRepo: (repo: string) => {
     set({ activeRepo: repo });
+  },
+
+  setAuthModalOpen: (open: boolean) => {
+    set({ isAuthModalOpen: open });
+  },
+
+  loadRepositories: async () => {
+    try {
+      const repos = await fetchRepositories();
+      const safeRepos = Array.isArray(repos) ? repos : [];
+      set({ repositories: safeRepos });
+      if (safeRepos.length > 0 && !get().activeRepo) {
+        set({ activeRepo: safeRepos[0].full_name });
+      }
+    } catch (err: any) {
+      console.error("Failed to load repositories", err);
+    }
+  },
+
+  loadAuthStatus: async () => {
+    try {
+      const status = await fetchGitHubAuthStatus();
+      if (status.is_connected && status.user) {
+        set({ githubUser: status.user });
+      } else {
+        set({ githubUser: null });
+      }
+    } catch (err: any) {
+      console.error("Failed to load auth status", err);
+    }
+  },
+
+  connectToken: async (token: string) => {
+    try {
+      set({ isConnectingToken: true, error: null });
+      const res = await connectGitHubToken(token);
+      set({
+        githubUser: res.user,
+        isAuthModalOpen: false,
+      });
+      // Immediately refresh repos
+      await get().loadRepositories();
+    } catch (err: any) {
+      set({ error: err.message || "Failed to authenticate GitHub token" });
+      throw err;
+    } finally {
+      set({ isConnectingToken: false });
+    }
+  },
+
+  disconnectAccount: async () => {
+    try {
+      await disconnectGitHub();
+      set({ githubUser: null });
+    } catch (err: any) {
+      set({ error: err.message });
+    }
   },
 
   sendUserMessage: async (content: string) => {

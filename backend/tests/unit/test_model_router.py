@@ -4,6 +4,7 @@ import pytest
 
 from app.agent.router import (
     ChatCompletionResponse,
+    GeminiClient,
     MockLLMClient,
     ModelRouter,
     OpenAIClient,
@@ -38,3 +39,18 @@ def test_openai_client_validation():
     """Verify OpenAI client requires API key."""
     client = OpenAIClient(api_key="")
     assert client.api_key == ""
+
+
+@pytest.mark.asyncio
+async def test_gemini_client_validation():
+    """Verify Gemini client capability validation."""
+    client = GeminiClient(api_key="")
+    report = await client.validate_capabilities()
+    assert report.is_available is False
+    assert report.provider == "gemini"
+
+    client_with_key = GeminiClient(api_key="AIzaSyTestGeminiKey123")
+    assert await client_with_key.is_available() is True
+    report_valid = await client_with_key.validate_capabilities()
+    assert report_valid.is_available is True
+    assert report_valid.supports_tool_calling is True

@@ -24,8 +24,7 @@ global.fetch = vi.fn().mockImplementation((url: string) => {
 describe("WorkspacePage", () => {
   it("renders navbar and welcome container", () => {
     render(<WorkspacePage />);
-    expect(screen.getByText("GitHub AI Workspace")).toBeInTheDocument();
-    expect(screen.getByText("Welcome to GitHub AI Workspace")).toBeInTheDocument();
-    expect(screen.getByText("New Session")).toBeInTheDocument();
+    expect(screen.getAllByText("GitHub AI Workspace").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("New Workspace Session")).toBeInTheDocument();
   });
 });

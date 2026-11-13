@@ -54,6 +54,71 @@ async def sync_repository(payload: RepositorySyncRequest, db: AsyncSession = Dep
     return repo
 
 
+@router.post("/refresh", response_model=list[RepositoryResponse])
+async def refresh_repositories(db: AsyncSession = Depends(get_db)):
+    """Fetch updated repositories from GitHub if authenticated and return all tracked repositories."""
+    from app.core.config import get_settings
+    import httpx
+
+    settings = get_settings()
+    token = settings.GITHUB_PERSONAL_ACCESS_TOKEN
+
+    if token:
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
+            "User-Agent": "GitHub-AI-Workspace",
+        }
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                res = await client.get(
+                    "https://api.github.com/user/repos?per_page=100&sort=updated",
+                    headers=headers,
+                )
+                if res.status_code == 200:
+                    raw_repos = res.json()
+                    for r in raw_repos:
+                        if not isinstance(r, dict):
+                            continue
+                        full_name = r.get("full_name")
+                        if not full_name:
+                            continue
+                        owner = r.get("owner", {}).get("login", full_name.split("/")[0])
+                        name = r.get("name", full_name.split("/")[-1])
+                        default_branch = r.get("default_branch", "main")
+                        is_private = bool(r.get("private", False))
+                        description = r.get("description")
+
+                        existing = await db.execute(
+                            select(RepositoryRecord).where(RepositoryRecord.full_name == full_name)
+                        )
+                        repo = existing.scalar_one_or_none()
+                        if not repo:
+                            repo = RepositoryRecord(
+                                full_name=full_name,
+                                owner=owner,
+                                name=name,
+                                description=description,
+                                default_branch=default_branch,
+                                is_private=is_private,
+                                is_cloned=False,
+                            )
+                            db.add(repo)
+                        else:
+                            repo.description = description
+                            repo.default_branch = default_branch
+                            repo.is_private = is_private
+                    await db.commit()
+        except Exception:
+            pass
+
+    result = await db.execute(
+        select(RepositoryRecord).order_by(RepositoryRecord.last_synced_at.desc())
+    )
+    return result.scalars().all()
+
+
 @router.get("/{owner}/{repo}", response_model=RepositoryResponse)
 async def get_repository(owner: str, repo: str, db: AsyncSession = Depends(get_db)):
     """Get details for a specific repository."""

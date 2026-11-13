@@ -1,9 +1,11 @@
 """Application configuration module using Pydantic Settings."""
 
+import json
 from functools import lru_cache
 from pathlib import Path
+from typing import Any
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
@@ -29,8 +31,24 @@ class Settings(BaseSettings):
 
     # Security
     SECRET_KEY: str = "insecure-dev-secret-key-replace-in-production-32-chars-min"
-    ALLOWED_ORIGINS: list[str] = Field(default=["http://localhost:3000", "http://127.0.0.1:3000"])
+    ALLOWED_ORIGINS: list[str] | str = Field(
+        default=["http://localhost:3000", "http://127.0.0.1:3000"]
+    )
     RATE_LIMIT_PER_MINUTE: int = 60
+
+    @field_validator("ALLOWED_ORIGINS", mode="before")
+    @classmethod
+    def assemble_cors_origins(cls, v: Any) -> list[str]:
+        if isinstance(v, str):
+            if v.startswith("[") and v.endswith("]"):
+                try:
+                    return json.loads(v)
+                except Exception:
+                    pass
+            return [i.strip() for i in v.split(",") if i.strip()]
+        elif isinstance(v, (list, set)):
+            return list(v)
+        return ["http://localhost:3000", "http://127.0.0.1:3000"]
 
     # Database
     DATABASE_URL: str = f"sqlite+aiosqlite:///{DEFAULT_DB_PATH}"
@@ -58,6 +76,9 @@ class Settings(BaseSettings):
 
     ANTHROPIC_API_KEY: str = ""
     ANTHROPIC_MODEL: str = "claude-3-5-sonnet-20241022"
+
+    GEMINI_API_KEY: str = ""
+    GEMINI_MODEL: str = "gemini-2.0-flash"
 
     # GitHub Integration
     GITHUB_PERSONAL_ACCESS_TOKEN: str = ""

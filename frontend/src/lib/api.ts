@@ -73,6 +73,30 @@ export interface ExecutionRun {
   completed_at?: string | null;
 }
 
+export interface GitHubUserProfile {
+  login: string;
+  name?: string | null;
+  avatar_url?: string | null;
+  html_url?: string | null;
+  public_repos: number;
+  total_private_repos: number;
+}
+
+export interface GitHubAuthStatus {
+  is_connected: boolean;
+  user?: GitHubUserProfile | null;
+  repo_count: number;
+  masked_token?: string | null;
+  provider_type: string;
+}
+
+export interface GitHubConnectResponse {
+  status: string;
+  message: string;
+  user: GitHubUserProfile;
+  synced_repositories: number;
+}
+
 export interface RepositoryRecord {
   id: string;
   full_name: string;
@@ -271,6 +295,41 @@ export async function decideApproval(
 export async function fetchRepositories(): Promise<RepositoryRecord[]> {
   const res = await fetch(`${API_BASE_URL}/api/v1/repos`);
   if (!res.ok) throw new Error("Failed to fetch repositories");
+  return res.json();
+}
+
+export async function refreshRepositories(): Promise<RepositoryRecord[]> {
+  const res = await fetch(`${API_BASE_URL}/api/v1/repos/refresh`, {
+    method: "POST",
+  });
+  if (!res.ok) throw new Error("Failed to refresh repositories");
+  return res.json();
+}
+
+export async function fetchGitHubAuthStatus(): Promise<GitHubAuthStatus> {
+  const res = await fetch(`${API_BASE_URL}/api/v1/auth/github/status`);
+  if (!res.ok) throw new Error("Failed to fetch GitHub auth status");
+  return res.json();
+}
+
+export async function connectGitHubToken(token: string): Promise<GitHubConnectResponse> {
+  const res = await fetch(`${API_BASE_URL}/api/v1/auth/github`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Failed to connect token" }));
+    throw new Error(err.detail || "Failed to connect GitHub token");
+  }
+  return res.json();
+}
+
+export async function disconnectGitHub(): Promise<{ status: string; message: string }> {
+  const res = await fetch(`${API_BASE_URL}/api/v1/auth/github/disconnect`, {
+    method: "POST",
+  });
+  if (!res.ok) throw new Error("Failed to disconnect GitHub account");
   return res.json();
 }
 

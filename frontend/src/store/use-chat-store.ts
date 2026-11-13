@@ -159,10 +159,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
       const res = await connectGitHubToken(token);
       set({
         githubUser: res.user,
-        isAuthModalOpen: false,
       });
       // Immediately refresh repos
       await get().loadRepositories();
+      return res;
     } catch (err: any) {
       set({ error: err.message || "Failed to authenticate GitHub token" });
       throw err;

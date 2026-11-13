@@ -11,6 +11,7 @@ from app.agent.tools.mcp_github import (
     is_mutating_tool as is_mutating_github_tool,
 )
 from app.agent.tools.test_runner import TestRunner
+from app.services.advanced_workflows import AdvancedWorkflowsService
 from app.services.coding_agent import AutonomousCodingService
 from app.services.repo_intelligence import RepoIntelligenceService
 
@@ -33,6 +34,10 @@ class ToolRegistry:
         )
         self.coding_service = AutonomousCodingService(
             intelligence_service=self.intelligence_service,
+        )
+        self.advanced_workflows = AdvancedWorkflowsService(
+            repo_intelligence=self.intelligence_service,
+            git_manager=self.git_manager,
         )
 
         self._local_tools: dict[str, Callable] = {}
@@ -127,6 +132,80 @@ class ToolRegistry:
             handler=self.coding_service.execute_task_in_worktree,
             is_mutating=True,
             description="Safely modify code in an isolated worktree, run tests, and generate diff for approval.",
+        )
+
+        # Advanced Phase 8 Specialized Workflows
+        self.register_local_tool(
+            name="analyze_entire_repository",
+            handler=self.advanced_workflows.analyze_entire_repository,
+            is_mutating=False,
+            description="Produce an end-to-end repository structural, architectural, and dependency audit.",
+        )
+        self.register_local_tool(
+            name="identify_technical_debt",
+            handler=self.advanced_workflows.identify_technical_debt,
+            is_mutating=False,
+            description="Detect code smells, oversized modules, missing documentation, and debt score.",
+        )
+        self.register_local_tool(
+            name="find_code_duplication",
+            handler=self.advanced_workflows.find_code_duplication,
+            is_mutating=False,
+            description="Detect similar function signatures, recurring symbols, or identical method names.",
+        )
+        self.register_local_tool(
+            name="investigate_production_bug",
+            handler=self.advanced_workflows.investigate_production_bug,
+            is_mutating=False,
+            description="Map production bug symptoms to source code symbols and related unit tests.",
+        )
+        self.register_local_tool(
+            name="analyze_commit_regressions",
+            handler=self.advanced_workflows.analyze_commit_regressions,
+            is_mutating=False,
+            description="Inspect recent commits for breaking API changes and regression candidates.",
+        )
+        self.register_local_tool(
+            name="compare_repository_branches",
+            handler=self.advanced_workflows.compare_branches_advanced,
+            is_mutating=False,
+            description="Compare branch divergence, commit difference, and conflict risk between branches.",
+        )
+        self.register_local_tool(
+            name="batch_review_prs",
+            handler=self.advanced_workflows.batch_review_prs,
+            is_mutating=False,
+            description="Triage, policy-check, and review all open pull requests in batch.",
+        )
+        self.register_local_tool(
+            name="diagnose_ci_failures",
+            handler=self.advanced_workflows.diagnose_ci_failures,
+            is_mutating=False,
+            description="Inspect failing GitHub Actions workflow runs and extract diagnostic errors.",
+        )
+        self.register_local_tool(
+            name="generate_development_plan",
+            handler=self.advanced_workflows.generate_development_plan,
+            is_mutating=False,
+            description="Synthesize an actionable architectural plan with dependency breakdown.",
+        )
+        self.register_local_tool(
+            name="implement_multi_file_feature",
+            handler=self.advanced_workflows.implement_multi_file_feature,
+            is_mutating=True,
+            description="Apply changes across multiple files in an isolated worktree and verify tests.",
+        )
+        self.register_local_tool(
+            name="generate_tests_for_code",
+            handler=self.advanced_workflows.generate_tests_for_code,
+            is_mutating=False,
+            description="Generate test cases matching existing repository testing conventions.",
+        )
+        self.register_local_tool(
+            name="prepare_release_summary",
+            handler=self.advanced_workflows.prepare_release_summary,
+            is_mutating=False,
+            description="Compile merged PRs and commit history into a structured release changelog.",
         )
 
     def register_local_tool(

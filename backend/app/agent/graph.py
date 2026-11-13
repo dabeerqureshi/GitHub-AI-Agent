@@ -6,6 +6,7 @@ from typing import Any
 
 from langgraph.graph import END, StateGraph
 
+from app.agent.planning_engine import PlanningEngine
 from app.agent.prompts import SYSTEM_AGENT_PROMPT
 from app.agent.router import BaseLLMClient, ModelRouter
 from app.agent.state import AgentState, IntentAnalysis
@@ -123,6 +124,149 @@ class GitHubAgentWorkflow:
             for w in ("show my repos", "list repos", "list repositories", "my repositories")
         ):
             return IntentAnalysis(intent="SHOW_REPOSITORIES", target_repo=resolved_repo)
+
+        # Advanced Phase 8 Specialized Workflows
+        elif any(
+            w in lower
+            for w in (
+                "analyze the entire repository",
+                "analyze entire repository",
+                "full repository analysis",
+                "audit repository",
+            )
+        ):
+            return IntentAnalysis(intent="ANALYZE_REPOSITORY", target_repo=resolved_repo)
+        elif any(
+            w in lower
+            for w in (
+                "technical debt",
+                "tech debt",
+                "identify technical debt",
+                "identify debt",
+                "code smells",
+            )
+        ):
+            return IntentAnalysis(intent="IDENTIFY_TECH_DEBT", target_repo=resolved_repo)
+        elif any(
+            w in lower
+            for w in (
+                "duplicated code",
+                "code duplication",
+                "find duplicates",
+                "duplicate code",
+                "similar code",
+            )
+        ):
+            return IntentAnalysis(intent="FIND_CODE_DUPLICATION", target_repo=resolved_repo)
+        elif any(
+            w in lower
+            for w in (
+                "production bug",
+                "investigate production bug",
+                "nullpointerexception",
+                "investigate bug",
+            )
+        ):
+            return IntentAnalysis(
+                intent="INVESTIGATE_PRODUCTION_BUG",
+                target_repo=resolved_repo,
+                extracted_parameters={"bug_description": message},
+            )
+        elif any(
+            w in lower
+            for w in (
+                "commit regressions",
+                "recent commits for regressions",
+                "analyze recent commits",
+                "regression analysis",
+            )
+        ):
+            return IntentAnalysis(intent="ANALYZE_COMMIT_REGRESSIONS", target_repo=resolved_repo)
+        elif any(
+            w in lower
+            for w in (
+                "branch divergence",
+                "compare branch divergence",
+                "merge risk between",
+            )
+        ):
+            return IntentAnalysis(
+                intent="COMPARE_BRANCHES_ADVANCED",
+                target_repo=resolved_repo,
+                extracted_parameters={"base": "main", "head": "dev"},
+            )
+        elif any(
+            w in lower
+            for w in (
+                "batch review",
+                "review all open prs",
+                "batch pr",
+                "review multiple prs",
+            )
+        ):
+            return IntentAnalysis(intent="BATCH_REVIEW_PRS", target_repo=resolved_repo)
+        elif any(
+            w in lower
+            for w in (
+                "failing ci",
+                "diagnose failing ci",
+                "ci workflow failure",
+                "failing ci workflows",
+            )
+        ):
+            return IntentAnalysis(intent="DIAGNOSE_CI_FAILURES", target_repo=resolved_repo)
+        elif any(
+            w in lower
+            for w in (
+                "development plan",
+                "generate a development plan",
+                "dev plan",
+                "plan feature",
+            )
+        ):
+            return IntentAnalysis(
+                intent="GENERATE_DEV_PLAN",
+                target_repo=resolved_repo,
+                extracted_parameters={"feature_goal": message},
+            )
+        elif any(
+            w in lower
+            for w in (
+                "multi-file feature",
+                "multi file feature",
+                "implement multi-file",
+                "implement multi file",
+            )
+        ):
+            return IntentAnalysis(
+                intent="MULTI_FILE_FEATURE_IMPLEMENTATION",
+                target_repo=resolved_repo,
+                requires_mutation=True,
+            )
+        elif any(
+            w in lower
+            for w in (
+                "generate tests",
+                "generate test",
+                "write tests for",
+                "create tests for",
+            )
+        ):
+            return IntentAnalysis(
+                intent="GENERATE_TESTS_FOR_CODE",
+                target_repo=resolved_repo,
+                extracted_parameters={"target_file": "calculator.py"},
+            )
+        elif any(
+            w in lower
+            for w in (
+                "release summary",
+                "release notes",
+                "prepare release summary",
+                "prepare release",
+            )
+        ):
+            return IntentAnalysis(intent="PREPARE_RELEASE_SUMMARY", target_repo=resolved_repo)
         elif any(w in lower for w in ("assigned to me", "my assigned issues", "assigned issues")):
             return IntentAnalysis(
                 intent="LIST_ASSIGNED_ISSUES",
@@ -511,9 +655,19 @@ class GitHubAgentWorkflow:
             "GENERAL_QUERY": ["1. Understand question", "2. Formulate assistant response"],
         }
 
-        plan = plan_map.get(
-            analysis.intent, ["1. Plan task", "2. Execute actions", "3. Verify results"]
-        )
+        if analysis.intent in plan_map:
+            plan = plan_map[analysis.intent]
+        else:
+            decomp = PlanningEngine.decompose_task(
+                analysis.intent,
+                last_user_message,
+                analysis.target_repo,
+                analysis.extracted_parameters,
+            )
+            plan = [
+                f"{i + 1}. [{s.agent_role.value}] {s.description}"
+                for i, s in enumerate(decomp.steps)
+            ]
 
         return {
             "active_repo": analysis.target_repo,
@@ -759,6 +913,83 @@ class GitHubAgentWorkflow:
                     "arguments": {"owner": owner, "repo": name, "path": path},
                 }
 
+        # Advanced Phase 8 Specialized Workflows Routing
+        elif analysis.intent == "ANALYZE_REPOSITORY":
+            tool_to_execute = {
+                "name": "analyze_entire_repository",
+                "arguments": {"owner": owner, "repo": name},
+            }
+        elif analysis.intent == "IDENTIFY_TECH_DEBT":
+            tool_to_execute = {
+                "name": "identify_technical_debt",
+                "arguments": {"owner": owner, "repo": name},
+            }
+        elif analysis.intent == "FIND_CODE_DUPLICATION":
+            tool_to_execute = {
+                "name": "find_code_duplication",
+                "arguments": {"owner": owner, "repo": name},
+            }
+        elif analysis.intent == "INVESTIGATE_PRODUCTION_BUG":
+            tool_to_execute = {
+                "name": "investigate_production_bug",
+                "arguments": {"owner": owner, "repo": name, "bug_description": last_user_message},
+            }
+        elif analysis.intent == "ANALYZE_COMMIT_REGRESSIONS":
+            tool_to_execute = {
+                "name": "analyze_commit_regressions",
+                "arguments": {"owner": owner, "repo": name, "limit": 10},
+            }
+        elif analysis.intent == "COMPARE_BRANCHES_ADVANCED":
+            tool_to_execute = {
+                "name": "compare_repository_branches",
+                "arguments": {"owner": owner, "repo": name, "base": "main", "head": "dev"},
+            }
+        elif analysis.intent == "BATCH_REVIEW_PRS":
+            tool_to_execute = {
+                "name": "batch_review_prs",
+                "arguments": {"owner": owner, "repo": name},
+            }
+        elif analysis.intent == "DIAGNOSE_CI_FAILURES":
+            tool_to_execute = {
+                "name": "diagnose_ci_failures",
+                "arguments": {"owner": owner, "repo": name},
+            }
+        elif analysis.intent == "GENERATE_DEV_PLAN":
+            tool_to_execute = {
+                "name": "generate_development_plan",
+                "arguments": {"owner": owner, "repo": name, "feature_goal": last_user_message},
+            }
+        elif analysis.intent == "MULTI_FILE_FEATURE_IMPLEMENTATION":
+            tool_to_execute = {
+                "name": "implement_multi_file_feature",
+                "arguments": {
+                    "owner": owner,
+                    "repo": name,
+                    "feature_name": "multi-file-feature",
+                    "file_edits": {
+                        "src/models.py": '"""Models definition."""\n\nclass UserProfile:\n    id: int\n',
+                        "src/service.py": '"""Service layer."""\n\nclass ProfileService:\n    pass\n',
+                    },
+                    "branch_name": f"feature-multi-{int(time.time())}",
+                },
+            }
+        elif analysis.intent == "GENERATE_TESTS_FOR_CODE":
+            tool_to_execute = {
+                "name": "generate_tests_for_code",
+                "arguments": {
+                    "owner": owner,
+                    "repo": name,
+                    "target_file": analysis.extracted_parameters.get(
+                        "target_file", "calculator.py"
+                    ),
+                },
+            }
+        elif analysis.intent == "PREPARE_RELEASE_SUMMARY":
+            tool_to_execute = {
+                "name": "prepare_release_summary",
+                "arguments": {"owner": owner, "repo": name},
+            }
+
         return {"tool_to_execute": tool_to_execute}
 
     async def approval_gate(self, state: AgentState) -> dict[str, Any]:
@@ -971,6 +1202,134 @@ class GitHubAgentWorkflow:
                         response_text = "### Repository Directory Structure\n\n" + "\n".join(items)
                     else:
                         response_text = str(content)
+
+                # Advanced Phase 8 Specialized Workflows Rendering
+                elif tool and tool["name"] == "analyze_entire_repository":
+                    response_text = (
+                        f"### 🛡️ [Repository Analyst] Architecture & Structural Audit: {content.get('repository')}\n\n"
+                        f"- **Default Branch:** `{content.get('default_branch')}`\n"
+                        f"- **Languages:** {content.get('languages')}\n"
+                        f"- **Total Files:** {content.get('total_files')} | **Total Symbols:** {content.get('total_symbols')}\n\n"
+                        f"**Architecture Assessment:**\n{content.get('architecture_summary')}\n\n"
+                        f"**Key Entrypoints:**\n"
+                        + "\n".join(f"- `{e}`" for e in content.get("key_entrypoints", []))
+                    )
+                elif tool and tool["name"] == "identify_technical_debt":
+                    debt_lines = [
+                        f"- **[{item['severity']}] {item['type']}** ({item.get('file', 'general')}): {item['issue']}\n  *Recommendation:* {item['recommendation']}"
+                        for item in content.get("debt_items", [])
+                    ]
+                    response_text = (
+                        f"### 🧹 [Repository Analyst] Technical Debt Assessment: {content.get('repository')}\n\n"
+                        f"- **Overall Health Score:** {content.get('overall_health_score')}/100\n"
+                        f"- **Total Debt Items Detected:** {content.get('total_debt_items')}\n\n"
+                        + "\n".join(debt_lines)
+                    )
+                elif tool and tool["name"] == "find_code_duplication":
+                    dup_lines = [
+                        f"- **Symbol `{d['symbol_name']}`** appearing in {d['occurrences']} files:\n  "
+                        + "\n  ".join(f"  * `{f}`" for f in d["files"])
+                        + f"\n  *Recommendation:* {d['recommendation']}"
+                        for d in content.get("duplicated_symbols", [])
+                    ]
+                    response_text = (
+                        f"### 🔍 [Repository Analyst] Code Duplication & Pattern Analysis: {content.get('repository')}\n\n"
+                        f"- **Duplicated Symbol Instances:** {content.get('duplicated_symbol_count')}\n\n"
+                        + (
+                            "\n".join(dup_lines)
+                            if dup_lines
+                            else "No duplicated symbols detected across modules."
+                        )
+                    )
+                elif tool and tool["name"] == "investigate_production_bug":
+                    loc_lines = [
+                        f"- `{m['file']}` (Line {m['line']}): `{m['snippet']}`"
+                        for m in content.get("matched_code_locations", [])
+                    ]
+                    test_lines = [f"- `{t}`" for t in content.get("related_tests", [])]
+                    response_text = (
+                        f"### 🐛 [Coding Agent] Production Bug Investigation: {content.get('repository')}\n\n"
+                        f"- **Description:** {content.get('bug_description')}\n"
+                        f"- **Hypothesis:** {content.get('hypothesis')}\n\n"
+                        f"**Matched Source Locations:**\n"
+                        + ("\n".join(loc_lines) if loc_lines else "None")
+                        + "\n\n"
+                        "**Related Tests:**\n"
+                        + ("\n".join(test_lines) if test_lines else "None")
+                        + "\n\n"
+                        f"**Recommended Next Action:** {content.get('next_action')}"
+                    )
+                elif tool and tool["name"] == "analyze_commit_regressions":
+                    commit_lines = [
+                        f"- `{c['sha']}` by {c['author']}: {c['message']} (Risk: **{c.get('risk_level', 'LOW')}**)"
+                        for c in content.get("commits", [])[:5]
+                    ]
+                    response_text = (
+                        f"### ⚡ [Git Operations Agent] Commit Regression Analysis: {content.get('repository')}\n\n"
+                        f"- **Analyzed Commits:** {content.get('analyzed_commits')}\n"
+                        f"- **High-Risk Candidates:** {len(content.get('regression_candidates', []))}\n\n"
+                        f"**Recent Commits:**\n" + "\n".join(commit_lines)
+                    )
+                elif tool and tool["name"] == "compare_repository_branches":
+                    response_text = (
+                        f"### 🔀 [Git Operations Agent] Branch Comparison Analysis: `{content.get('base_branch')}` ↔ `{content.get('head_branch')}`\n\n"
+                        f"- **Total Files Changed:** {content.get('total_files_changed')}\n"
+                        f"- **Additions:** +{content.get('additions')} | **Deletions:** -{content.get('deletions')}\n"
+                        f"- **Merge Conflict Risk:** **{content.get('merge_risk')}**"
+                    )
+                elif tool and tool["name"] == "batch_review_prs":
+                    review_lines = [
+                        f"- **PR #{r['pr_number']}: {r['title']}** (Author: @{r['author']})\n  *Recommendation:* `{r['review_recommendation']}` | Policy: `{r['policy_check']}`"
+                        for r in content.get("reviews", [])
+                    ]
+                    response_text = (
+                        f"### 📋 [Pull Request Reviewer] Batch Pull Request Review: {content.get('repository')}\n\n"
+                        f"- **Total Open PRs:** {content.get('total_open_prs')}\n\n"
+                        + (
+                            "\n".join(review_lines)
+                            if review_lines
+                            else "No open pull requests found."
+                        )
+                    )
+                elif tool and tool["name"] == "diagnose_ci_failures":
+                    response_text = (
+                        f"### 🚨 [GitHub Actions Analyst] CI Workflow Diagnostics: {content.get('repository')}\n\n"
+                        f"- **Total Failing Runs:** {content.get('total_failing_runs')}\n"
+                        f"- **Top Recommendation:** {content.get('top_recommendation')}"
+                    )
+                elif tool and tool["name"] == "generate_development_plan":
+                    phase_blocks = [
+                        f"#### Phase {p['phase']}: {p['name']}\n**Tasks:**\n"
+                        + "\n".join(f"- {t}" for t in p["tasks"])
+                        + "\n**Affected Paths:** "
+                        + ", ".join(f"`{ap}`" for ap in p["affected_paths"])
+                        for p in content.get("phases", [])
+                    ]
+                    response_text = (
+                        f"### 📐 [Repository Analyst] Development & Implementation Plan: {content.get('feature_goal')}\n\n"
+                        + "\n\n".join(phase_blocks)
+                    )
+                elif tool and tool["name"] == "implement_multi_file_feature":
+                    response_text = (
+                        f"### 🛠️ [Coding Agent] Multi-File Feature Implementation Prepared\n\n"
+                        f"- **Repository:** `{content.get('repository')}`\n"
+                        f"- **Branch:** `{content.get('branch')}`\n"
+                        f"- **Files Modified:** {', '.join(f'`{f}`' for f in content.get('files_modified', []))}\n"
+                        f"- **Status:** {content.get('status')}\n\n"
+                        f"Diff is prepared in isolated worktree and ready for user review and approval."
+                    )
+                elif tool and tool["name"] == "generate_tests_for_code":
+                    response_text = (
+                        f"### 🧪 [Coding Agent] Automated Test Suite Generated\n\n"
+                        f"- **Target File:** `{content.get('target_file')}`\n"
+                        f"- **Generated Test Path:** `{content.get('generated_test_path')}`\n\n"
+                        f"```python\n{content.get('generated_test_code')}\n```"
+                    )
+                elif tool and tool["name"] == "prepare_release_summary":
+                    response_text = (
+                        f"### 📦 [Issue Manager] Release Summary: {content.get('repository')}\n\n"
+                        f"{content.get('changelog')}"
+                    )
                 else:
                     response_text = (
                         f"### Verified Operation: `{tool['name'] if tool else 'Task'}`\n\n"

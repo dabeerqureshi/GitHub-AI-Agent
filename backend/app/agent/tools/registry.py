@@ -3,6 +3,8 @@
 from collections.abc import Callable
 from typing import Any
 
+from fastapi.encoders import jsonable_encoder
+
 from app.agent.tools.git_local import LocalGitManager
 from app.agent.tools.mcp_github import (
     GitHubMCPClient,
@@ -267,7 +269,8 @@ class ToolRegistry:
                 result = await handler(**arguments)
             else:
                 result = handler(**arguments)
-            return {"tool": tool_name, "content": result, "is_error": False}
+            return {"tool": tool_name, "content": jsonable_encoder(result), "is_error": False}
 
         # Otherwise route through GitHub MCP client
-        return await self.mcp_client.execute_tool(tool_name, arguments)
+        mcp_res = await self.mcp_client.execute_tool(tool_name, arguments)
+        return jsonable_encoder(mcp_res)

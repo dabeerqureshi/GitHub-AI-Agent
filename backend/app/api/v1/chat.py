@@ -1,12 +1,22 @@
 """Chat and conversation management API endpoints with LangGraph orchestration and SSE streaming."""
 
 import json
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sse_starlette.sse import EventSourceResponse
+
+
+def safe_json_dumps(obj: Any, **kwargs) -> str:
+    """Safely dump any object to JSON string via FastAPI jsonable_encoder with fallback."""
+    try:
+        return json.dumps(jsonable_encoder(obj), **kwargs)
+    except Exception:
+        return json.dumps(obj, default=str, **kwargs)
 
 from app.agent.graph import GitHubAgentWorkflow
 from app.core.database import get_db
@@ -218,7 +228,7 @@ async def stream_message(
         )
         conv = result.scalar_one_or_none()
         if not conv:
-            yield {"event": "error", "data": json.dumps({"detail": "Conversation not found"})}
+            yield {"event": "error", "data": safe_json_dumps({"detail": "Conversation not found"})}
             return
 
         if payload.active_repo:
@@ -237,7 +247,7 @@ async def stream_message(
 
         yield {
             "event": "status",
-            "data": json.dumps(
+            "data": safe_json_dumps(
                 {"step": "PLANNING", "message": "Analyzing natural language instruction..."}
             ),
         }
@@ -264,7 +274,7 @@ async def stream_message(
             state.update(plan_update)
             yield {
                 "event": "plan",
-                "data": json.dumps({"plan": state["plan"], "intent": state["intent"]}),
+                "data": safe_json_dumps({"plan": state["plan"], "intent": state["intent"]}),
             }
 
             # 2. Tool select node
@@ -275,7 +285,7 @@ async def stream_message(
             if tool:
                 yield {
                     "event": "status",
-                    "data": json.dumps({"step": "TOOL_SELECTED", "tool": tool["name"]}),
+                    "data": safe_json_dumps({"step": "TOOL_SELECTED", "tool": tool["name"]}),
                 }
 
                 # 3. Approval gate
@@ -306,7 +316,7 @@ async def stream_message(
 
                     yield {
                         "event": "approval_required",
-                        "data": json.dumps(
+                        "data": safe_json_dumps(
                             {
                                 "approval": ApprovalResponse.model_validate(approval).model_dump(
                                     mode="json"
@@ -316,27 +326,27 @@ async def stream_message(
                     }
                     yield {
                         "event": "done",
-                        "data": json.dumps({"status": "NEEDS_APPROVAL"}),
+                        "data": safe_json_dumps({"status": "NEEDS_APPROVAL"}),
                     }
                     return
 
                 # 4. Tool execution
                 yield {
                     "event": "tool_call",
-                    "data": json.dumps({"tool": tool["name"], "arguments": tool.get("arguments", {})}),
+                    "data": safe_json_dumps({"tool": tool["name"], "arguments": tool.get("arguments", {})}),
                 }
                 exec_update = await workflow.execute_tool(state)
                 state.update(exec_update)
 
                 yield {
                     "event": "tool_result",
-                    "data": json.dumps({"tool": tool["name"], "result": state.get("tool_result")}),
+                    "data": safe_json_dumps({"tool": tool["name"], "result": state.get("tool_result")}),
                 }
 
             # 5. Verification and Final Response
             yield {
                 "event": "status",
-                "data": json.dumps(
+                "data": safe_json_dumps(
                     {
                         "step": "VERIFYING",
                         "message": "Verifying actual GitHub results and formulating response...",
@@ -359,7 +369,7 @@ async def stream_message(
 
             yield {
                 "event": "response",
-                "data": json.dumps(
+                "data": safe_json_dumps(
                     {
                         "content": assistant_text,
                         "message": MessageResponse.model_validate(assistant_msg).model_dump(
@@ -371,7 +381,7 @@ async def stream_message(
 
             yield {
                 "event": "done",
-                "data": json.dumps({"status": "COMPLETED", "metadata": state.get("metadata")}),
+                "data": safe_json_dumps({"status": "COMPLETED", "metadata": state.get("metadata")}),
             }
         except Exception as exc:
             import logging
@@ -391,7 +401,7 @@ async def stream_message(
                 await db.refresh(fallback_msg)
                 yield {
                     "event": "response",
-                    "data": json.dumps(
+                    "data": safe_json_dumps(
                         {
                             "content": fallback_text,
                             "message": MessageResponse.model_validate(fallback_msg).model_dump(mode="json"),
@@ -402,11 +412,11 @@ async def stream_message(
                 pass
             yield {
                 "event": "error",
-                "data": json.dumps({"detail": str(exc)}),
+                "data": safe_json_dumps({"detail": str(exc)}),
             }
             yield {
                 "event": "done",
-                "data": json.dumps({"status": "FAILED"}),
+                "data": safe_json_dumps({"status": "FAILED"}),
             }
 
     return EventSourceResponse(sse_generator())

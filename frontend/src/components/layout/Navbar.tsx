@@ -39,13 +39,20 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    fetchHealth()
-      .then(setHealth)
-      .catch(() => setHealth({ status: "offline", default_provider: "gemini" }));
+    const checkHealth = () => {
+      fetchHealth()
+        .then(setHealth)
+        .catch(() => setHealth({ status: "offline", default_provider: "gemini" }));
+    };
+
+    checkHealth();
+    const interval = setInterval(checkHealth, 10000);
 
     loadAuthStatus();
     loadRepositories();
     loadModelsConfig();
+
+    return () => clearInterval(interval);
   }, [loadAuthStatus, loadRepositories, loadModelsConfig]);
 
   const navLinks = [
@@ -64,9 +71,9 @@ export function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full border-b border-slate-800 bg-slate-950">
+      <header className="sticky top-0 z-40 w-full border-b border-[#333333] bg-[#1f1f1f]">
         {/* TIER 1: Brand Logo, Repository Switcher, Model Dropdown & Account Controls */}
-        <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 h-13 flex items-center justify-between gap-3">
+        <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 h-14 flex items-center justify-between gap-3">
           {/* Left: Mobile Toggle, Brand & Repository Selector */}
           <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
             {/* Mobile Hamburger Button */}
@@ -76,7 +83,7 @@ export function Navbar() {
                 setMobileMenuOpen(!mobileMenuOpen);
                 toggleSidebar();
               }}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 md:hidden transition-colors cursor-pointer"
+              className="p-1.5 rounded-md text-[#cccccc] hover:text-white hover:bg-[#2a2d2e] md:hidden transition-colors cursor-pointer"
               aria-label="Toggle navigation menu"
             >
               {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -87,14 +94,14 @@ export function Navbar() {
               href="/"
               className="flex items-center space-x-2.5 font-sans font-bold text-sm sm:text-base tracking-tight shrink-0 group"
             >
-              <div className="p-1.5 rounded-lg bg-indigo-500/15 text-indigo-400 border border-indigo-500/30 group-hover:bg-indigo-500/25 transition-all shrink-0">
-                <ShieldCheck className="h-5 w-5 text-indigo-400" />
+              <div className="p-1.5 rounded-md bg-[#007acc]/15 text-[#3794ff] border border-[#007acc]/30 group-hover:bg-[#007acc]/25 transition-all shrink-0">
+                <ShieldCheck className="h-5 w-5 text-[#3794ff]" />
               </div>
               <div className="flex flex-col leading-tight hidden sm:flex">
                 <span className="text-white font-semibold text-sm tracking-tight whitespace-nowrap">
                   GitHub AI Workspace
                 </span>
-                <span className="text-[10px] text-slate-400 font-mono font-normal tracking-wide whitespace-nowrap uppercase">
+                <span className="text-[10px] text-[#858585] font-mono font-normal tracking-wide whitespace-nowrap uppercase">
                   Enterprise Autonomous Agent
                 </span>
               </div>
@@ -112,15 +119,15 @@ export function Navbar() {
             <ModelDropdown align="right" direction="down" />
 
             {/* Backend API Health Status */}
-            <div className="hidden lg:flex items-center space-x-1.5 px-2.5 py-1 rounded-lg border border-slate-800 bg-slate-900 font-mono text-[11px]">
-              <Database className="h-3 w-3 text-emerald-400 shrink-0" />
+            <div className="hidden lg:flex items-center space-x-1.5 px-2.5 py-1 rounded-md border border-[#333333] bg-[#252526] font-mono text-[11px]">
+              <Database className="h-3 w-3 text-[#73c991] shrink-0" />
               {health?.status === "ok" ? (
-                <span className="text-emerald-400 font-medium flex items-center">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 mr-1 animate-pulse" />
+                <span className="text-[#73c991] font-medium flex items-center">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#73c991] mr-1 animate-pulse" />
                   Online
                 </span>
               ) : (
-                <span className="text-amber-400 font-medium">Offline</span>
+                <span className="text-[#cca700] font-medium">Offline</span>
               )}
             </div>
 
@@ -128,28 +135,28 @@ export function Navbar() {
             {githubUser ? (
               <button
                 onClick={() => setAuthModalOpen(true)}
-                className="flex items-center space-x-1.5 pl-1.5 pr-2.5 py-1 rounded-lg border border-slate-800 bg-slate-900 hover:bg-slate-800 transition-all cursor-pointer"
+                className="flex items-center space-x-1.5 pl-1.5 pr-2.5 py-1 rounded-md border border-[#333333] bg-[#252526] hover:bg-[#2a2d2e] transition-all cursor-pointer text-[#cccccc] hover:text-white"
                 title={`Connected as @${githubUser.login}`}
               >
                 {githubUser.avatar_url ? (
                   <img
                     src={githubUser.avatar_url}
                     alt={githubUser.login}
-                    className="w-5 h-5 rounded-full border border-indigo-400/50"
+                    className="w-5 h-5 rounded-full border border-[#007acc]/60"
                   />
                 ) : (
-                  <div className="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-[10px] font-bold">
+                  <div className="w-5 h-5 rounded-full bg-[#007acc]/20 text-[#3794ff] flex items-center justify-center text-[10px] font-bold">
                     {githubUser.login.substring(0, 2).toUpperCase()}
                   </div>
                 )}
-                <span className="text-xs font-mono font-medium text-slate-200 hidden md:inline truncate max-w-[100px]">
+                <span className="text-xs font-mono font-medium text-[#cccccc] hidden md:inline truncate max-w-[100px]">
                   @{githubUser.login}
                 </span>
               </button>
             ) : (
               <button
                 onClick={() => setAuthModalOpen(true)}
-                className="flex items-center space-x-1.5 px-2.5 py-1 text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-all cursor-pointer shadow-sm"
+                className="flex items-center space-x-1.5 px-3 py-1 text-xs font-semibold bg-[#007acc] hover:bg-[#0e639c] text-white rounded-md transition-all cursor-pointer shadow-sm"
               >
                 <Key className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Connect PAT</span>
@@ -158,9 +165,9 @@ export function Navbar() {
           </div>
         </div>
 
-        {/* TIER 2: Clean Sub-Navigation Tab Strip (Zero Text Collision at Any Resolution) */}
-        <div className="w-full border-t border-slate-800 bg-slate-950">
-          <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 flex items-center space-x-1 sm:space-x-2 overflow-x-auto scrollbar-none h-9.5 text-xs font-medium">
+        {/* TIER 2: Clean Sub-Navigation Tab Strip (VS Code Editor Tabs Style) */}
+        <div className="w-full border-t border-[#333333] bg-[#181818]">
+          <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 flex items-center space-x-1 overflow-x-auto scrollbar-none h-9 text-xs font-medium">
             {navLinks.map((link) => {
               const isActive =
                 link.href === "/"
@@ -173,16 +180,16 @@ export function Navbar() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-t-md transition-all shrink-0 whitespace-nowrap ${
+                  className={`flex items-center space-x-1.5 px-3.5 py-1.5 transition-all shrink-0 whitespace-nowrap rounded-t-sm border-t-2 ${
                     isActive
-                      ? "text-indigo-400 font-semibold border-b-2 border-indigo-500 bg-indigo-500/10"
-                      : "text-slate-400 hover:text-white hover:bg-slate-900/60"
+                      ? "text-white font-medium border-t-[#007acc] bg-[#1e1e1e] border-x border-[#333333]"
+                      : "text-[#969696] hover:text-white hover:bg-[#2a2d2e]/50 border-t-transparent border-x border-transparent"
                   }`}
                 >
-                  <Icon className="h-3.5 w-3.5" />
+                  <Icon className={`h-3.5 w-3.5 ${isActive ? "text-[#3794ff]" : "text-[#858585]"}`} />
                   <span>{link.label}</span>
                   {link.badge && (
-                    <span className="ml-1 px-1.5 py-0.2 text-[9px] rounded-full bg-amber-500 text-slate-950 font-bold font-mono">
+                    <span className="ml-1 px-1.5 py-0.2 text-[9px] rounded-full bg-[#cca700] text-[#181818] font-bold font-mono">
                       {link.badge}
                     </span>
                   )}
@@ -194,7 +201,7 @@ export function Navbar() {
 
         {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-slate-800 bg-slate-950 px-4 py-3 space-y-2 animate-slide-up">
+          <div className="md:hidden border-t border-[#333333] bg-[#1f1f1f] px-4 py-3 space-y-2 animate-slide-up">
             <div className="grid grid-cols-2 gap-1.5">
               {navLinks.map((link) => {
                 const isActive =
@@ -209,16 +216,16 @@ export function Navbar() {
                     key={link.href}
                     href={link.href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                    className={`flex items-center space-x-2 px-3 py-2 rounded-md text-xs font-medium transition-colors ${
                       isActive
-                        ? "bg-indigo-600 text-white font-semibold"
-                        : "text-slate-300 hover:bg-slate-900 hover:text-white"
+                        ? "bg-[#007acc] text-white font-medium"
+                        : "text-[#cccccc] hover:bg-[#2a2d2e] hover:text-white"
                     }`}
                   >
                     <Icon className="h-4 w-4 shrink-0" />
                     <span>{link.label}</span>
                     {link.badge && (
-                      <span className="ml-auto px-1.5 py-0.2 text-[9px] rounded-full bg-amber-500 text-slate-950 font-bold font-mono">
+                      <span className="ml-auto px-1.5 py-0.2 text-[9px] rounded-full bg-[#cca700] text-[#181818] font-bold font-mono">
                         {link.badge}
                       </span>
                     )}

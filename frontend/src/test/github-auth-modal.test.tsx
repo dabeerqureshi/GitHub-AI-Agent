@@ -18,6 +18,13 @@ vi.mock("@/lib/api", () => ({
     synced_repositories: 5,
   }),
   disconnectGitHub: vi.fn().mockResolvedValue({ status: "disconnected" }),
+  fetchGitHubAuthStatus: vi.fn().mockResolvedValue({
+    is_connected: false,
+    user: null,
+    repo_count: 0,
+    masked_token: null,
+  }),
+  fetchRepositories: vi.fn().mockResolvedValue([]),
 }));
 
 describe("GitHubAuthModal Component", () => {

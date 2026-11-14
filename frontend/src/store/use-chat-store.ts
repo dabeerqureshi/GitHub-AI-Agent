@@ -320,7 +320,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         githubUser: res.user,
       });
       // Immediately refresh repos
-      await get().loadRepositories();
+      await get().loadRepositories(true);
     } catch (err: any) {
       set({ error: err.message || "Failed to authenticate GitHub token" });
       throw err;

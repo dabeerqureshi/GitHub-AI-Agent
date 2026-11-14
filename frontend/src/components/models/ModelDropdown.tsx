@@ -155,46 +155,46 @@ export function ModelDropdown({
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         disabled={isSwitching}
-        className={`flex items-center space-x-2 rounded-lg border border-slate-700 bg-slate-900 hover:bg-slate-800 text-slate-200 transition-all cursor-pointer shadow-sm group select-none ${
+        className={`flex items-center space-x-2 rounded-md border border-[#3c3c3c] bg-[#252526] hover:bg-[#2a2d2e] hover:border-[#007acc] text-[#cccccc] hover:text-white transition-all cursor-pointer shadow-sm group select-none ${
           compact ? "px-2.5 py-1 text-xs" : "px-3 py-1.5 text-xs sm:text-sm"
         }`}
         title={`Active Engine: ${currentMeta.name} (${currentModel}) - Click to switch`}
       >
         {isSwitching ? (
-          <Loader2 className="h-4 w-4 animate-spin text-indigo-400" />
+          <Loader2 className="h-4 w-4 animate-spin text-[#3794ff]" />
         ) : (
-          <CurrentIcon className="h-4 w-4 text-indigo-400 group-hover:scale-110 transition-transform shrink-0" />
+          <CurrentIcon className="h-4 w-4 text-[#3794ff] group-hover:scale-110 transition-transform shrink-0" />
         )}
         <div className="flex items-center space-x-1.5 font-medium min-w-0">
-          <span className="text-slate-300 hidden sm:inline">{currentMeta.name}:</span>
+          <span className="text-[#858585] hidden sm:inline">{currentMeta.name}:</span>
           <span className="text-white font-semibold truncate max-w-[100px] sm:max-w-[140px]">
             {currentModel.split("/").pop()}
           </span>
         </div>
         <ChevronDown
-          className={`h-3.5 w-3.5 text-slate-400 transition-transform duration-200 shrink-0 ${
+          className={`h-3.5 w-3.5 text-[#858585] transition-transform duration-200 shrink-0 ${
             isOpen ? "rotate-180 text-white" : ""
           }`}
         />
       </button>
 
-      {/* Dropdown Menu (100% Solid Opaque Slate, Shadow Elevation) */}
+      {/* Dropdown Menu (100% Solid Opaque VS Code Surface, Shadow Elevation) */}
       {isOpen && (
         <div
-          className={`absolute ${positionClasses} w-[min(24rem,calc(100vw-1.5rem))] rounded-xl border border-slate-700 bg-slate-900 shadow-2xl shadow-black/90 z-50 overflow-hidden animate-slide-up text-slate-200`}
+          className={`absolute ${positionClasses} w-[min(24rem,calc(100vw-1.5rem))] rounded-md border border-[#3c3c3c] bg-[#252526] shadow-2xl shadow-black/90 z-50 overflow-hidden animate-slide-up text-[#cccccc]`}
         >
           {/* Dropdown Header */}
-          <div className="p-3 border-b border-slate-800 bg-slate-950 flex items-center justify-between">
+          <div className="p-3 border-b border-[#333333] bg-[#1f1f1f] flex items-center justify-between">
             <div>
               <h4 className="text-xs font-semibold text-white tracking-wide">Select AI Model</h4>
-              <p className="text-[11px] text-slate-400">Choose engine provider &amp; model for chat</p>
+              <p className="text-[11px] text-[#858585]">Choose engine provider &amp; model for chat</p>
             </div>
             <button
               onClick={() => {
                 setIsOpen(false);
                 setModelModalOpen(true);
               }}
-              className="flex items-center space-x-1 text-[11px] text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 px-2 py-1 rounded border border-indigo-500/30 transition-colors cursor-pointer"
+              className="flex items-center space-x-1 text-[11px] text-[#3794ff] hover:text-white bg-[#007acc]/15 hover:bg-[#007acc]/25 px-2 py-1 rounded border border-[#007acc]/30 transition-colors cursor-pointer"
               title="Configure API Keys &amp; Advanced Settings"
             >
               <Key className="h-3 w-3" />
@@ -203,7 +203,7 @@ export function ModelDropdown({
           </div>
 
           {/* Provider Tabs */}
-          <div className="grid grid-cols-5 p-1.5 bg-slate-950 gap-1 border-b border-slate-800">
+          <div className="grid grid-cols-5 p-1.5 bg-[#1e1e1e] gap-1 border-b border-[#333333]">
             {PROVIDERS.map((p) => {
               const Icon = p.icon;
               const isActive = activeTab === p.id;
@@ -214,10 +214,10 @@ export function ModelDropdown({
                 <button
                   key={p.id}
                   onClick={() => setActiveTab(p.id)}
-                  className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-md text-[10px] font-medium transition-all cursor-pointer relative ${
+                  className={`flex flex-col items-center justify-center py-1.5 px-1 rounded text-[10px] font-medium transition-all cursor-pointer relative ${
                     isActive
-                      ? "bg-indigo-600 text-white shadow-sm font-semibold"
-                      : "text-slate-400 hover:text-white hover:bg-slate-800"
+                      ? "bg-[#007acc] text-white shadow-sm font-semibold"
+                      : "text-[#858585] hover:text-white hover:bg-[#2a2d2e]"
                   }`}
                   title={`${p.name} ${isConfigured ? "(Ready)" : "(Needs Key)"}`}
                 >
@@ -226,7 +226,7 @@ export function ModelDropdown({
                   {isConfigured && (
                     <span
                       className={`absolute top-1 right-1 w-1.5 h-1.5 rounded-full ${
-                        isActive ? "bg-white" : "bg-emerald-400"
+                        isActive ? "bg-white" : "bg-[#73c991]"
                       }`}
                     />
                   )}
@@ -236,24 +236,24 @@ export function ModelDropdown({
           </div>
 
           {/* Models List for Selected Provider */}
-          <div className="p-2 max-h-60 overflow-y-auto space-y-1 bg-slate-900">
-            <div className="flex items-center justify-between px-2 py-1 text-[11px] text-slate-400">
-              <span className="font-semibold text-slate-300">
+          <div className="p-2 max-h-60 overflow-y-auto space-y-1 bg-[#252526]">
+            <div className="flex items-center justify-between px-2 py-1 text-[11px] text-[#858585]">
+              <span className="font-semibold text-white">
                 {PROVIDERS.find((p) => p.id === activeTab)?.name} Models
               </span>
               {selectedProviderConfig?.has_key ? (
-                <span className="text-emerald-400 text-[10px] flex items-center">
+                <span className="text-[#73c991] text-[10px] flex items-center">
                   <Check className="h-3 w-3 mr-0.5" /> Ready
                 </span>
               ) : activeTab === "ollama" ? (
-                <span className="text-blue-400 text-[10px]">Local Daemon</span>
+                <span className="text-[#3794ff] text-[10px]">Local Daemon</span>
               ) : (
                 <button
                   onClick={() => {
                     setIsOpen(false);
                     setModelModalOpen(true);
                   }}
-                  className="text-amber-400 text-[10px] hover:underline flex items-center cursor-pointer"
+                  className="text-[#cca700] text-[10px] hover:underline flex items-center cursor-pointer"
                 >
                   <Key className="h-2.5 w-2.5 mr-0.5" /> Setup Key
                 </button>
@@ -267,30 +267,30 @@ export function ModelDropdown({
                 <button
                   key={m}
                   onClick={() => handleSelectModel(activeTab, m)}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-all text-left cursor-pointer ${
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-xs transition-all text-left cursor-pointer ${
                     isCurrent
-                      ? "bg-indigo-600/20 text-indigo-300 border border-indigo-500/40 font-semibold"
-                      : "hover:bg-slate-800 text-slate-200 hover:text-white"
+                      ? "bg-[#007acc]/20 text-[#3794ff] border border-[#007acc]/50 font-semibold"
+                      : "hover:bg-[#2a2d2e] text-[#cccccc] hover:text-white"
                   }`}
                 >
-                  <span className="truncate pr-2">{m}</span>
-                  {isCurrent && <Check className="h-3.5 w-3.5 text-indigo-400 shrink-0" />}
+                  <span className="truncate pr-2 font-mono text-[11px]">{m}</span>
+                  {isCurrent && <Check className="h-3.5 w-3.5 text-[#3794ff] shrink-0" />}
                 </button>
               );
             })}
           </div>
 
           {/* Footer with active switch feedback */}
-          <div className="p-2.5 bg-slate-950 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
+          <div className="p-2.5 bg-[#1f1f1f] border-t border-[#333333] flex items-center justify-between text-[11px] text-[#858585]">
             <span className="truncate">
-              Active: <strong className="text-white">{currentModel}</strong>
+              Active: <strong className="text-white font-mono">{currentModel}</strong>
             </span>
             <button
               onClick={() => {
                 setIsOpen(false);
                 setModelModalOpen(true);
               }}
-              className="text-indigo-400 hover:text-indigo-300 hover:underline flex items-center cursor-pointer shrink-0 ml-2 font-medium"
+              className="text-[#3794ff] hover:underline flex items-center cursor-pointer shrink-0 ml-2 font-medium"
             >
               <Settings2 className="h-3 w-3 mr-1" /> All Settings
             </button>

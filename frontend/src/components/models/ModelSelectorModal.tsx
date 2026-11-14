@@ -178,29 +178,29 @@ export function ModelSelectorModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in font-sans">
-      <div className="relative w-full max-w-2xl p-6 rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl animate-slide-up text-slate-100 max-h-[92vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-fade-in font-sans">
+      <div className="relative w-full max-w-2xl p-6 rounded-lg bg-[#252526] border border-[#3c3c3c] shadow-2xl animate-slide-up text-[#cccccc] max-h-[92vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-800">
+        <div className="flex items-center justify-between pb-4 mb-4 border-b border-[#333333]">
           <div className="flex items-center space-x-3">
-            <div className="p-2.5 rounded-xl bg-indigo-500/15 text-indigo-400 border border-indigo-500/30">
+            <div className="p-2.5 rounded-md bg-[#007acc]/15 text-[#3794ff] border border-[#007acc]/30">
               <Cpu className="h-5 w-5" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
                 <h3 className="font-semibold text-base tracking-tight text-white">AI Engine &amp; Model Configuration</h3>
-                <span className="text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded-full font-mono">
+                <span className="text-[10px] bg-[#007acc]/20 text-[#3794ff] border border-[#007acc]/30 px-2 py-0.5 rounded font-mono">
                   Multi-LLM
                 </span>
               </div>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-[#858585] mt-0.5">
                 Configure AI providers with fallback and local execution options
               </p>
             </div>
           </div>
           <button
             onClick={() => setModelModalOpen(false)}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+            className="p-1.5 rounded-md text-[#858585] hover:text-white hover:bg-[#2a2d2e] transition-colors cursor-pointer"
           >
             <X className="h-4 w-4" />
           </button>
@@ -218,21 +218,21 @@ export function ModelSelectorModal() {
                 key={pid}
                 type="button"
                 onClick={() => handleProviderChange(pid)}
-                className={`flex flex-col items-center justify-center p-3 rounded-xl border text-center transition-all cursor-pointer ${
+                className={`flex flex-col items-center justify-center p-3 rounded-md border text-center transition-all cursor-pointer ${
                   isSelected
-                    ? "bg-indigo-600/20 border-indigo-500 text-white font-semibold shadow-xs"
-                    : "bg-slate-950 border-slate-800 hover:bg-slate-800 text-slate-400 hover:text-white"
+                    ? "bg-[#007acc]/20 border-[#007acc] text-white font-semibold shadow-xs"
+                    : "bg-[#1e1e1e] border-[#333333] hover:bg-[#2a2d2e] text-[#858585] hover:text-white"
                 }`}
               >
-                <Icon className="h-5 w-5 mb-1 text-indigo-400" />
+                <Icon className="h-5 w-5 mb-1 text-[#3794ff]" />
                 <span className="text-xs font-medium">{meta.name}</span>
                 <span
                   className={`text-[9px] mt-1.5 font-mono px-2 py-0.5 rounded-full ${
                     isConfigured
-                      ? "text-emerald-400 bg-emerald-500/15 border border-emerald-500/25"
+                      ? "text-[#73c991] bg-[#73c991]/15 border border-[#73c991]/25"
                       : pid === "ollama"
-                      ? "text-blue-400 bg-blue-500/15"
-                      : "text-slate-500 bg-slate-900"
+                      ? "text-[#3794ff] bg-[#3794ff]/15"
+                      : "text-[#858585] bg-[#252526]"
                   }`}
                 >
                   {isConfigured ? "Ready" : pid === "ollama" ? "Local" : "No Key"}
@@ -245,12 +245,12 @@ export function ModelSelectorModal() {
         {/* Form Body */}
         <form onSubmit={handleSave} className="space-y-4">
           {/* Active Provider Info Banner */}
-          <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs">
+          <div className="flex items-center justify-between p-3.5 rounded-md bg-[#1e1e1e] border border-[#333333] text-xs">
             <div className="flex items-center space-x-2">
-              <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-indigo-500/15 border border-indigo-500/30 text-indigo-300">
+              <span className="px-2.5 py-1 rounded text-xs font-semibold bg-[#007acc]/15 border border-[#007acc]/30 text-[#3794ff]">
                 {PROVIDER_METADATA[selectedProvider]?.name}
               </span>
-              <span className="text-slate-400 text-xs truncate max-w-[280px]">
+              <span className="text-[#858585] text-xs truncate max-w-[280px]">
                 {currentProviderConfig?.description}
               </span>
             </div>
@@ -260,7 +260,7 @@ export function ModelSelectorModal() {
                 href={PROVIDER_METADATA[selectedProvider].link}
                 target="_blank"
                 rel="noreferrer"
-                className="text-indigo-400 hover:text-indigo-300 hover:underline text-xs font-medium shrink-0 ml-2"
+                className="text-[#3794ff] hover:underline text-xs font-medium shrink-0 ml-2"
               >
                 Get API Key &rarr;
               </a>
@@ -269,9 +269,9 @@ export function ModelSelectorModal() {
 
           {/* Model Selector */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-medium text-slate-300 flex items-center justify-between">
+            <label className="block text-xs font-medium text-[#cccccc] flex items-center justify-between">
               <span>Select Model</span>
-              <span className="text-[11px] text-slate-400 font-mono">
+              <span className="text-[11px] text-[#858585] font-mono">
                 Active: {currentProviderConfig?.model || selectedModel}
               </span>
             </label>
@@ -282,10 +282,10 @@ export function ModelSelectorModal() {
                   setSelectedModel(e.target.value);
                   setCustomModel("");
                 }}
-                className="w-full px-3 py-2 text-xs bg-slate-950 border border-slate-800 rounded-lg text-white font-mono focus:outline-none focus:border-indigo-500"
+                className="w-full px-3 py-2 text-xs bg-[#1e1e1e] border border-[#333333] rounded-md text-white font-mono focus:outline-none focus:border-[#007acc]"
               >
                 {supportedModels.map((m) => (
-                  <option key={m} value={m} className="bg-slate-900 text-white">
+                  <option key={m} value={m} className="bg-[#252526] text-white">
                     {m}
                   </option>
                 ))}
@@ -296,7 +296,7 @@ export function ModelSelectorModal() {
                 value={customModel}
                 onChange={(e) => setCustomModel(e.target.value)}
                 placeholder="Or enter custom model ID..."
-                className="w-full px-3 py-2 text-xs bg-slate-950 border border-slate-800 rounded-lg text-white font-mono focus:outline-none focus:border-indigo-500 placeholder:text-slate-500"
+                className="w-full px-3 py-2 text-xs bg-[#1e1e1e] border border-[#333333] rounded-md text-white font-mono focus:outline-none focus:border-[#007acc] placeholder:text-[#858585]"
               />
             </div>
           </div>
@@ -304,17 +304,17 @@ export function ModelSelectorModal() {
           {/* API Key Input (if not local Ollama) */}
           {selectedProvider !== "ollama" ? (
             <div className="space-y-1.5">
-              <label className="block text-xs font-medium text-slate-300 flex items-center justify-between">
+              <label className="block text-xs font-medium text-[#cccccc] flex items-center justify-between">
                 <span>API Key</span>
                 {currentProviderConfig?.has_key && (
-                  <span className="text-[11px] text-emerald-400 font-mono flex items-center">
+                  <span className="text-[11px] text-[#73c991] font-mono flex items-center">
                     <CheckCircle2 className="h-3 w-3 mr-1" />
                     Key saved ({currentProviderConfig.masked_key})
                   </span>
                 )}
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#858585]">
                   <Key className="h-4 w-4" />
                 </div>
                 <input
@@ -326,20 +326,20 @@ export function ModelSelectorModal() {
                       ? "Enter new key to update, or leave blank to keep existing"
                       : `Enter ${PROVIDER_METADATA[selectedProvider]?.name} API key...`
                   }
-                  className="w-full pl-9 pr-10 py-2 text-xs font-mono bg-slate-950 border border-slate-800 rounded-lg focus:outline-none focus:border-indigo-500 transition-all text-white placeholder:text-slate-500"
+                  className="w-full pl-9 pr-10 py-2 text-xs font-mono bg-[#1e1e1e] border border-[#333333] rounded-md focus:outline-none focus:border-[#007acc] transition-all text-white placeholder:text-[#858585]"
                 />
                 <button
                   type="button"
                   onClick={() => setShowKey(!showKey)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-white transition-colors cursor-pointer"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#858585] hover:text-white transition-colors cursor-pointer"
                 >
                   {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
             </div>
           ) : (
-            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-400 flex items-center space-x-2.5">
-              <ShieldCheck className="h-5 w-5 text-emerald-400 shrink-0" />
+            <div className="p-3.5 rounded-md bg-[#1e1e1e] border border-[#333333] text-xs text-[#858585] flex items-center space-x-2.5">
+              <ShieldCheck className="h-5 w-5 text-[#73c991] shrink-0" />
               <span>Ollama runs completely locally on your machine. No API key required.</span>
             </div>
           )}
@@ -352,9 +352,9 @@ export function ModelSelectorModal() {
                 id="cloud-consent"
                 checked={allowCloudCode}
                 onChange={(e) => setAllowCloudCode(e.target.checked)}
-                className="rounded border-slate-800 bg-slate-950 text-indigo-600 focus:ring-indigo-500 h-4 w-4"
+                className="rounded border-[#333333] bg-[#1e1e1e] text-[#007acc] focus:ring-[#007acc] h-4 w-4"
               />
-              <label htmlFor="cloud-consent" className="text-xs text-slate-400 cursor-pointer">
+              <label htmlFor="cloud-consent" className="text-xs text-[#858585] cursor-pointer">
                 Consent to send repository diffs &amp; source queries to {PROVIDER_METADATA[selectedProvider]?.name}
               </label>
             </div>
@@ -363,10 +363,10 @@ export function ModelSelectorModal() {
           {/* Test Status Feedback */}
           {testResult && (
             <div
-              className={`p-3 rounded-lg border text-xs flex items-center space-x-2.5 animate-fade-in ${
+              className={`p-3 rounded-md border text-xs flex items-center space-x-2.5 animate-fade-in ${
                 testResult.success
-                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
-                  : "bg-rose-500/10 border-rose-500/30 text-rose-400"
+                  ? "bg-[#73c991]/10 border-[#73c991]/30 text-[#73c991]"
+                  : "bg-[#f14c4c]/10 border-[#f14c4c]/30 text-[#f14c4c]"
               }`}
             >
               {testResult.success ? (
@@ -379,35 +379,35 @@ export function ModelSelectorModal() {
           )}
 
           {errorMessage && (
-            <div className="p-3 rounded-lg border border-rose-500/30 bg-rose-500/10 text-rose-400 text-xs flex items-center space-x-2">
+            <div className="p-3 rounded-md border border-[#f14c4c]/30 bg-[#f14c4c]/10 text-[#f14c4c] text-xs flex items-center space-x-2">
               <AlertCircle className="h-4 w-4 shrink-0" />
               <span>{errorMessage}</span>
             </div>
           )}
 
           {successMessage && (
-            <div className="p-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-xs flex items-center space-x-2">
+            <div className="p-3 rounded-md border border-[#73c991]/30 bg-[#73c991]/10 text-[#73c991] text-xs flex items-center space-x-2">
               <CheckCircle2 className="h-4 w-4 shrink-0" />
               <span>{successMessage}</span>
             </div>
           )}
 
           {/* Footer Actions */}
-          <div className="flex items-center justify-between pt-3 border-t border-slate-800">
+          <div className="flex items-center justify-between pt-3 border-t border-[#333333]">
             <button
               type="button"
               onClick={handleTestConnection}
               disabled={isTesting}
-              className="flex items-center space-x-1.5 px-3.5 py-2 text-xs font-medium bg-slate-950 hover:bg-slate-800 text-slate-200 rounded-lg transition-all cursor-pointer border border-slate-800"
+              className="flex items-center space-x-1.5 px-3.5 py-2 text-xs font-medium bg-[#1e1e1e] hover:bg-[#2a2d2e] text-[#cccccc] hover:text-white rounded-md transition-all cursor-pointer border border-[#333333]"
             >
               {isTesting ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin text-indigo-400" />
+                  <Loader2 className="h-4 w-4 animate-spin text-[#3794ff]" />
                   <span>Probing...</span>
                 </>
               ) : (
                 <>
-                  <Zap className="h-4 w-4 text-indigo-400" />
+                  <Zap className="h-4 w-4 text-[#3794ff]" />
                   <span>Test Connection</span>
                 </>
               )}
@@ -417,14 +417,14 @@ export function ModelSelectorModal() {
               <button
                 type="button"
                 onClick={() => setModelModalOpen(false)}
-                className="px-3.5 py-2 text-xs font-medium text-slate-400 hover:text-white rounded-lg transition-colors cursor-pointer"
+                className="px-3.5 py-2 text-xs font-medium text-[#858585] hover:text-white rounded-md transition-colors cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSaving}
-                className="flex items-center space-x-1.5 px-4 py-2 text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-40 rounded-lg shadow-md transition-all cursor-pointer"
+                className="flex items-center space-x-1.5 px-4 py-2 text-xs font-semibold bg-[#007acc] hover:bg-[#0e639c] text-white disabled:opacity-40 rounded-md shadow-md transition-all cursor-pointer"
               >
                 {isSaving ? (
                   <>

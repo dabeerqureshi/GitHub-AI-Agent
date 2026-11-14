@@ -292,15 +292,147 @@ class GitHubMCPClient:
                 async with ClientSession(read_stream, write_stream) as session:
                     await session.initialize()
                     result = await session.call_tool(name, arguments)
+                    is_err = getattr(result, "is_error", getattr(result, "isError", False))
                     return {
                         "tool": name,
                         "content": [c.text if hasattr(c, "text") else str(c) for c in result.content],
-                        "is_error": result.isError,
+                        "is_error": is_err,
                         "rate_limit": self.get_rate_limit(),
                     }
         except Exception:
+            # First try direct GitHub REST API if token is present
+            rest_res = await self._execute_github_api(name, arguments)
+            if rest_res is not None:
+                return rest_res
             # Resilient fallback to deterministic mock execution when network or token fails
             return self._execute_mock(name, arguments)
+
+    async def _execute_github_api(self, name: str, arguments: dict[str, Any]) -> dict[str, Any] | None:
+        """Execute against GitHub REST API when token is available."""
+        if not self.github_token:
+            return None
+        import httpx
+
+        headers = {
+            "Authorization": f"Bearer {self.github_token}",
+            "Accept": "application/vnd.github+json",
+            "User-Agent": "GitHub-AI-Workspace/2.0",
+        }
+        owner = arguments.get("owner", "")
+        repo = arguments.get("repo", "")
+        base_url = "https://api.github.com"
+
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                if name == "list_repositories":
+                    r = await client.get(f"{base_url}/user/repos?sort=updated&per_page=30", headers=headers)
+                    if r.status_code == 200:
+                        repos = [
+                            f"{rp.get('full_name')} ({'private' if rp.get('private') else 'public'}, stars: {rp.get('stargazers_count', 0)}, default: {rp.get('default_branch')})"
+                            for rp in r.json()
+                        ]
+                        return {"tool": name, "content": repos or ["No repositories found."], "is_error": False}
+                elif name in ("list_issues", "search_issues"):
+                    query = arguments.get("query", "")
+                    state = arguments.get("state", "open")
+                    assignee = arguments.get("assignee")
+                    if query:
+                        q = f"{query} repo:{owner}/{repo} is:issue"
+                        r = await client.get(f"{base_url}/search/issues?q={q}", headers=headers)
+                        if r.status_code == 200:
+                            items = r.json().get("items", [])
+                            lines = [
+                                f"Issue #{i['number']} [{i['state'].upper()}]: {i['title']} (Assignee: @{i.get('assignee', {}).get('login', 'none') if i.get('assignee') else 'none'}, Labels: {', '.join(l['name'] for l in i.get('labels', []))})"
+                                for i in items
+                            ]
+                            return {"tool": name, "content": lines or ["No matching issues found."], "is_error": False}
+                    else:
+                        params: dict[str, Any] = {"state": state, "per_page": arguments.get("per_page", 30), "page": arguments.get("page", 1)}
+                        if assignee:
+                            params["assignee"] = assignee
+                        r = await client.get(f"{base_url}/repos/{owner}/{repo}/issues", headers=headers, params=params)
+                        if r.status_code == 200:
+                            issues = [i for i in r.json() if "pull_request" not in i]
+                            lines = [
+                                f"Issue #{i['number']} [{i['state'].upper()}]: {i['title']} (Assignee: @{i.get('assignee', {}).get('login', 'none') if i.get('assignee') else 'none'}, Labels: {', '.join(l['name'] for l in i.get('labels', []))})"
+                                for i in issues
+                            ]
+                            return {"tool": name, "content": lines or [f"No {state} issues found in {owner}/{repo}."], "is_error": False}
+                elif name == "get_issue":
+                    num = arguments.get("issue_number")
+                    r = await client.get(f"{base_url}/repos/{owner}/{repo}/issues/{num}", headers=headers)
+                    if r.status_code == 200:
+                        i = r.json()
+                        return {
+                            "tool": name,
+                            "content": [f"Issue #{i['number']} [{i['state'].upper()}]: {i['title']}\nAuthor: @{i['user']['login']}\nBody: {i.get('body', '')}\nLabels: {', '.join(l['name'] for l in i.get('labels', []))}"],
+                            "is_error": False,
+                        }
+                elif name == "list_pull_requests":
+                    state = arguments.get("state", "open")
+                    r = await client.get(f"{base_url}/repos/{owner}/{repo}/pulls?state={state}", headers=headers)
+                    if r.status_code == 200:
+                        prs = r.json()
+                        lines = [
+                            f"PR #{p['number']} [{p['state'].upper()}]: {p['title']} (Author: @{p['user']['login']}, {p['head']['ref']} -> {p['base']['ref']})"
+                            for p in prs
+                        ]
+                        return {"tool": name, "content": lines or [f"No {state} pull requests found in {owner}/{repo}."], "is_error": False}
+                elif name == "get_pull_request":
+                    num = arguments.get("pull_number")
+                    r = await client.get(f"{base_url}/repos/{owner}/{repo}/pulls/{num}", headers=headers)
+                    if r.status_code == 200:
+                        p = r.json()
+                        return {
+                            "tool": name,
+                            "content": [f"PR #{p['number']} [{p['state'].upper()}]: {p['title']}\nAuthor: @{p['user']['login']}\nBranch: {p['head']['ref']} -> {p['base']['ref']}\nMergeable: {p.get('mergeable')}\nBody: {p.get('body', '')}"],
+                            "is_error": False,
+                        }
+                elif name == "get_pull_request_diff":
+                    num = arguments.get("pull_number")
+                    diff_headers = {**headers, "Accept": "application/vnd.github.v3.diff"}
+                    r = await client.get(f"{base_url}/repos/{owner}/{repo}/pulls/{num}", headers=diff_headers)
+                    if r.status_code == 200:
+                        return {"tool": name, "content": [r.text], "is_error": False}
+                elif name in ("get_commit", "list_commits"):
+                    ref = arguments.get("commit_sha") or arguments.get("ref")
+                    if ref:
+                        r = await client.get(f"{base_url}/repos/{owner}/{repo}/commits/{ref}", headers=headers)
+                        if r.status_code == 200:
+                            c = r.json()
+                            line = f"Commit {c['sha'][:7]}: {c['commit']['message'].splitlines()[0]} (Author: {c['commit']['author']['name']}, Date: {c['commit']['author']['date']})"
+                            return {"tool": name, "content": [line], "is_error": False}
+                    r = await client.get(f"{base_url}/repos/{owner}/{repo}/commits?per_page=20", headers=headers)
+                    if r.status_code == 200:
+                        commits = r.json()
+                        lines = [
+                            f"Commit {c['sha'][:7]}: {c['commit']['message'].splitlines()[0]} (Author: {c['commit']['author']['name']}, Date: {c['commit']['author']['date']})"
+                            for c in commits
+                        ]
+                        return {"tool": name, "content": lines or ["No commits found."], "is_error": False}
+                elif name == "list_workflows":
+                    r = await client.get(f"{base_url}/repos/{owner}/{repo}/actions/workflows", headers=headers)
+                    if r.status_code == 200:
+                        wfs = r.json().get("workflows", [])
+                        lines = [f"Workflow '{w['name']}' (ID: {w['id']}, State: {w['state']}, Path: {w['path']})" for w in wfs]
+                        return {"tool": name, "content": lines or [f"No GitHub Actions workflows configured in {owner}/{repo}."], "is_error": False}
+                elif name == "list_workflow_runs":
+                    r = await client.get(f"{base_url}/repos/{owner}/{repo}/actions/runs?per_page=10", headers=headers)
+                    if r.status_code == 200:
+                        runs = r.json().get("workflow_runs", [])
+                        lines = [
+                            f"Run #{rn.get('run_number')} (ID: {rn['id']}): {rn.get('name')} [{rn['status']}/{rn.get('conclusion', 'in_progress')}] Branch: {rn.get('head_branch')}"
+                            for rn in runs
+                        ]
+                        return {"tool": name, "content": lines or [f"No workflow runs found in {owner}/{repo}."], "is_error": False}
+                elif name == "get_authenticated_user":
+                    r = await client.get(f"{base_url}/user", headers=headers)
+                    if r.status_code == 200:
+                        u = r.json()
+                        return {"tool": name, "content": [f"User: @{u.get('login')} ({u.get('name')}), Public repos: {u.get('public_repos')}"], "is_error": False}
+        except Exception:
+            pass
+        return None
 
     def _execute_mock(self, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         """Offline mock response for testing or when token is not configured."""

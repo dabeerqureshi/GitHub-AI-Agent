@@ -35,8 +35,10 @@ async def fetch_github_user_and_repos(
 ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     """
     Query GitHub API with the given token to retrieve user profile and all accessible repositories.
-    Supports Fine-Grained Personal Access Tokens (PATs) and classic PATs.
+    Optimized for high-speed concurrent execution (supports Fine-Grained & classic PATs).
     """
+    import asyncio
+
     clean_token = token.strip()
     headers = {
         "Authorization": f"Bearer {clean_token}",
@@ -48,76 +50,97 @@ async def fetch_github_user_and_repos(
     user_data: dict[str, Any] = {}
     raw_repos: list[dict[str, Any]] = []
 
-    async with httpx.AsyncClient(timeout=15.0) as client:
-        # 1. Fetch user profile
-        try:
-            user_res = await client.get("https://api.github.com/user", headers=headers)
-            if user_res.status_code == 200:
-                user_data = user_res.json()
-            elif user_res.status_code in (401, 403) and "Bad credentials" in user_res.text:
-                raise ValueError("Invalid GitHub Personal Access Token (Bad credentials). Please check your token.")
-            else:
-                user_data = {"login": "github-user", "name": "Authenticated Developer"}
-        except (httpx.RequestError, httpx.TimeoutException) as exc:
-            logger.warning("Could not reach GitHub /user endpoint: %s", str(exc))
-            user_data = {"login": "github-user", "name": "Authenticated Developer (Offline Mode)"}
+    # Detect local git repo as immediate fallback target if none provided
+    effective_target = target_repo.strip() if target_repo else detect_local_git_repo()
 
-        # 2. Fetch accessible user repositories
-        try:
-            repos_res = await client.get(
-                "https://api.github.com/user/repos?per_page=100&sort=updated&affiliation=owner,collaborator,organization_member",
-                headers=headers,
-            )
-            if repos_res.status_code == 200:
-                items = repos_res.json()
-                if isinstance(items, list):
-                    raw_repos.extend(items)
-            else:
-                repos_res_alt = await client.get(
+    timeout_cfg = httpx.Timeout(5.0, connect=3.0, read=4.5)
+
+    async with httpx.AsyncClient(timeout=timeout_cfg) as client:
+        # Define concurrent fetch tasks
+        async def fetch_user() -> dict[str, Any] | None:
+            try:
+                res = await client.get("https://api.github.com/user", headers=headers)
+                if res.status_code == 200:
+                    return res.json()
+                if res.status_code in (401, 403) and "Bad credentials" in res.text:
+                    raise ValueError("Invalid GitHub Personal Access Token (Bad credentials). Please check your token.")
+            except ValueError:
+                raise
+            except Exception as e:
+                logger.debug("Fetch user profile soft error: %s", e)
+            return None
+
+        async def fetch_repos() -> list[dict[str, Any]]:
+            try:
+                res = await client.get(
                     "https://api.github.com/user/repos?per_page=100&sort=updated",
                     headers=headers,
                 )
-                if repos_res_alt.status_code == 200:
-                    items = repos_res_alt.json()
-                    if isinstance(items, list):
-                        raw_repos.extend(items)
-        except Exception as exc:
-            logger.warning("Error fetching /user/repos: %s", str(exc))
+                if res.status_code == 200:
+                    data = res.json()
+                    if isinstance(data, list):
+                        return data
+            except Exception as e:
+                logger.debug("Fetch user repos soft error: %s", e)
+            return []
 
-        # 3. If login is known, query /users/{login}/repos for public/accessible repos
-        login = user_data.get("login")
-        if login and login not in ("github-user", "unknown"):
+        async def fetch_target(target: str) -> dict[str, Any] | None:
+            if "/" not in target:
+                return None
             try:
-                user_public_repos_res = await client.get(
-                    f"https://api.github.com/users/{login}/repos?per_page=100&sort=updated",
-                    headers=headers,
-                )
-                if user_public_repos_res.status_code == 200:
-                    items = user_public_repos_res.json()
-                    if isinstance(items, list):
-                        raw_repos.extend(items)
-            except Exception as exc:
-                logger.warning("Error fetching /users/%s/repos: %s", login, str(exc))
+                res = await client.get(f"https://api.github.com/repos/{target}", headers=headers)
+                if res.status_code == 200:
+                    return res.json()
+            except Exception as e:
+                logger.debug("Fetch target repo soft error: %s", e)
+            return None
 
-        # 4. If target_repo specified in payload, fetch directly
-        if target_repo:
-            target = target_repo.strip()
-            if "/" in target:
-                try:
-                    target_res = await client.get(f"https://api.github.com/repos/{target}", headers=headers)
-                    if target_res.status_code == 200:
-                        raw_repos.append(target_res.json())
-                except Exception:
-                    pass
+        # Execute requests in parallel
+        tasks = [fetch_user(), fetch_repos()]
+        if effective_target:
+            tasks.append(fetch_target(effective_target))
 
-        # 5. Fallback identity if login is still generic
-        if user_data.get("login") in ("github-user", "unknown") and raw_repos:
-            first_owner = raw_repos[0].get("owner", {}).get("login")
-            if first_owner:
-                user_data["login"] = first_owner
-                user_data["name"] = first_owner
-                user_data["avatar_url"] = raw_repos[0].get("owner", {}).get("avatar_url")
-                user_data["html_url"] = f"https://github.com/{first_owner}"
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        user_result = results[0]
+        if isinstance(user_result, Exception):
+            raise user_result
+        if isinstance(user_result, dict):
+            user_data = user_result
+
+        repos_result = results[1]
+        if isinstance(repos_result, list):
+            raw_repos.extend(repos_result)
+
+        if len(results) > 2:
+            target_result = results[2]
+            if isinstance(target_result, dict) and target_result.get("full_name"):
+                if not any(r.get("full_name") == target_result["full_name"] for r in raw_repos):
+                    raw_repos.append(target_result)
+
+        # Fallback profile inference for Fine-Grained PATs (which often omit /user permissions)
+        if not user_data or user_data.get("login") in ("github-user", "unknown", None):
+            if raw_repos:
+                first_owner = raw_repos[0].get("owner", {}).get("login")
+                if first_owner:
+                    user_data = {
+                        "login": first_owner,
+                        "name": first_owner,
+                        "avatar_url": raw_repos[0].get("owner", {}).get("avatar_url"),
+                        "html_url": f"https://github.com/{first_owner}",
+                    }
+            elif effective_target and "/" in effective_target:
+                owner = effective_target.split("/")[0]
+                user_data = {
+                    "login": owner,
+                    "name": owner,
+                    "html_url": f"https://github.com/{owner}",
+                }
+            else:
+                user_data = {
+                    "login": "github-user",
+                    "name": "Authenticated Developer",
+                }
 
     return user_data, raw_repos
 

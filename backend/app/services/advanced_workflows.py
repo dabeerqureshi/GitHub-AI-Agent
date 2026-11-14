@@ -520,3 +520,51 @@ class AdvancedWorkflowsService:
             "bugfixes_count": len(bugfixes),
             "changelog": "\n".join(changelog),
         }
+
+    # 13. Security and Secret Scanner
+    def scan_security_and_secrets(self, owner: str, repo: str) -> dict[str, Any]:
+        """Audit repository for hardcoded secrets, credentials, and security risks without exposing discovered values."""
+        import re
+
+        self.intelligence._resolve_repo(owner, repo)
+        repo_dir = self.git_manager._resolve_repo_path(owner, repo)
+
+        secret_patterns = [
+            ("GitHub PAT / Secret", re.compile(r"(ghp_[a-zA-Z0-9]{36}|github_pat_[a-zA-Z0-9_]{82})")),
+            ("Generic API Key", re.compile(r"""(?:api[_-]?key|access[_-]?token)\s*[:=]\s*["']([A-Za-z0-9_\-]{20,})["']""", re.IGNORECASE)),
+            ("Private Key Header", re.compile(r"-----BEGIN (?:RSA |EC )?PRIVATE KEY-----")),
+            ("Password Assignment", re.compile(r"""(?:password|passwd|pwd)\s*[:=]\s*["']([^"']{8,})["']""", re.IGNORECASE)),
+        ]
+
+        findings = []
+        scanned_files = 0
+        skip_dirs = {".git", "node_modules", ".venv", "venv", "__pycache__", "dist", "build"}
+
+        for p in repo_dir.rglob("*"):
+            if p.is_file() and not any(part in skip_dirs for part in p.parts):
+                scanned_files += 1
+                try:
+                    content = p.read_text(encoding="utf-8", errors="ignore")
+                    lines = content.splitlines()
+                    for idx, line in enumerate(lines[:1000], start=1):
+                        for pattern_name, regex in secret_patterns:
+                            if regex.search(line):
+                                rel_path = str(p.relative_to(repo_dir))
+                                findings.append({
+                                    "severity": "CRITICAL" if "Key" in pattern_name or "PAT" in pattern_name else "HIGH",
+                                    "type": pattern_name,
+                                    "path": rel_path,
+                                    "line": idx,
+                                    "citation": f"[{rel_path}#L{idx}]",
+                                    "recommendation": "Migrate secret to environment variables or secret manager immediately.",
+                                })
+                except Exception:
+                    pass
+
+        return {
+            "repository": f"{owner}/{repo}",
+            "scanned_files": scanned_files,
+            "findings_count": len(findings),
+            "findings": findings[:20],
+            "security_status": "CLEAN" if not findings else f"{len(findings)} potential security risk(s) detected",
+        }

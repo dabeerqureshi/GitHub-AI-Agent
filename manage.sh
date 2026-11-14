@@ -127,7 +127,7 @@ with open('${BACKEND_LOG}', 'a') as f:
     env = os.environ.copy()
     env['PYTHONPATH'] = '${ROOT_DIR}/backend'
     p = subprocess.Popen(
-        ['${ROOT_DIR}/backend/.venv/bin/uvicorn', 'app.main:app', '--host', '0.0.0.0', '--port', '8000', '--reload'],
+        ['${ROOT_DIR}/backend/.venv/bin/uvicorn', 'app.main:app', '--host', '0.0.0.0', '--port', '8000'],
         cwd='${ROOT_DIR}/backend',
         env=env,
         stdout=f,

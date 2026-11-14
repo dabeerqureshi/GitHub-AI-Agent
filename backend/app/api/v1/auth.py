@@ -63,6 +63,11 @@ async def connect_github_account(
     # Securely register token in application settings
     settings = get_settings()
     settings.GITHUB_PERSONAL_ACCESS_TOKEN = token
+    try:
+        from app.api.v1.models import _save_env_variable
+        _save_env_variable("GITHUB_PERSONAL_ACCESS_TOKEN", token)
+    except Exception:
+        pass
 
     user_profile = GitHubUserProfile(
         login=user_data.get("login", "unknown"),
@@ -153,6 +158,11 @@ async def disconnect_github_account():
     settings = get_settings()
     settings.GITHUB_PERSONAL_ACCESS_TOKEN = ""
     _cached_gh_profile = None
+    try:
+        from app.api.v1.models import _save_env_variable
+        _save_env_variable("GITHUB_PERSONAL_ACCESS_TOKEN", "")
+    except Exception:
+        pass
 
     logger.info("GitHub account disconnected by user request.")
     return {"status": "disconnected", "message": "GitHub account successfully disconnected"}

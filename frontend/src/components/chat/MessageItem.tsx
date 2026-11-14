@@ -29,22 +29,22 @@ export function MessageItem({ message }: MessageItemProps) {
       }`}
     >
       {!isUser && (
-        <div className="h-8 w-8 rounded-xl bg-indigo-500/15 text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-500/30 shadow-xs mt-0.5">
+        <div className="h-8 w-8 rounded-md bg-[#007acc]/15 text-[#3794ff] flex items-center justify-center shrink-0 border border-[#007acc]/30 shadow-xs mt-0.5">
           <Bot className="h-4 w-4" />
         </div>
       )}
 
       <div
-        className={`relative group max-w-[94%] sm:max-w-[85%] md:max-w-[80%] rounded-2xl px-4 py-3 text-sm sm:text-base leading-relaxed transition-all ${
+        className={`relative group max-w-[94%] sm:max-w-[85%] md:max-w-[80%] rounded-md px-4 py-3 text-sm sm:text-base leading-relaxed transition-all ${
           isUser
-            ? "bg-indigo-600 text-white font-normal shadow-sm"
-            : "bg-slate-900 text-slate-100 border border-slate-800 shadow-sm"
+            ? "bg-[#007acc] text-white font-normal shadow-sm"
+            : "bg-[#252526] text-[#cccccc] border border-[#333333] shadow-sm"
         }`}
       >
         {/* Assistant Header if verified operation */}
         {!isUser && isVerified && (
-          <div className="flex items-center space-x-2 text-xs text-emerald-400 font-semibold mb-2.5 pb-2 border-b border-slate-800">
-            <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+          <div className="flex items-center space-x-2 text-xs text-[#73c991] font-semibold mb-2.5 pb-2 border-b border-[#333333]">
+            <CheckCircle2 className="h-4 w-4 text-[#73c991]" />
             <span className="font-mono text-xs tracking-wider uppercase">
               Verified GitHub MCP Operation
             </span>
@@ -52,14 +52,14 @@ export function MessageItem({ message }: MessageItemProps) {
         )}
 
         {/* Message Content: Clean Readable Typography */}
-        <div className="whitespace-pre-wrap font-sans text-sm sm:text-base leading-relaxed break-words">
+        <div className="whitespace-pre-wrap font-sans text-sm sm:text-base leading-relaxed break-words text-white">
           {message.content}
         </div>
 
         {/* Message Footer: Timestamp & Copy Action */}
         <div
           className={`flex items-center justify-between mt-3 pt-1.5 border-t text-xs ${
-            isUser ? "border-indigo-500/40 text-indigo-200" : "border-slate-800 text-slate-400"
+            isUser ? "border-white/20 text-white/80" : "border-[#333333] text-[#858585]"
           }`}
         >
           <span className="font-mono text-[11px]">
@@ -76,7 +76,7 @@ export function MessageItem({ message }: MessageItemProps) {
           >
             {copied ? (
               <>
-                <Check className={`h-3.5 w-3.5 ${isUser ? "text-white" : "text-emerald-400"}`} />
+                <Check className={`h-3.5 w-3.5 ${isUser ? "text-white" : "text-[#73c991]"}`} />
                 <span>Copied</span>
               </>
             ) : (
@@ -90,7 +90,7 @@ export function MessageItem({ message }: MessageItemProps) {
       </div>
 
       {isUser && (
-        <div className="h-8 w-8 rounded-xl bg-slate-800 text-slate-200 flex items-center justify-center shrink-0 border border-slate-700 shadow-xs mt-0.5">
+        <div className="h-8 w-8 rounded-md bg-[#252526] text-[#cccccc] flex items-center justify-center shrink-0 border border-[#333333] shadow-xs mt-0.5">
           <User className="h-4 w-4" />
         </div>
       )}

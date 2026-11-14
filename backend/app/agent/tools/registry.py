@@ -207,6 +207,12 @@ class ToolRegistry:
             is_mutating=False,
             description="Compile merged PRs and commit history into a structured release changelog.",
         )
+        self.register_local_tool(
+            name="scan_security_and_secrets",
+            handler=self.advanced_workflows.scan_security_and_secrets,
+            is_mutating=False,
+            description="Audit repository for hardcoded secrets, credentials, and security risks.",
+        )
 
     def register_local_tool(
         self,

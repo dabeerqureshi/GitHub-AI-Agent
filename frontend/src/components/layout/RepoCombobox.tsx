@@ -94,64 +94,64 @@ export function RepoCombobox() {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 text-xs sm:text-sm bg-slate-900 hover:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 hover:border-indigo-500/50 transition-all text-slate-200 group cursor-pointer shadow-sm select-none"
+        className="flex items-center space-x-2 text-xs sm:text-sm bg-[#252526] hover:bg-[#2a2d2e] px-3 py-1.5 rounded-md border border-[#3c3c3c] hover:border-[#007acc] transition-all text-[#cccccc] hover:text-white group cursor-pointer shadow-sm select-none"
         aria-expanded={isOpen}
       >
-        <FolderGit2 className="h-4 w-4 text-indigo-400 group-hover:scale-105 transition-transform shrink-0" />
-        <span className="font-medium max-w-[130px] sm:max-w-[200px] truncate text-xs sm:text-sm">
+        <FolderGit2 className="h-4 w-4 text-[#3794ff] group-hover:scale-105 transition-transform shrink-0" />
+        <span className="font-medium max-w-[130px] sm:max-w-[200px] truncate text-xs sm:text-sm text-white">
           {activeRepo || "Select Repository"}
         </span>
 
         {selectedRepoRecord && (
-          <span className="hidden sm:flex items-center text-[10px] px-1.5 py-0.5 rounded bg-slate-950 text-slate-400 border border-slate-800 font-mono ml-0.5">
+          <span className="hidden sm:flex items-center text-[10px] px-1.5 py-0.5 rounded bg-[#1e1e1e] text-[#858585] border border-[#333333] font-mono ml-0.5">
             {selectedRepoRecord.is_private ? (
-              <Lock className="h-2.5 w-2.5 mr-1 text-amber-400" />
+              <Lock className="h-2.5 w-2.5 mr-1 text-[#cca700]" />
             ) : (
-              <Globe className="h-2.5 w-2.5 mr-1 text-indigo-400" />
+              <Globe className="h-2.5 w-2.5 mr-1 text-[#4ec9b0]" />
             )}
             <span>{selectedRepoRecord.default_branch || "main"}</span>
           </span>
         )}
 
         <ChevronDown
-          className={`h-3.5 w-3.5 text-slate-400 transition-transform duration-200 shrink-0 ${
+          className={`h-3.5 w-3.5 text-[#858585] transition-transform duration-200 shrink-0 ${
             isOpen ? "rotate-180 text-white" : ""
           }`}
         />
       </button>
 
-      {/* Popover Dropdown (100% Solid, Opaque Slate, Left-Aligned) */}
+      {/* Popover Dropdown (100% Solid, Opaque VS Code Surface, Left-Aligned) */}
       {isOpen && (
-        <div className="absolute left-0 top-full mt-2 w-[min(24rem,calc(100vw-1.5rem))] rounded-xl bg-slate-900 border border-slate-700 shadow-2xl shadow-black/90 z-50 overflow-hidden animate-slide-up text-slate-200">
+        <div className="absolute left-0 top-full mt-2 w-[min(24rem,calc(100vw-1.5rem))] rounded-md bg-[#252526] border border-[#3c3c3c] shadow-2xl shadow-black/90 z-50 overflow-hidden animate-slide-up text-[#cccccc]">
           {/* Search Header */}
-          <div className="p-2.5 border-b border-slate-800 bg-slate-950">
+          <div className="p-2.5 border-b border-[#333333] bg-[#1f1f1f]">
             <div className="relative">
-              <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
+              <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-[#858585]" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search repositories..."
-                className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 placeholder:text-slate-500"
+                className="w-full pl-9 pr-3 py-1.5 text-xs bg-[#1e1e1e] border border-[#3c3c3c] rounded-md text-white focus:outline-none focus:border-[#007acc] focus:ring-1 focus:ring-[#007acc] placeholder:text-[#858585]"
                 autoFocus
               />
             </div>
           </div>
 
           {/* Repository List */}
-          <div className="max-h-64 overflow-y-auto p-1.5 space-y-1 bg-slate-900">
+          <div className="max-h-64 overflow-y-auto p-1.5 space-y-1 bg-[#252526]">
             {canAddAsNew && (
               <button
                 type="button"
                 disabled={isAddingCustom}
                 onClick={() => handleAddCustomRepo(searchQuery)}
-                className="w-full flex items-center justify-between p-2 rounded-lg bg-indigo-600/15 hover:bg-indigo-600/25 text-indigo-300 border border-indigo-500/30 text-xs transition-colors cursor-pointer"
+                className="w-full flex items-center justify-between p-2 rounded-md bg-[#007acc]/15 hover:bg-[#007acc]/25 text-[#3794ff] border border-[#007acc]/30 text-xs transition-colors cursor-pointer"
               >
                 <div className="flex items-center space-x-2 truncate">
-                  <PlusCircle className="h-4 w-4 shrink-0 text-indigo-400" />
+                  <PlusCircle className="h-4 w-4 shrink-0 text-[#3794ff]" />
                   <span className="font-mono truncate">Add &amp; sync &apos;{searchQuery.trim()}&apos;</span>
                 </div>
-                <span className="text-[10px] bg-indigo-500/30 px-1.5 py-0.5 rounded font-mono shrink-0 ml-1">
+                <span className="text-[10px] bg-[#007acc]/30 px-1.5 py-0.5 rounded font-mono shrink-0 ml-1">
                   {isAddingCustom ? "Syncing..." : "Add"}
                 </span>
               </button>
@@ -168,25 +168,25 @@ export function RepoCombobox() {
                       setActiveRepo(repo.full_name);
                       setIsOpen(false);
                     }}
-                    className={`w-full flex items-center justify-between p-2 rounded-lg text-left transition-all cursor-pointer ${
+                    className={`w-full flex items-center justify-between p-2 rounded-md text-left transition-all cursor-pointer ${
                       isSelected
-                        ? "bg-indigo-600/20 text-white border border-indigo-500/50 font-medium"
-                        : "hover:bg-slate-800 text-slate-300 hover:text-white"
+                        ? "bg-[#007acc]/20 text-white border border-[#007acc]/50 font-medium"
+                        : "hover:bg-[#2a2d2e] text-[#cccccc] hover:text-white"
                     }`}
                   >
                     <div className="flex items-center space-x-2.5 min-w-0 pr-2">
                       {repo.is_private ? (
-                        <Lock className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                        <Lock className="h-3.5 w-3.5 text-[#cca700] shrink-0" />
                       ) : (
-                        <Globe className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
+                        <Globe className="h-3.5 w-3.5 text-[#4ec9b0] shrink-0" />
                       )}
                       <div className="truncate">
                         <div className="text-xs font-medium truncate">
-                          <span className="text-slate-400">{repo.owner}/</span>
+                          <span className="text-[#858585]">{repo.owner}/</span>
                           <span className="font-semibold text-white">{repo.name}</span>
                         </div>
                         {repo.description && (
-                          <div className="text-[11px] text-slate-400 truncate max-w-[200px]">
+                          <div className="text-[11px] text-[#858585] truncate max-w-[200px]">
                             {repo.description}
                           </div>
                         )}
@@ -194,19 +194,19 @@ export function RepoCombobox() {
                     </div>
 
                     <div className="flex items-center space-x-1.5 shrink-0">
-                      <span className="text-[10px] text-slate-400 font-mono bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800">
+                      <span className="text-[10px] text-[#858585] font-mono bg-[#1e1e1e] px-1.5 py-0.5 rounded border border-[#333333]">
                         {repo.default_branch || "main"}
                       </span>
-                      {isSelected && <Check className="h-4 w-4 text-indigo-400" />}
+                      {isSelected && <Check className="h-4 w-4 text-[#3794ff]" />}
                     </div>
                   </button>
                 );
               })
             ) : (
-              <div className="p-4 text-center text-xs text-slate-400">
+              <div className="p-4 text-center text-xs text-[#858585]">
                 <p>No matching repositories found.</p>
-                <p className="text-[11px] mt-1 text-slate-500">
-                  Type <span className="font-mono text-slate-200 font-semibold">owner/repo</span> above to sync any repository.
+                <p className="text-[11px] mt-1 text-[#858585]">
+                  Type <span className="font-mono text-white font-semibold">owner/repo</span> above to sync any repository.
                 </p>
                 {!githubUser && (
                   <button
@@ -215,7 +215,7 @@ export function RepoCombobox() {
                       setIsOpen(false);
                       setAuthModalOpen(true);
                     }}
-                    className="mt-2.5 text-indigo-400 hover:text-indigo-300 hover:underline font-medium inline-flex items-center cursor-pointer text-xs"
+                    className="mt-2.5 text-[#3794ff] hover:underline font-medium inline-flex items-center cursor-pointer text-xs"
                   >
                     <Key className="h-3.5 w-3.5 mr-1" />
                     Connect GitHub PAT
@@ -226,14 +226,14 @@ export function RepoCombobox() {
           </div>
 
           {/* Footer Actions */}
-          <div className="p-2 border-t border-slate-800 bg-slate-950 flex items-center justify-between text-xs">
+          <div className="p-2 border-t border-[#333333] bg-[#1f1f1f] flex items-center justify-between text-xs">
             <button
               type="button"
               onClick={handleRefresh}
               disabled={isRefreshing}
-              className="flex items-center space-x-1.5 text-slate-400 hover:text-white transition-colors px-2 py-1 rounded hover:bg-slate-800 cursor-pointer"
+              className="flex items-center space-x-1.5 text-[#858585] hover:text-white transition-colors px-2 py-1 rounded hover:bg-[#2a2d2e] cursor-pointer"
             >
-              <RefreshCw className={`h-3 w-3 ${isRefreshing ? "animate-spin text-indigo-400" : ""}`} />
+              <RefreshCw className={`h-3 w-3 ${isRefreshing ? "animate-spin text-[#3794ff]" : ""}`} />
               <span>Refresh list</span>
             </button>
 
@@ -243,7 +243,7 @@ export function RepoCombobox() {
                 setIsOpen(false);
                 setAuthModalOpen(true);
               }}
-              className="flex items-center space-x-1 text-indigo-400 hover:text-indigo-300 hover:underline transition-colors px-2 py-1 rounded cursor-pointer font-medium"
+              className="flex items-center space-x-1 text-[#3794ff] hover:underline transition-colors px-2 py-1 rounded cursor-pointer font-medium"
             >
               <Key className="h-3 w-3" />
               <span>{githubUser ? "Manage Token" : "Add Token"}</span>

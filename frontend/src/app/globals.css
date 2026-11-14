@@ -4,88 +4,101 @@
 
 @layer base {
   :root {
-    --background: 222 47% 7%;           /* Modern Dark Slate #0B0F17 */
-    --foreground: 210 40% 98%;          /* High-contrast crisp text #F8FAFC */
-    --card: 222 47% 11%;                /* Elevated Surface #0F172A */
-    --card-foreground: 210 40% 98%;
-    --popover: 222 47% 10%;             /* Dropdown Surface #0F172A */
-    --popover-foreground: 210 40% 98%;
-    --primary: 239 84% 67%;             /* Vibrant Indigo #6366F1 */
+    --background: 0 0% 9.4%;            /* VS Code Dark #181818 */
+    --foreground: 0 0% 90%;             /* VS Code Text #E6E6E6 */
+    --card: 0 0% 14.5%;                 /* VS Code Card #252526 */
+    --card-foreground: 0 0% 95%;
+    --popover: 0 0% 12.2%;              /* VS Code Panel #1F1F1F */
+    --popover-foreground: 0 0% 95%;
+    --primary: 207 100% 40%;            /* VS Code Blue #007ACC */
     --primary-foreground: 0 0% 100%;
-    --secondary: 217 33% 17%;           /* Secondary Surface #1E293B */
-    --secondary-foreground: 210 40% 96%;
-    --muted: 217 33% 14%;               /* Muted Surface #162032 */
-    --muted-foreground: 215 20% 65%;    /* Readable Muted #94A3B8 */
-    --accent: 239 84% 67%;
+    --secondary: 0 0% 12.2%;            /* VS Code Panel #1F1F1F */
+    --secondary-foreground: 0 0% 85%;
+    --muted: 0 0% 16%;                  /* VS Code Muted #292929 */
+    --muted-foreground: 0 0% 55%;       /* VS Code Gray #8C8C8C */
+    --accent: 207 100% 40%;
     --accent-foreground: 0 0% 100%;
-    --destructive: 0 84% 60%;
+    --destructive: 0 84% 60%;           /* Soft Crimson #F14C4C */
     --destructive-foreground: 0 0% 100%;
-    --border: 217 33% 20%;              /* Clean Web Border #1E293B */
-    --input: 217 33% 18%;
-    --ring: 239 84% 67%;
-    --radius: 0.5rem;                   /* Modern soft radius */
+    --border: 0 0% 20%;                 /* VS Code Border #333333 */
+    --input: 0 0% 14.5%;
+    --ring: 207 100% 40%;
+    --radius: 0.375rem;                 /* VS Code subtle radius */
   }
 
   .dark {
-    --background: 222 47% 7%;
-    --foreground: 210 40% 98%;
-    --card: 222 47% 11%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 47% 10%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 239 84% 67%;
+    --background: 0 0% 9.4%;
+    --foreground: 0 0% 90%;
+    --card: 0 0% 14.5%;
+    --card-foreground: 0 0% 95%;
+    --popover: 0 0% 12.2%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 207 100% 40%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 96%;
-    --muted: 217 33% 14%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 239 84% 67%;
+    --secondary: 0 0% 12.2%;
+    --secondary-foreground: 0 0% 85%;
+    --muted: 0 0% 16%;
+    --muted-foreground: 0 0% 55%;
+    --accent: 207 100% 40%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 217 33% 20%;
-    --input: 217 33% 18%;
-    --ring: 239 84% 67%;
+    --border: 0 0% 20%;
+    --input: 0 0% 14.5%;
+    --ring: 207 100% 40%;
   }
 }
 
 body {
-  @apply bg-slate-950 text-slate-100 antialiased selection:bg-indigo-500/30 selection:text-indigo-200 font-sans;
+  @apply bg-[#181818] text-[#cccccc] antialiased selection:bg-[#007acc]/35 selection:text-white font-sans;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11", "tnum" 1;
 }
 
-/* Modern Card Surfaces */
+/* VS Code Dark+ Card Surfaces */
+.vscode-editor {
+  background-color: #1e1e1e;
+  border: 1px solid #333333;
+}
+
+.vscode-panel {
+  background-color: #1f1f1f;
+  border: 1px solid #333333;
+}
+
+.vscode-card {
+  background-color: #252526;
+  border: 1px solid #333333;
+}
+
 .surface-card {
-  background-color: #0F172A;
-  border: 1px solid #1E293B;
+  background-color: #252526;
+  border: 1px solid #333333;
 }
 
 .surface-elevated {
-  background-color: #162032;
-  border: 1px solid #233148;
+  background-color: #2a2d2e;
+  border: 1px solid #3c3c3c;
 }
 
 .surface-terminal {
-  background-color: #0B0F17;
-  border: 1px solid #1E293B;
+  background-color: #181818;
+  border: 1px solid #333333;
 }
 
 .glass-panel {
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid #1E293B;
+  background: #1f1f1f;
+  border: 1px solid #333333;
 }
 
 .interactive-card {
   transition: all 0.15s ease-out;
 }
 .interactive-card:hover {
-  background-color: #162032;
-  border-color: #6366F1;
+  background-color: #2a2d2e;
+  border-color: #007acc;
 }
 
-/* Clean, Smooth Web Scrollbars */
+/* VS Code Style Thin Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -94,11 +107,11 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.25);
-  border-radius: 9999px;
+  background: #424242;
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.45);
+  background: #4f4f4f;
 }
 
 .font-tabular {
@@ -120,5 +133,5 @@ body {
 }
 
 .animate-slide-up {
-  animation: slideUp 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: slideUp 0.15s ease-out forwards;
 }

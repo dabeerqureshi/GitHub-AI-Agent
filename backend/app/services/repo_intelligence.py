@@ -35,8 +35,22 @@ class RepoIntelligenceService:
         self.search_indexer = search_indexer or LocalSymbolSearchIndexer()
 
     def _resolve_repo(self, owner: str, repo: str) -> git.Repo:
-        """Resolve and open git repository."""
+        """Resolve and open git repository, automatically cloning on-demand if missing."""
         path = self.git_manager._resolve_repo_path(owner, repo)
+        if not (path / ".git").exists():
+            try:
+                from app.core.config import get_settings
+                settings = get_settings()
+                token = settings.GITHUB_PERSONAL_ACCESS_TOKEN
+                clone_url = (
+                    f"https://x-access-token:{token}@github.com/{owner}/{repo}.git"
+                    if token
+                    else f"https://github.com/{owner}/{repo}.git"
+                )
+                self.git_manager.init_or_clone_repo(owner, repo, clone_url=clone_url)
+            except Exception as clone_err:
+                logger.warning("Could not auto-clone %s/%s: %s", owner, repo, clone_err)
+
         if not (path / ".git").exists():
             raise FileNotFoundError(f"Repository {owner}/{repo} is not initialized or cloned.")
         return git.Repo(path)
@@ -55,6 +69,7 @@ class RepoIntelligenceService:
 
     def browse_files(self, owner: str, repo: str, relative_path: str = "") -> list[FileBrowseItem]:
         """Browse files and directories at given relative path in repository."""
+        self._resolve_repo(owner, repo)
         repo_dir = self.git_manager._resolve_repo_path(owner, repo)
         target_dir = self.git_manager._validate_file_path(repo_dir, relative_path)
 
@@ -232,9 +247,8 @@ class RepoIntelligenceService:
     ) -> list[SearchResultItem]:
         """Search repository code returning matching lines and citations."""
         full_name = f"{owner}/{repo}"
+        self._resolve_repo(owner, repo)
         repo_dir = self.git_manager._resolve_repo_path(owner, repo)
-        if not (repo_dir / ".git").exists():
-            raise FileNotFoundError(f"Repository {owner}/{repo} is not initialized or cloned.")
 
         # Ensure files are indexed in the search indexer
         if not getattr(self.search_indexer, "_index", {}).get(full_name):

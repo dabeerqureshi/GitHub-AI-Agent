@@ -75,6 +75,7 @@ DEFAULT_PROVIDER_CATALOG = {
         "name": "Ollama (Local)",
         "description": "100% private, offline inference running directly on your machine.",
         "supported_models": [
+            "qwen3:4b",
             "qwen2.5-coder:7b",
             "qwen2.5-coder:1.5b",
             "llama3.2:3b",
@@ -85,8 +86,23 @@ DEFAULT_PROVIDER_CATALOG = {
 }
 
 
+def _get_ollama_installed_models() -> list[str]:
+    """Dynamically query local Ollama daemon for pulled models with fast timeout."""
+    try:
+        import json
+        import urllib.request
+        req = urllib.request.Request("http://localhost:11434/api/tags", headers={"User-Agent": "GitHub-AI-Agent"})
+        with urllib.request.urlopen(req, timeout=0.8) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            return [m["name"] for m in data.get("models", []) if "name" in m]
+    except Exception:
+        return []
+
+
 def _get_provider_details(provider_id: str, settings: Any) -> ProviderInfo:
     info = DEFAULT_PROVIDER_CATALOG[provider_id]
+    supported_models = list(info["supported_models"])
+
     if provider_id == "gemini":
         key = settings.GEMINI_API_KEY
         model = settings.GEMINI_MODEL
@@ -102,6 +118,11 @@ def _get_provider_details(provider_id: str, settings: Any) -> ProviderInfo:
     elif provider_id == "ollama":
         key = "local"
         model = settings.OLLAMA_MODEL
+        installed = _get_ollama_installed_models()
+        for m in reversed(installed):
+            if m in supported_models:
+                supported_models.remove(m)
+            supported_models.insert(0, m)
     else:
         key = ""
         model = ""
@@ -112,7 +133,7 @@ def _get_provider_details(provider_id: str, settings: Any) -> ProviderInfo:
         model=model,
         has_key=bool(key),
         masked_key=mask_secret(key) if key and key != "local" else (key if key == "local" else None),
-        supported_models=info["supported_models"],
+        supported_models=supported_models,
         description=info["description"],
     )
 

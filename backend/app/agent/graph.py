@@ -1,5 +1,6 @@
 """LangGraph agent workflow definition for GitHub AI Workspace."""
 
+import json
 import logging
 import re
 import time
@@ -280,6 +281,23 @@ class GitHubAgentWorkflow:
             )
         ):
             return IntentAnalysis(intent="PREPARE_RELEASE_SUMMARY", target_repo=resolved_repo)
+        elif any(
+            w in lower
+            for w in (
+                "hardcoded secret",
+                "hardcoded credentials",
+                "security issues",
+                "secret scan",
+                "security scan",
+                "scan for secrets",
+                "scan secrets",
+                "scan credentials",
+                "exposed keys",
+                "api keys",
+                "security audit",
+            )
+        ):
+            return IntentAnalysis(intent="SECURITY_SECRET_SCAN", target_repo=resolved_repo)
         elif any(w in lower for w in ("assigned to me", "my assigned issues", "assigned issues")):
             return IntentAnalysis(
                 intent="LIST_ASSIGNED_ISSUES",
@@ -1006,6 +1024,11 @@ class GitHubAgentWorkflow:
                 "name": "prepare_release_summary",
                 "arguments": {"owner": owner, "repo": name},
             }
+        elif analysis.intent == "SECURITY_SECRET_SCAN":
+            tool_to_execute = {
+                "name": "scan_security_and_secrets",
+                "arguments": {"owner": owner, "repo": name},
+            }
 
         return {"tool_to_execute": tool_to_execute}
 
@@ -1087,7 +1110,12 @@ class GitHubAgentWorkflow:
                 response_text = f"Operation failed: {tool_result.get('error', 'Unknown error')}"
             else:
                 content = tool_result.get("content", [])
-                formatted_content = "\n".join(str(c) for c in content)
+                if isinstance(content, dict):
+                    formatted_content = json.dumps(content, indent=2)
+                elif isinstance(content, list):
+                    formatted_content = "\n".join(str(c) for c in content)
+                else:
+                    formatted_content = str(content)
 
                 if intent == "REVIEW_PULL_REQUEST":
                     response_text = (
@@ -1352,6 +1380,23 @@ class GitHubAgentWorkflow:
                     response_text = (
                         f"### 📦 [Issue Manager] Release Summary: {content.get('repository')}\n\n"
                         f"{content.get('changelog')}"
+                    )
+                elif tool and tool["name"] == "scan_security_and_secrets":
+                    findings = content.get("findings", []) if isinstance(content, dict) else []
+                    if findings:
+                        f_lines = [
+                            f"- **[{f['severity']}] {f['type']}** at `{f['citation']}`: {f['recommendation']}"
+                            for f in findings
+                        ]
+                        findings_md = "\n".join(f_lines)
+                    else:
+                        findings_md = "✅ No hardcoded secrets, private keys, or exposed credentials detected across scanned repository files."
+                    response_text = (
+                        f"### 🛡️ [Security Auditor] Secret & Credential Scan: {content.get('repository') if isinstance(content, dict) else ''}\n\n"
+                        f"- **Scanned Files:** {content.get('scanned_files') if isinstance(content, dict) else 0}\n"
+                        f"- **Security Status:** **{content.get('security_status') if isinstance(content, dict) else 'Clean'}**\n"
+                        f"- **Total Risks Detected:** {content.get('findings_count') if isinstance(content, dict) else 0}\n\n"
+                        f"#### Scan Findings & Evidence:\n{findings_md}"
                     )
                 else:
                     response_text = (

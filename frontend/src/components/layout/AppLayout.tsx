@@ -26,12 +26,12 @@ export function AppLayout({ children }: AppLayoutProps) {
   }, [loadAuthStatus, loadRepositories, loadModelsConfig, loadConversations]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 antialiased selection:bg-indigo-500/30 selection:text-indigo-200">
-      {/* Modern Responsive SaaS Web Navbar with Clean 2-Tier Architecture */}
+    <div className="min-h-screen flex flex-col bg-[#181818] text-[#cccccc] antialiased selection:bg-[#007acc]/35 selection:text-white">
+      {/* VS Code Dark+ Responsive SaaS Web Navbar with Clean 2-Tier Architecture */}
       <Navbar />
 
       {/* Main Responsive Content Viewport */}
-      <main className="flex-1 flex flex-col h-[calc(100vh-5.75rem)] w-full overflow-y-auto relative">
+      <main className="flex-1 flex flex-col h-[calc(100vh-5.75rem)] w-full overflow-y-auto relative bg-[#181818]">
         {children}
       </main>
 

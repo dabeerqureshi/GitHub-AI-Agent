@@ -12,11 +12,22 @@ import {
   GitPullRequest,
   Layers,
   FolderGit2,
+  HelpCircle,
+  AlertTriangle,
+  ShieldCheck,
+  Terminal,
+  GitBranch,
+  Code2,
+  FileText,
+  GitCommit,
+  PlayCircle,
 } from "lucide-react";
 import { useChatStore } from "@/store/use-chat-store";
 import { MessageItem } from "@/components/chat/MessageItem";
 import { ApprovalCard } from "@/components/approvals/ApprovalCard";
 import { ModelDropdown } from "@/components/models/ModelDropdown";
+
+type OperatingMode = "ask" | "analyze" | "execute";
 
 export function ChatContainer() {
   const {
@@ -31,6 +42,7 @@ export function ChatContainer() {
   } = useChatStore();
 
   const [input, setInput] = useState("");
+  const [activeMode, setActiveMode] = useState<OperatingMode>("ask");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -58,32 +70,113 @@ export function ChatContainer() {
   };
 
   const targetName = activeRepo || "the repository";
-  const starterCards = [
-    {
-      title: "Architecture Summary",
-      desc: "Analyze tree, modules, dependencies & design patterns",
-      prompt: `Explain architecture of ${targetName}`,
-      icon: Layers,
-    },
-    {
-      title: "Inspect Issues & Bugs",
-      desc: "Search and categorize open defects and backlog",
-      prompt: `Find open issues and bug reports in ${targetName}`,
-      icon: Bug,
-    },
-    {
-      title: "Review Pull Requests",
-      desc: "Conduct automated diff analysis and security review",
-      prompt: `Review recent pull requests and diffs in ${targetName}`,
-      icon: GitPullRequest,
-    },
-    {
-      title: "Diagnose CI Failures",
-      desc: "Isolate failing workflow steps and synthesize fixes",
-      prompt: `Analyze failing CI workflow runs in ${targetName}`,
-      icon: FileSearch,
-    },
-  ];
+
+  const starterCardsByMode: Record<OperatingMode, Array<{
+    title: string;
+    desc: string;
+    prompt: string;
+    icon: any;
+    color: string;
+  }>> = {
+    ask: [
+      {
+        title: "Repository Overview",
+        desc: "Summarize README, dependencies, languages & directory tree",
+        prompt: `Give me an overview of ${targetName}`,
+        icon: FolderGit2,
+        color: "text-[#3794ff] bg-[#3794ff]/10 border-[#3794ff]/30 hover:border-[#3794ff]",
+      },
+      {
+        title: "Inspect Open Issues",
+        desc: "Search, filter, and inspect open issues, labels, and assignees",
+        prompt: `Find open issues and bug reports in ${targetName}`,
+        icon: Bug,
+        color: "text-[#4ec9b0] bg-[#4ec9b0]/10 border-[#4ec9b0]/30 hover:border-[#4ec9b0]",
+      },
+      {
+        title: "Recent Commits",
+        desc: "Inspect latest commits, authors, and change history on main",
+        prompt: `Show recent commits on main in ${targetName}`,
+        icon: GitCommit,
+        color: "text-[#cca700] bg-[#cca700]/10 border-[#cca700]/30 hover:border-[#cca700]",
+      },
+      {
+        title: "GitHub Actions Status",
+        desc: "Check recent workflow runs, CI pipeline health, and logs",
+        prompt: `Show recent GitHub Actions workflow runs in ${targetName}`,
+        icon: PlayCircle,
+        color: "text-[#c586c0] bg-[#c586c0]/10 border-[#c586c0]/30 hover:border-[#c586c0]",
+      },
+    ],
+    analyze: [
+      {
+        title: "Architecture Analysis",
+        desc: "Analyze tree, modules, dependencies & application entry points",
+        prompt: `Explain architecture of ${targetName}`,
+        icon: Layers,
+        color: "text-[#4ec9b0] bg-[#4ec9b0]/10 border-[#4ec9b0]/30 hover:border-[#4ec9b0]",
+      },
+      {
+        title: "Technical Debt & Smells",
+        desc: "Detect code smells, oversized modules, and debt score",
+        prompt: `Identify technical debt and code smells in ${targetName}`,
+        icon: AlertTriangle,
+        color: "text-[#cca700] bg-[#cca700]/10 border-[#cca700]/30 hover:border-[#cca700]",
+      },
+      {
+        title: "Security & Secret Scan",
+        desc: "Audit codebase for hardcoded credentials and security vulnerabilities",
+        prompt: `Scan ${targetName} for hardcoded credentials and security issues`,
+        icon: ShieldCheck,
+        color: "text-[#f14c4c] bg-[#f14c4c]/10 border-[#f14c4c]/30 hover:border-[#f14c4c]",
+      },
+      {
+        title: "Diagnose CI Failures",
+        desc: "Isolate failing workflow steps and analyze error logs",
+        prompt: `Analyze failing CI workflow runs in ${targetName}`,
+        icon: FileSearch,
+        color: "text-[#3794ff] bg-[#3794ff]/10 border-[#3794ff]/30 hover:border-[#3794ff]",
+      },
+    ],
+    execute: [
+      {
+        title: "Autonomous Code Fix",
+        desc: "Implement fixes in isolated Git worktree and verify tests (Requires Approval)",
+        prompt: `Investigate and fix failing tests or bugs in ${targetName}`,
+        icon: Terminal,
+        color: "text-[#cca700] bg-[#cca700]/10 border-[#cca700]/30 hover:border-[#cca700]",
+      },
+      {
+        title: "Create Feature Branch",
+        desc: "Create and checkout an isolated local git branch (Requires Approval)",
+        prompt: `Create a new feature branch in ${targetName}`,
+        icon: GitBranch,
+        color: "text-[#3794ff] bg-[#3794ff]/10 border-[#3794ff]/30 hover:border-[#3794ff]",
+      },
+      {
+        title: "Generate Unit Tests",
+        desc: "Synthesize automated test suite adhering to repo conventions",
+        prompt: `Generate automated tests for key modules in ${targetName}`,
+        icon: Code2,
+        color: "text-[#4ec9b0] bg-[#4ec9b0]/10 border-[#4ec9b0]/30 hover:border-[#4ec9b0]",
+      },
+      {
+        title: "Prepare Release Summary",
+        desc: "Compile merged PRs and commit history into release changelog",
+        prompt: `Prepare release summary and changelog for ${targetName}`,
+        icon: FileText,
+        color: "text-[#c586c0] bg-[#c586c0]/10 border-[#c586c0]/30 hover:border-[#c586c0]",
+      },
+    ],
+  };
+
+  const currentCards = starterCardsByMode[activeMode];
+
+  const modePlaceholders: Record<OperatingMode, string> = {
+    ask: `Ask anything about ${activeRepo || "repository"} (e.g. 'Show open issues', 'Overview of project', 'Recent commits')...`,
+    analyze: `Analyze ${activeRepo || "codebase"} (e.g. 'Explain architecture', 'Identify technical debt', 'Scan secrets')...`,
+    execute: `Instruct autonomous changes in ${activeRepo || "worktree"} (e.g. 'Fix bug in issue #42', 'Create feature branch')...`,
+  };
 
   const messages = activeConversation?.messages || [];
   const hasMessages = messages.length > 0;
@@ -94,16 +187,16 @@ export function ChatContainer() {
     : "Workspace Session";
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-slate-950 overflow-hidden font-sans">
+    <div className="flex-1 flex flex-col h-full bg-[#181818] overflow-hidden font-sans">
       {/* Conversation Subheader */}
-      <div className="px-4 py-2.5 bg-slate-900 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
+      <div className="px-4 py-2.5 bg-[#1f1f1f] border-b border-[#333333] flex flex-wrap items-center justify-between gap-2 text-xs">
         <div className="flex items-center space-x-2.5 min-w-0">
           <span className="font-semibold text-white text-sm tracking-tight truncate max-w-[180px] sm:max-w-none">
             {conversationTitle}
           </span>
-          <span className="text-slate-600 hidden sm:inline">/</span>
-          <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-slate-950 text-xs text-slate-300 border border-slate-800 truncate">
-            <FolderGit2 className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
+          <span className="text-[#858585] hidden sm:inline">/</span>
+          <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded bg-[#252526] text-xs text-[#cccccc] border border-[#333333] truncate">
+            <FolderGit2 className="h-3.5 w-3.5 text-[#3794ff] shrink-0" />
             <span className="font-medium truncate max-w-[140px] sm:max-w-[240px]">
               {activeRepo || "No repo selected"}
             </span>
@@ -114,8 +207,8 @@ export function ChatContainer() {
           <div className="sm:hidden">
             <ModelDropdown compact align="right" direction="down" />
           </div>
-          <div className="flex items-center space-x-1.5 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-md shrink-0">
-            <Shield className="h-3 w-3 text-emerald-400 shrink-0" />
+          <div className="flex items-center space-x-1.5 text-xs text-[#73c991] bg-[#73c991]/10 border border-[#73c991]/30 px-2.5 py-1 rounded shrink-0">
+            <Shield className="h-3 w-3 text-[#73c991] shrink-0" />
             <span className="hidden sm:inline font-medium">Cryptographic HITL Enforced</span>
             <span className="sm:hidden font-medium">HITL</span>
           </div>
@@ -124,21 +217,21 @@ export function ChatContainer() {
 
       {/* Plan Visualizer (if active) */}
       {currentPlan.length > 0 && (
-        <div className="bg-slate-900/40 border-b border-slate-800 px-4 py-2 flex flex-col sm:flex-row items-start sm:items-center gap-2 text-xs animate-slide-up">
-          <div className="flex items-center space-x-1.5 font-semibold text-indigo-400 shrink-0 text-xs">
+        <div className="bg-[#1f1f1f] border-b border-[#333333] px-4 py-2 flex flex-col sm:flex-row items-start sm:items-center gap-2 text-xs animate-slide-up">
+          <div className="flex items-center space-x-1.5 font-semibold text-[#3794ff] shrink-0 text-xs">
             <ListOrdered className="h-3.5 w-3.5" />
             <span>Agent Plan:</span>
           </div>
-          <div className="flex items-center space-x-2 overflow-x-auto w-full py-0.5 text-slate-400">
+          <div className="flex items-center space-x-2 overflow-x-auto w-full py-0.5 text-[#858585]">
             {currentPlan.map((step, idx) => {
               const cleanStep = step.replace(/^\d+[\.\)]\s*/, "");
               return (
                 <div
                   key={idx}
-                  className="whitespace-nowrap bg-slate-900 px-2.5 py-1 rounded-md border border-slate-800 text-xs flex items-center space-x-1.5 shrink-0"
+                  className="whitespace-nowrap bg-[#252526] px-2.5 py-1 rounded border border-[#333333] text-xs flex items-center space-x-1.5 shrink-0"
                 >
-                  <span className="text-indigo-400 font-bold">{idx + 1}.</span>
-                  <span className="text-slate-200">{cleanStep}</span>
+                  <span className="text-[#3794ff] font-bold font-mono">{idx + 1}.</span>
+                  <span className="text-[#cccccc]">{cleanStep}</span>
                 </div>
               );
             })}
@@ -147,43 +240,83 @@ export function ChatContainer() {
       )}
 
       {/* Message List / Starter Screen */}
-      <div className="flex-1 overflow-y-auto px-3 sm:px-6 md:px-8 py-5 space-y-4 bg-slate-950" role="log" aria-live="polite">
+      <div className="flex-1 overflow-y-auto px-3 sm:px-6 md:px-8 py-5 space-y-4 bg-[#181818]" role="log" aria-live="polite">
         <div className="max-w-4xl mx-auto space-y-4">
           {!hasMessages ? (
             /* Empty State: Quick Action Starter Cards */
             <div className="py-6 sm:py-10 animate-fade-in space-y-6">
               <div className="text-center space-y-2">
-                <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 text-xs font-medium mb-1">
+                <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-[#007acc]/15 border border-[#007acc]/30 text-[#3794ff] text-xs font-medium mb-1">
                   <Sparkles className="h-3.5 w-3.5" />
                   <span>Agent ready for instructions</span>
                 </div>
                 <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
-                  How can I assist with <span className="text-indigo-400 font-mono">{activeRepo || "your code"}</span>?
+                  How can I assist with <span className="text-[#3794ff] font-mono">{activeRepo || "your code"}</span>?
                 </h2>
-                <p className="text-sm text-slate-400 max-w-lg mx-auto leading-relaxed">
+                <p className="text-sm text-[#858585] max-w-lg mx-auto leading-relaxed">
                   Select an autonomous workflow below or enter your technical prompt to get started.
                 </p>
               </div>
 
-              {/* 4 Enterprise Starter Cards */}
+              {/* 3 Major Operating Modes Toggle */}
+              <div className="flex items-center justify-center space-x-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveMode("ask")}
+                  className={`px-3.5 py-1.5 rounded text-xs font-medium transition-all cursor-pointer flex items-center space-x-1.5 ${
+                    activeMode === "ask"
+                      ? "bg-[#007acc] text-white shadow-sm"
+                      : "bg-[#252526] text-[#858585] hover:text-[#cccccc] hover:bg-[#2a2d2e] border border-[#333333]"
+                  }`}
+                >
+                  <FolderGit2 className="h-3.5 w-3.5" />
+                  <span>Ask (Read-Only)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveMode("analyze")}
+                  className={`px-3.5 py-1.5 rounded text-xs font-medium transition-all cursor-pointer flex items-center space-x-1.5 ${
+                    activeMode === "analyze"
+                      ? "bg-[#4ec9b0] text-black font-semibold shadow-sm"
+                      : "bg-[#252526] text-[#858585] hover:text-[#cccccc] hover:bg-[#2a2d2e] border border-[#333333]"
+                  }`}
+                >
+                  <Layers className="h-3.5 w-3.5" />
+                  <span>Analyze (Deep Audit)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveMode("execute")}
+                  className={`px-3.5 py-1.5 rounded text-xs font-medium transition-all cursor-pointer flex items-center space-x-1.5 ${
+                    activeMode === "execute"
+                      ? "bg-[#cca700] text-black font-semibold shadow-sm"
+                      : "bg-[#252526] text-[#858585] hover:text-[#cccccc] hover:bg-[#2a2d2e] border border-[#333333]"
+                  }`}
+                >
+                  <Terminal className="h-3.5 w-3.5" />
+                  <span>Execute (HITL Approved)</span>
+                </button>
+              </div>
+
+              {/* 4 Enterprise Starter Cards (VS Code Syntax Style) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                {starterCards.map((card, i) => {
+                {currentCards.map((card, i) => {
                   const Icon = card.icon;
                   return (
                     <button
                       key={i}
                       onClick={() => handleQuickPrompt(card.prompt)}
                       disabled={isSending}
-                      className="flex items-start space-x-3.5 p-4 rounded-xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-indigo-500/50 text-left transition-all group cursor-pointer shadow-sm hover:shadow-md"
+                      className={`flex items-start space-x-3.5 p-4 rounded-md bg-[#252526] hover:bg-[#2a2d2e] border border-[#333333] ${card.color.split(" ").slice(-1)[0]} text-left transition-all group cursor-pointer shadow-sm`}
                     >
-                      <div className="p-2 rounded-lg bg-slate-950 text-indigo-400 border border-slate-800 group-hover:border-indigo-500/40 transition-colors shrink-0">
+                      <div className={`p-2 rounded border ${card.color.split(" ").slice(0, 3).join(" ")} shrink-0 transition-transform group-hover:scale-105`}>
                         <Icon className="h-5 w-5" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <span className="font-semibold text-sm text-white group-hover:text-indigo-300 transition-colors block">
+                        <span className="font-semibold text-sm text-white group-hover:text-[#3794ff] transition-colors block">
                           {card.title}
                         </span>
-                        <p className="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+                        <p className="text-xs text-[#858585] mt-1 line-clamp-2 leading-relaxed">
                           {card.desc}
                         </p>
                       </div>
@@ -207,10 +340,10 @@ export function ChatContainer() {
           {/* Streaming / Tool Execution Status Indicator */}
           {isSending && (
             <div
-              className="flex items-center space-x-3 text-sm py-2.5 px-4 rounded-xl bg-slate-900 border border-indigo-500/40 max-w-md animate-pulse shadow-md font-medium text-slate-200"
+              className="flex items-center space-x-3 text-sm py-2.5 px-4 rounded-md bg-[#252526] border border-[#007acc]/50 max-w-md animate-pulse shadow-md font-medium text-[#cccccc]"
               role="status"
             >
-              <Loader2 className="h-4 w-4 animate-spin text-indigo-400 shrink-0" />
+              <Loader2 className="h-4 w-4 animate-spin text-[#3794ff] shrink-0" />
               <span>
                 {streamingStatus || "Agent is synthesizing execution plan..."}
               </span>
@@ -222,18 +355,47 @@ export function ChatContainer() {
       </div>
 
       {/* Input Bar & Controls */}
-      <div className="p-3 sm:p-4 border-t border-slate-800 bg-slate-950">
+      <div className="p-3 sm:p-4 border-t border-[#333333] bg-[#1f1f1f]">
         <div className="max-w-4xl mx-auto space-y-2">
-          {/* Quick Toolbar: Model Selector & Repository Scope */}
-          <div className="flex items-center justify-between text-xs text-slate-400 px-1">
+          {/* Quick Toolbar: Mode Selector, Model Selector & Repository Scope */}
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-[#858585] px-1">
             <div className="flex items-center space-x-2">
-              <span className="text-slate-500 hidden sm:inline">Engine:</span>
+              <span className="text-[#858585] hidden sm:inline">Engine:</span>
               <ModelDropdown compact align="left" direction="up" />
+              <div className="hidden sm:flex items-center space-x-1 pl-2 border-l border-[#333333]">
+                <button
+                  type="button"
+                  onClick={() => setActiveMode("ask")}
+                  className={`px-2 py-0.5 rounded text-[11px] font-medium transition-all cursor-pointer ${
+                    activeMode === "ask" ? "bg-[#007acc] text-white" : "text-[#858585] hover:text-[#cccccc]"
+                  }`}
+                >
+                  Ask
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveMode("analyze")}
+                  className={`px-2 py-0.5 rounded text-[11px] font-medium transition-all cursor-pointer ${
+                    activeMode === "analyze" ? "bg-[#4ec9b0] text-black font-semibold" : "text-[#858585] hover:text-[#cccccc]"
+                  }`}
+                >
+                  Analyze
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveMode("execute")}
+                  className={`px-2 py-0.5 rounded text-[11px] font-medium transition-all cursor-pointer ${
+                    activeMode === "execute" ? "bg-[#cca700] text-black font-semibold" : "text-[#858585] hover:text-[#cccccc]"
+                  }`}
+                >
+                  Execute
+                </button>
+              </div>
             </div>
-            <div className="flex items-center space-x-1.5 text-xs text-slate-400">
-              <FolderGit2 className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
+            <div className="flex items-center space-x-1.5 text-xs text-[#858585]">
+              <FolderGit2 className="h-3.5 w-3.5 text-[#3794ff] shrink-0" />
               <span>
-                Scoped to: <strong className="text-slate-200 font-mono">{activeRepo || "global"}</strong>
+                Scoped to: <strong className="text-white font-mono">{activeRepo || "global"}</strong>
               </span>
             </div>
           </div>
@@ -243,15 +405,15 @@ export function ChatContainer() {
             className="flex items-end space-x-2"
             aria-label="Message input form"
           >
-            <div className="flex-1 rounded-xl border border-slate-800 bg-slate-900 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 transition-all">
+            <div className="flex-1 rounded-md border border-[#3c3c3c] bg-[#1e1e1e] focus-within:border-[#007acc] focus-within:ring-1 focus-within:ring-[#007acc] transition-all">
               <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 aria-label="Instruction input"
-                placeholder={`Instruct agent on ${activeRepo || "repository"} (e.g. 'Explain architecture', 'Check failing tests')...`}
+                placeholder={modePlaceholders[activeMode]}
                 rows={2}
-                className="w-full resize-none bg-transparent p-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none leading-relaxed"
+                className="w-full resize-none bg-transparent p-3 text-sm text-white placeholder:text-[#858585] focus:outline-none leading-relaxed font-sans"
               />
             </div>
 
@@ -259,7 +421,7 @@ export function ChatContainer() {
               type="submit"
               disabled={!input.trim() || isSending}
               aria-label="Send instruction"
-              className="h-11 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-xl text-sm flex items-center space-x-2 transition-all shadow-md hover:shadow-indigo-500/25 disabled:opacity-40 disabled:pointer-events-none shrink-0 cursor-pointer"
+              className="h-11 px-4 bg-[#007acc] hover:bg-[#0e639c] text-white font-medium rounded-md text-sm flex items-center space-x-2 transition-all shadow-md disabled:opacity-40 disabled:pointer-events-none shrink-0 cursor-pointer"
             >
               {isSending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -270,7 +432,7 @@ export function ChatContainer() {
             </button>
           </form>
 
-          <div className="text-[11px] text-center text-slate-500 flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 pt-0.5">
+          <div className="text-[11px] text-center text-[#858585] flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 pt-0.5">
             <span>Enter to send</span>
             <span>•</span>
             <span>Shift+Enter for new line</span>

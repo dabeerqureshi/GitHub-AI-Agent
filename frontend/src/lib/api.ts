@@ -2,7 +2,23 @@
  * Typed API client for GitHub AI Workspace Backend.
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+export function getApiBaseUrl(): string {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  if (typeof window !== "undefined" && window.location?.hostname) {
+    const protocol = window.location.protocol || "http:";
+    const hostname = window.location.hostname;
+    return `${protocol}//${hostname}:8000`;
+  }
+  return "http://localhost:8000";
+}
+
+const API_BASE_URL = {
+  toString: () => getApiBaseUrl(),
+  valueOf: () => getApiBaseUrl(),
+  [Symbol.toPrimitive]: () => getApiBaseUrl(),
+} as any as string;
 
 export interface Conversation {
   id: string;
@@ -355,8 +371,13 @@ export async function connectGitHubToken(
     body: JSON.stringify({ token, target_repo: targetRepo }),
   });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: "Failed to connect token" }));
-    throw new Error(err.detail || "Failed to connect GitHub token");
+    const err = await res.json().catch(() => null);
+    const msg =
+      err?.error?.message ||
+      err?.message ||
+      err?.detail ||
+      `HTTP error ${res.status}: Failed to connect GitHub token`;
+    throw new Error(msg);
   }
   return res.json();
 }
@@ -387,8 +408,8 @@ export async function updateModelConfig(payload: UpdateModelConfigRequest): Prom
     body: JSON.stringify(payload),
   });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: "Failed to update model configuration" }));
-    throw new Error(err.detail || "Failed to update model configuration");
+    const err = await res.json().catch(() => null);
+    throw new Error(err?.error?.message || err?.message || err?.detail || "Failed to update model configuration");
   }
   return res.json();
 }
@@ -404,8 +425,8 @@ export async function testModelConnection(payload: {
     body: JSON.stringify(payload),
   });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: "Failed to test model connection" }));
-    throw new Error(err.detail || "Failed to test model connection");
+    const err = await res.json().catch(() => null);
+    throw new Error(err?.error?.message || err?.message || err?.detail || "Failed to test model connection");
   }
   return res.json();
 }

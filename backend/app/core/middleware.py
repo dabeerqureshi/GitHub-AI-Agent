@@ -1,5 +1,6 @@
 """Production security, rate limiting, correlation tracking, and CSRF protection middlewares."""
 
+import re
 import time
 import uuid
 from collections import defaultdict
@@ -11,6 +12,10 @@ from starlette.responses import JSONResponse, Response
 
 from app.core.config import get_settings
 from app.core.logging import correlation_id_ctx
+
+LOCAL_ORIGIN_REGEX = re.compile(
+    r"^https?://(localhost|127\.0\.0\.1|0\.0\.0\.0|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)(:\d+)?$"
+)
 
 
 class CorrelationIdMiddleware(BaseHTTPMiddleware):
@@ -112,7 +117,9 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
             # Check origin if provided
             if origin:
                 clean_origin = origin.rstrip("/")
-                is_valid = any(clean_origin == a.rstrip("/") for a in self.allowed)
+                is_valid = any(clean_origin == a.rstrip("/") for a in self.allowed) or bool(
+                    LOCAL_ORIGIN_REGEX.match(clean_origin)
+                )
                 if not is_valid:
                     cid = correlation_id_ctx.get() or "unknown"
                     return JSONResponse(
@@ -128,7 +135,9 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
 
             # Check referer if origin not present
             elif referer:
-                is_valid = any(referer.startswith(a.rstrip("/")) for a in self.allowed)
+                is_valid = any(referer.startswith(a.rstrip("/")) for a in self.allowed) or bool(
+                    LOCAL_ORIGIN_REGEX.match(referer.rstrip("/"))
+                )
                 if not is_valid:
                     cid = correlation_id_ctx.get() or "unknown"
                     return JSONResponse(

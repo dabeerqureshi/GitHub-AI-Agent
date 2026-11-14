@@ -2,7 +2,6 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import {
-  GitBranch,
   ChevronDown,
   Search,
   Check,
@@ -88,70 +87,70 @@ export function RepoCombobox() {
     );
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative font-sans" ref={dropdownRef}>
       {/* Combobox Trigger */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 text-xs bg-secondary/80 hover:bg-secondary px-3 py-1.5 rounded-xl border border-border transition-all shadow-xs interactive-card group cursor-pointer"
+        className="flex items-center space-x-2 text-xs sm:text-sm bg-slate-900/90 hover:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700/80 hover:border-indigo-500/50 transition-all text-slate-200 group cursor-pointer shadow-sm"
         aria-expanded={isOpen}
       >
-        <FolderGit2 className="h-3.5 w-3.5 text-primary group-hover:scale-105 transition-transform" />
-        <span className="font-mono font-semibold text-foreground max-w-[220px] truncate">
+        <FolderGit2 className="h-4 w-4 text-indigo-400 group-hover:scale-105 transition-transform shrink-0" />
+        <span className="font-medium max-w-[150px] sm:max-w-[220px] truncate text-xs sm:text-sm">
           {activeRepo || "Select Repository"}
         </span>
 
         {selectedRepoRecord && (
-          <span className="flex items-center text-[10px] px-1.5 py-0.5 rounded-md bg-card text-muted-foreground border border-border shadow-xs ml-1">
+          <span className="hidden sm:flex items-center text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700 font-mono ml-0.5">
             {selectedRepoRecord.is_private ? (
               <Lock className="h-2.5 w-2.5 mr-1 text-amber-400" />
             ) : (
-              <Globe className="h-2.5 w-2.5 mr-1 text-blue-400" />
+              <Globe className="h-2.5 w-2.5 mr-1 text-indigo-400" />
             )}
-            <span className="font-mono">{selectedRepoRecord.default_branch || "main"}</span>
+            <span>{selectedRepoRecord.default_branch || "main"}</span>
           </span>
         )}
 
         <ChevronDown
-          className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 ${
-            isOpen ? "rotate-180" : ""
+          className={`h-3.5 w-3.5 text-slate-400 transition-transform duration-200 ${
+            isOpen ? "rotate-180 text-white" : ""
           }`}
         />
       </button>
 
       {/* Popover Dropdown */}
       {isOpen && (
-        <div className="absolute left-0 mt-2 w-80 rounded-2xl glass-panel border border-border shadow-2xl z-50 overflow-hidden animate-slide-up text-card-foreground">
+        <div className="absolute left-0 sm:left-auto sm:right-0 mt-2 w-80 sm:w-96 rounded-xl bg-slate-900/98 border border-slate-700 shadow-2xl z-50 overflow-hidden animate-slide-up text-slate-200 backdrop-blur-md">
           {/* Search Header */}
-          <div className="p-2.5 border-b border-border bg-secondary/40">
+          <div className="p-2 border-b border-slate-800 bg-slate-950/60">
             <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+              <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-500" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search repositories..."
-                className="w-full pl-8 pr-3 py-1.5 text-xs bg-card border border-border rounded-lg text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono placeholder:text-muted-foreground/60"
+                className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-900 border border-slate-800 rounded-lg text-slate-100 focus:outline-none focus:border-indigo-500 placeholder:text-slate-500"
                 autoFocus
               />
             </div>
           </div>
 
           {/* Repository List */}
-          <div className="max-h-64 overflow-y-auto p-1.5 space-y-0.5 divide-y divide-border/20">
+          <div className="max-h-64 overflow-y-auto p-1.5 space-y-1">
             {canAddAsNew && (
               <button
                 type="button"
                 disabled={isAddingCustom}
                 onClick={() => handleAddCustomRepo(searchQuery)}
-                className="w-full flex items-center justify-between p-2 mb-1 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 text-xs transition-colors cursor-pointer"
+                className="w-full flex items-center justify-between p-2 rounded-lg bg-indigo-600/15 hover:bg-indigo-600/25 text-indigo-300 border border-indigo-500/30 text-xs transition-colors cursor-pointer"
               >
-                <div className="flex items-center space-x-2">
-                  <PlusCircle className="h-3.5 w-3.5 flex-shrink-0" />
-                  <span className="font-mono truncate">Add & sync &apos;{searchQuery.trim()}&apos;</span>
+                <div className="flex items-center space-x-2 truncate">
+                  <PlusCircle className="h-4 w-4 shrink-0 text-indigo-400" />
+                  <span className="font-mono truncate">Add &amp; sync &apos;{searchQuery.trim()}&apos;</span>
                 </div>
-                <span className="text-[10px] bg-primary/20 px-1.5 py-0.5 rounded font-mono flex-shrink-0 ml-1">
-                  {isAddingCustom ? "Syncing..." : "Click to add"}
+                <span className="text-[10px] bg-indigo-500/30 px-1.5 py-0.5 rounded font-mono shrink-0 ml-1">
+                  {isAddingCustom ? "Syncing..." : "Add"}
                 </span>
               </button>
             )}
@@ -167,45 +166,45 @@ export function RepoCombobox() {
                       setActiveRepo(repo.full_name);
                       setIsOpen(false);
                     }}
-                    className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition-colors cursor-pointer ${
+                    className={`w-full flex items-center justify-between p-2 rounded-lg text-left transition-all cursor-pointer ${
                       isSelected
-                        ? "bg-primary/10 text-primary border border-primary/20"
-                        : "hover:bg-secondary/60 text-card-foreground"
+                        ? "bg-indigo-600/20 text-indigo-200 border border-indigo-500/40 font-medium"
+                        : "hover:bg-slate-800 text-slate-300"
                     }`}
                   >
-                    <div className="flex items-center space-x-2.5 min-w-0">
+                    <div className="flex items-center space-x-2.5 min-w-0 pr-2">
                       {repo.is_private ? (
-                        <Lock className="h-3.5 w-3.5 text-amber-400 flex-shrink-0" />
+                        <Lock className="h-3.5 w-3.5 text-amber-400 shrink-0" />
                       ) : (
-                        <Globe className="h-3.5 w-3.5 text-blue-400 flex-shrink-0" />
+                        <Globe className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
                       )}
                       <div className="truncate">
-                        <div className="text-xs font-mono font-medium truncate">
-                          <span className="text-muted-foreground">{repo.owner}/</span>
-                          <span className="font-semibold">{repo.name}</span>
+                        <div className="text-xs font-medium truncate">
+                          <span className="text-slate-400">{repo.owner}/</span>
+                          <span className="font-semibold text-white">{repo.name}</span>
                         </div>
                         {repo.description && (
-                          <div className="text-[10px] text-muted-foreground truncate max-w-[200px]">
+                          <div className="text-[11px] text-slate-500 truncate max-w-[220px]">
                             {repo.description}
                           </div>
                         )}
                       </div>
                     </div>
 
-                    <div className="flex items-center space-x-1.5 flex-shrink-0 ml-2">
-                      <span className="text-[10px] text-muted-foreground font-mono bg-background/50 px-1.5 py-0.5 rounded border border-border">
+                    <div className="flex items-center space-x-1.5 shrink-0">
+                      <span className="text-[10px] text-slate-400 font-mono bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800">
                         {repo.default_branch || "main"}
                       </span>
-                      {isSelected && <Check className="h-3.5 w-3.5 text-primary" />}
+                      {isSelected && <Check className="h-4 w-4 text-indigo-400" />}
                     </div>
                   </button>
                 );
               })
             ) : (
-              <div className="p-4 text-center text-xs text-muted-foreground">
+              <div className="p-4 text-center text-xs text-slate-400">
                 <p>No matching repositories found.</p>
-                <p className="text-[11px] mt-1 text-muted-foreground/80">
-                  Type <span className="font-mono text-foreground font-semibold">owner/repo</span> above to sync any repository.
+                <p className="text-[11px] mt-1 text-slate-500">
+                  Type <span className="font-mono text-slate-200 font-semibold">owner/repo</span> above to sync any repository.
                 </p>
                 {!githubUser && (
                   <button
@@ -214,9 +213,9 @@ export function RepoCombobox() {
                       setIsOpen(false);
                       setAuthModalOpen(true);
                     }}
-                    className="mt-2 text-primary hover:underline font-medium inline-flex items-center cursor-pointer"
+                    className="mt-2.5 text-indigo-400 hover:text-indigo-300 hover:underline font-medium inline-flex items-center cursor-pointer text-xs"
                   >
-                    <Key className="h-3 w-3 mr-1" />
+                    <Key className="h-3.5 w-3.5 mr-1" />
                     Connect GitHub PAT
                   </button>
                 )}
@@ -225,15 +224,15 @@ export function RepoCombobox() {
           </div>
 
           {/* Footer Actions */}
-          <div className="p-2 border-t border-border/60 bg-secondary/20 flex items-center justify-between text-[11px]">
+          <div className="p-2 border-t border-slate-800 bg-slate-950/80 flex items-center justify-between text-xs">
             <button
               type="button"
               onClick={handleRefresh}
               disabled={isRefreshing}
-              className="flex items-center space-x-1 text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-secondary cursor-pointer"
+              className="flex items-center space-x-1.5 text-slate-400 hover:text-white transition-colors px-2 py-1 rounded hover:bg-slate-800 cursor-pointer"
             >
-              <RefreshCw className={`h-3 w-3 ${isRefreshing ? "animate-spin text-primary" : ""}`} />
-              <span>Refresh</span>
+              <RefreshCw className={`h-3 w-3 ${isRefreshing ? "animate-spin text-indigo-400" : ""}`} />
+              <span>Refresh list</span>
             </button>
 
             <button
@@ -242,10 +241,10 @@ export function RepoCombobox() {
                 setIsOpen(false);
                 setAuthModalOpen(true);
               }}
-              className="flex items-center space-x-1 text-primary hover:text-primary/80 transition-colors px-2 py-1 rounded-md hover:bg-primary/10 cursor-pointer font-medium"
+              className="flex items-center space-x-1 text-indigo-400 hover:text-indigo-300 hover:underline transition-colors px-2 py-1 rounded cursor-pointer font-medium"
             >
               <Key className="h-3 w-3" />
-              <span>{githubUser ? "Manage PAT" : "Add GitHub Token"}</span>
+              <span>{githubUser ? "Manage Token" : "Add Token"}</span>
             </button>
           </div>
         </div>

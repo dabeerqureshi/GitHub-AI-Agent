@@ -45,13 +45,13 @@ export default function ActivityPage() {
     <AppLayout>
       <div className="max-w-7xl mx-auto p-4 sm:p-6 md:p-8 space-y-6">
         {/* Page Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#252D3A] gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#2b2b2b] gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#F1F5F9] flex items-center gap-2">
-              <Activity className="h-6 w-6 text-[#818CF8]" />
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#ffffff] flex items-center gap-2">
+              <Activity className="h-6 w-6 text-[#007acc]" />
               <span>Activity & Execution History</span>
             </h1>
-            <p className="text-xs text-[#94A3B8] mt-0.5">
+            <p className="text-xs text-[#8c8c8c] mt-0.5">
               Chronological, tamper-evident log of all agent runs, cryptographic approvals, and tool invocations.
             </p>
           </div>
@@ -60,7 +60,7 @@ export default function ActivityPage() {
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="text-xs font-mono bg-[#121722] border border-[#252D3A] rounded-md px-3 py-1.5 text-[#F1F5F9] focus:outline-none focus:border-[#818CF8]"
+              className="text-xs font-mono bg-[#252526] border border-[#2b2b2b] rounded-md px-3 py-1.5 text-[#ffffff] focus:outline-none focus:border-[#007acc]"
             >
               <option value="">All Events</option>
               <option value="APPROVAL_REQUESTED">APPROVAL_REQUESTED</option>
@@ -71,19 +71,19 @@ export default function ActivityPage() {
             <button
               onClick={loadEvents}
               disabled={loading}
-              className="flex items-center space-x-1.5 px-3 py-1.5 bg-[#121722] hover:bg-[#171E2B] text-[#F1F5F9] text-xs font-semibold rounded-md border border-[#252D3A] transition-colors cursor-pointer"
+              className="flex items-center space-x-1.5 px-3 py-1.5 bg-[#252526] hover:bg-[#2a2d2e] text-[#ffffff] text-xs font-semibold rounded-md border border-[#2b2b2b] transition-colors cursor-pointer"
             >
-              <RefreshCw className={`h-3.5 w-3.5 text-[#818CF8] ${loading ? "animate-spin" : ""}`} />
+              <RefreshCw className={`h-3.5 w-3.5 text-[#007acc] ${loading ? "animate-spin" : ""}`} />
               <span>Refresh</span>
             </button>
           </div>
         </div>
 
         {/* Activity Table */}
-        <div className="rounded-xl surface-card overflow-hidden border border-[#252D3A]">
+        <div className="rounded-md bg-[#252526] overflow-hidden border border-[#2b2b2b]">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#0D1017] text-[#64748B] font-mono border-b border-[#252D3A]">
+              <thead className="bg-[#1e1e1e] text-[#8c8c8c] font-mono border-b border-[#2b2b2b]">
                 <tr>
                   <th className="p-3.5">Timestamp</th>
                   <th className="p-3.5">Event Type</th>
@@ -93,28 +93,28 @@ export default function ActivityPage() {
                   <th className="p-3.5 text-right">Details</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#252D3A]">
+              <tbody className="divide-y divide-[#2b2b2b]">
                 {events.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="p-8 text-center text-[#64748B] font-mono">
+                    <td colSpan={6} className="p-8 text-center text-[#8c8c8c] font-mono">
                       No activity events recorded yet. Run agent commands in the workspace.
                     </td>
                   </tr>
                 ) : (
                   events.map((e) => (
-                    <tr key={e.id} className="hover:bg-[#171E2B]/50 transition-colors">
-                      <td className="p-3.5 font-mono text-[#64748B] whitespace-nowrap font-tabular">
+                    <tr key={e.id} className="hover:bg-[#2a2d2e]/50 transition-colors">
+                      <td className="p-3.5 font-mono text-[#8c8c8c] whitespace-nowrap font-tabular">
                         <div className="flex items-center space-x-1.5">
-                          <Calendar className="h-3.5 w-3.5 text-[#818CF8]" />
+                          <Calendar className="h-3.5 w-3.5 text-[#007acc]" />
                           <span>{new Date(e.timestamp).toLocaleString()}</span>
                         </div>
                       </td>
-                      <td className="p-3.5 font-mono font-medium text-[#F1F5F9]">
-                        <span className="px-2 py-0.5 rounded bg-[#0D1017] border border-[#252D3A]">
+                      <td className="p-3.5 font-mono font-medium text-[#ffffff]">
+                        <span className="px-2 py-0.5 rounded bg-[#1e1e1e] border border-[#2b2b2b]">
                           {e.event_type}
                         </span>
                       </td>
-                      <td className="p-3.5 font-mono text-[#818CF8]">{e.tool_name || "—"}</td>
+                      <td className="p-3.5 font-mono text-[#007acc]">{e.tool_name || "—"}</td>
                       <td className="p-3.5">
                         <span
                           className={`inline-flex items-center gap-1 font-mono text-[10px] px-2 py-0.5 rounded-full border ${
@@ -128,13 +128,13 @@ export default function ActivityPage() {
                           {e.status}
                         </span>
                       </td>
-                      <td className="p-3.5 font-mono text-[#64748B] max-w-xs truncate">
+                      <td className="p-3.5 font-mono text-[#8c8c8c] max-w-xs truncate">
                         {e.action_hash ? (
                           <div className="flex items-center space-x-1.5">
-                            <span className="truncate font-tabular text-[#94A3B8]">{e.action_hash}</span>
+                            <span className="truncate font-tabular text-[#8c8c8c]">{e.action_hash}</span>
                             <button
                               onClick={() => copyToClipboard(e.action_hash || "")}
-                              className="text-[#64748B] hover:text-[#F1F5F9] cursor-pointer"
+                              className="text-[#8c8c8c] hover:text-[#ffffff] cursor-pointer"
                               title="Copy hash"
                             >
                               {copiedHash === e.action_hash ? (
@@ -150,11 +150,11 @@ export default function ActivityPage() {
                       </td>
                       <td className="p-3.5 text-right">
                         <details className="cursor-pointer inline-block text-left">
-                          <summary className="text-[#818CF8] hover:underline font-mono text-[11px] select-none flex items-center gap-1">
+                          <summary className="text-[#007acc] hover:underline font-mono text-[11px] select-none flex items-center gap-1">
                             <Code2 className="h-3 w-3" />
                             <span>Payload</span>
                           </summary>
-                          <pre className="mt-2 p-2.5 rounded bg-[#090B10] border border-[#252D3A] text-[10px] font-mono text-[#F1F5F9] max-h-36 overflow-auto">
+                          <pre className="mt-2 p-2.5 rounded bg-[#1e1e1e] border border-[#2b2b2b] text-[10px] font-mono text-[#ffffff] max-h-36 overflow-auto">
                             {JSON.stringify(e.details, null, 2)}
                           </pre>
                         </details>

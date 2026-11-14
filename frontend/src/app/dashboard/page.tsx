@@ -9,24 +9,18 @@ import {
   CircleDot,
   Bot,
   Sparkles,
-  ArrowRight,
   RefreshCw,
-  Clock,
-  CheckCircle2,
-  AlertTriangle,
-  Play,
-  Terminal,
   Activity as ActivityIcon,
-  Search,
-  ExternalLink,
   ChevronRight,
   Send,
   Layers,
   Bug,
   FileSearch,
+  Terminal,
 } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useChatStore } from "@/store/use-chat-store";
+import { ModelDropdown } from "@/components/models/ModelDropdown";
 import {
   fetchExecutionRuns,
   fetchAuditEvents,
@@ -120,28 +114,31 @@ export default function DashboardPage() {
 
   return (
     <AppLayout>
-      <div className="max-w-7xl mx-auto p-4 sm:p-6 md:p-8 space-y-6">
+      <div className="max-w-7xl w-full mx-auto p-4 sm:p-6 md:p-8 space-y-6 font-sans">
         {/* HEADER */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#252D3A] gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-5 border-b border-slate-800 gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#F1F5F9]">
-              Overview
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+              Dashboard Overview
             </h1>
-            <p className="text-xs text-[#94A3B8] mt-0.5">
-              Your development workspace and autonomous agents at a glance.
+            <p className="text-sm text-slate-400 mt-1">
+              Your developer workspace, active LLM engines, and autonomous tasks at a glance.
             </p>
           </div>
 
-          <div className="flex items-center space-x-2 self-start sm:self-auto">
+          <div className="flex items-center space-x-3 self-start sm:self-auto">
+            {/* Model Selector Dropdown right in the Dashboard header */}
+            <ModelDropdown />
+
             <button
               onClick={() => {
                 loadRepositories();
                 loadDashboardData();
               }}
               disabled={loading}
-              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-md bg-[#121722] hover:bg-[#171E2B] border border-[#252D3A] text-xs font-medium text-[#F1F5F9] transition-colors cursor-pointer"
+              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-medium text-slate-300 transition-colors cursor-pointer"
             >
-              <RefreshCw className={`h-3.5 w-3.5 text-[#818CF8] ${loading ? "animate-spin" : ""}`} />
+              <RefreshCw className={`h-3.5 w-3.5 text-indigo-400 ${loading ? "animate-spin" : ""}`} />
               <span>Refresh</span>
             </button>
           </div>
@@ -151,73 +148,73 @@ export default function DashboardPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <Link
             href="/repositories"
-            className="p-4 rounded-xl surface-card interactive-card flex flex-col justify-between"
+            className="p-5 rounded-xl bg-slate-900/90 hover:bg-slate-800/90 border border-slate-800 hover:border-indigo-500/50 transition-all flex flex-col justify-between shadow-xs"
           >
-            <div className="flex items-center justify-between text-[#64748B]">
-              <span className="text-xs font-mono font-medium uppercase tracking-wider">
+            <div className="flex items-center justify-between text-slate-400">
+              <span className="text-xs font-semibold uppercase tracking-wider">
                 Repositories
               </span>
-              <FolderGit2 className="h-4 w-4 text-[#818CF8]" />
+              <FolderGit2 className="h-5 w-5 text-indigo-400" />
             </div>
-            <div className="mt-3">
-              <div className="text-2xl font-bold text-[#F1F5F9] font-tabular">
+            <div className="mt-4">
+              <div className="text-2xl sm:text-3xl font-bold text-white font-tabular">
                 {connectedReposCount}
               </div>
-              <div className="text-[11px] text-[#94A3B8] mt-0.5">Connected accounts</div>
+              <div className="text-xs text-slate-400 mt-1">Connected accounts</div>
             </div>
           </Link>
 
           <Link
             href="/pull-requests"
-            className="p-4 rounded-xl surface-card interactive-card flex flex-col justify-between"
+            className="p-5 rounded-xl bg-slate-900/90 hover:bg-slate-800/90 border border-slate-800 hover:border-indigo-500/50 transition-all flex flex-col justify-between shadow-xs"
           >
-            <div className="flex items-center justify-between text-[#64748B]">
-              <span className="text-xs font-mono font-medium uppercase tracking-wider">
+            <div className="flex items-center justify-between text-slate-400">
+              <span className="text-xs font-semibold uppercase tracking-wider">
                 Pull Requests
               </span>
-              <GitPullRequest className="h-4 w-4 text-[#38BDF8]" />
+              <GitPullRequest className="h-5 w-5 text-indigo-400" />
             </div>
-            <div className="mt-3">
-              <div className="text-2xl font-bold text-[#F1F5F9] font-tabular">
+            <div className="mt-4">
+              <div className="text-2xl sm:text-3xl font-bold text-white font-tabular">
                 {runs.filter((r) => r.user_request?.toLowerCase().includes("pr") || r.user_request?.toLowerCase().includes("pull")).length}
               </div>
-              <div className="text-[11px] text-[#94A3B8] mt-0.5">Active reviews & diffs</div>
+              <div className="text-xs text-slate-400 mt-1">Active reviews &amp; diffs</div>
             </div>
           </Link>
 
           <Link
             href="/issues"
-            className="p-4 rounded-xl surface-card interactive-card flex flex-col justify-between"
+            className="p-5 rounded-xl bg-slate-900/90 hover:bg-slate-800/90 border border-slate-800 hover:border-indigo-500/50 transition-all flex flex-col justify-between shadow-xs"
           >
-            <div className="flex items-center justify-between text-[#64748B]">
-              <span className="text-xs font-mono font-medium uppercase tracking-wider">
+            <div className="flex items-center justify-between text-slate-400">
+              <span className="text-xs font-semibold uppercase tracking-wider">
                 Open Issues
               </span>
-              <CircleDot className="h-4 w-4 text-emerald-400" />
+              <CircleDot className="h-5 w-5 text-emerald-400" />
             </div>
-            <div className="mt-3">
-              <div className="text-2xl font-bold text-[#F1F5F9] font-tabular">
+            <div className="mt-4">
+              <div className="text-2xl sm:text-3xl font-bold text-white font-tabular">
                 {runs.filter((r) => r.user_request?.toLowerCase().includes("issue") || r.user_request?.toLowerCase().includes("bug")).length}
               </div>
-              <div className="text-[11px] text-[#94A3B8] mt-0.5">Tracked & triaged</div>
+              <div className="text-xs text-slate-400 mt-1">Tracked &amp; triaged</div>
             </div>
           </Link>
 
           <Link
             href="/approvals"
-            className="p-4 rounded-xl surface-card interactive-card flex flex-col justify-between"
+            className="p-5 rounded-xl bg-slate-900/90 hover:bg-slate-800/90 border border-slate-800 hover:border-indigo-500/50 transition-all flex flex-col justify-between shadow-xs"
           >
-            <div className="flex items-center justify-between text-[#64748B]">
-              <span className="text-xs font-mono font-medium uppercase tracking-wider">
+            <div className="flex items-center justify-between text-slate-400">
+              <span className="text-xs font-semibold uppercase tracking-wider">
                 Agent Tasks
               </span>
-              <Bot className="h-4 w-4 text-amber-400" />
+              <Bot className="h-5 w-5 text-amber-400" />
             </div>
-            <div className="mt-3">
-              <div className="text-2xl font-bold text-[#F1F5F9] font-tabular">
+            <div className="mt-4">
+              <div className="text-2xl sm:text-3xl font-bold text-white font-tabular">
                 {activeAgentTasks || pendingApprovalsCount}
               </div>
-              <div className="text-[11px] text-[#94A3B8] mt-0.5">
+              <div className="text-xs text-slate-400 mt-1">
                 {pendingApprovalsCount > 0 ? `${pendingApprovalsCount} awaiting approval` : "All systems normal"}
               </div>
             </div>
@@ -225,33 +222,33 @@ export default function DashboardPage() {
         </div>
 
         {/* SECTION 2 — AI WORKSPACE (Command Panel) */}
-        <div className="p-5 sm:p-6 rounded-xl surface-card border border-[#252D3A] space-y-4">
+        <div className="p-5 rounded-xl bg-slate-900 border border-slate-800 space-y-4">
           <div className="flex items-center space-x-2">
-            <Sparkles className="h-4 w-4 text-[#818CF8]" />
-            <h2 className="text-sm font-semibold text-[#F1F5F9]">
+            <Sparkles className="h-5 w-5 text-indigo-400" />
+            <h2 className="text-base font-semibold text-white">
               What would you like to work on?
             </h2>
           </div>
 
           <form onSubmit={handlePromptSubmit} className="space-y-3">
-            <div className="relative rounded-lg border border-[#252D3A] bg-[#0D1017] focus-within:border-[#818CF8]/60 transition-colors">
+            <div className="rounded-xl border border-slate-800 bg-slate-950 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 transition-all">
               <textarea
                 value={promptInput}
                 onChange={(e) => setPromptInput(e.target.value)}
                 placeholder={`Instruct GitHub AI on ${targetRepo} (e.g. 'Investigate open bugs', 'Explain commit history')...`}
                 rows={2}
-                className="w-full resize-none bg-transparent p-3 text-xs md:text-sm text-[#F1F5F9] placeholder:text-[#64748B] focus:outline-none"
+                className="w-full resize-none bg-transparent p-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none"
               />
-              <div className="flex items-center justify-between p-2 pt-0 border-t border-[#252D3A]/40 text-xs text-[#64748B]">
-                <span className="text-[11px] font-mono">
-                  Target: <span className="text-[#F1F5F9] font-medium">{targetRepo}</span>
+              <div className="flex items-center justify-between p-2.5 pt-0 border-t border-slate-800/60 text-xs text-slate-400">
+                <span className="text-xs">
+                  Target: <strong className="text-white font-mono">{targetRepo}</strong>
                 </span>
                 <button
                   type="submit"
                   disabled={!promptInput.trim()}
-                  className="px-3.5 py-1.5 bg-[#818CF8] hover:bg-[#818CF8]/90 text-[#090B10] font-semibold rounded-md text-xs flex items-center space-x-1.5 transition-all disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                  className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg text-xs flex items-center space-x-1.5 transition-colors disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
                 >
-                  <Send className="h-3 w-3" />
+                  <Send className="h-3.5 w-3.5" />
                   <span>Send</span>
                 </button>
               </div>
@@ -266,16 +263,16 @@ export default function DashboardPage() {
                 <button
                   key={idx}
                   onClick={() => handleLaunchPrompt(card.prompt)}
-                  className="flex items-start space-x-3 p-3 rounded-lg bg-[#0D1017] hover:bg-[#171E2B] border border-[#252D3A] text-left transition-all cursor-pointer group"
+                  className="flex items-start space-x-3 p-3 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-indigo-500/50 text-left transition-all cursor-pointer group"
                 >
-                  <div className="p-1.5 rounded-md bg-[#121722] text-[#818CF8] border border-[#252D3A] group-hover:border-indigo-500/40 shrink-0">
+                  <div className="p-1.5 rounded-md bg-slate-900 text-indigo-400 border border-slate-800 group-hover:border-indigo-500/40 shrink-0">
                     <Icon className="h-4 w-4" />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-xs font-semibold text-[#F1F5F9] group-hover:text-[#818CF8] transition-colors truncate">
+                    <div className="text-xs font-semibold text-white group-hover:text-indigo-300 transition-colors truncate">
                       {card.title}
                     </div>
-                    <div className="text-[10px] text-[#94A3B8] mt-0.5 line-clamp-1">
+                    <div className="text-[11px] text-slate-400 mt-0.5 line-clamp-1">
                       {card.desc}
                     </div>
                   </div>
@@ -286,48 +283,48 @@ export default function DashboardPage() {
         </div>
 
         {/* TWO COLUMN GRID: RECENT ACTIVITY & AGENT STATUS */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* SECTION 3 — RECENT ACTIVITY */}
-          <div className="rounded-xl surface-card p-5 space-y-3">
-            <div className="flex items-center justify-between pb-3 border-b border-[#252D3A]">
+          <div className="rounded-xl bg-slate-900 border border-slate-800 p-5 space-y-3">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
               <div className="flex items-center space-x-2">
-                <ActivityIcon className="h-4 w-4 text-[#818CF8]" />
-                <h3 className="text-sm font-semibold text-[#F1F5F9]">Recent Activity</h3>
+                <ActivityIcon className="h-4 w-4 text-indigo-400" />
+                <h3 className="text-xs font-semibold text-slate-200 uppercase tracking-wider">Recent Activity</h3>
               </div>
               <Link
                 href="/activity"
-                className="text-[11px] font-mono text-[#818CF8] hover:underline flex items-center gap-1"
+                className="text-xs text-indigo-400 hover:underline flex items-center gap-1"
               >
                 <span>View all</span>
-                <ChevronRight className="h-3 w-3" />
+                <ChevronRight className="h-3.5 w-3.5" />
               </Link>
             </div>
 
             <div className="space-y-2">
               {activity.length === 0 ? (
-                <div className="text-center py-8 text-xs text-[#64748B] font-mono">
+                <div className="text-center py-6 text-xs text-slate-500">
                   No activity recorded yet. Run agent tasks in the workspace to see live events.
                 </div>
               ) : (
                 activity.slice(0, 5).map((act) => (
                   <div
                     key={act.id}
-                    className="p-2.5 rounded-lg bg-[#0D1017] border border-[#252D3A] flex items-center justify-between text-xs"
+                    className="p-2.5 rounded-lg bg-slate-950 border border-slate-800/80 flex items-center justify-between text-xs"
                   >
                     <div className="flex items-center space-x-2.5 truncate">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#818CF8] shrink-0" />
+                      <span className="w-2 h-2 rounded-full bg-indigo-500 shrink-0" />
                       <div className="truncate">
-                        <span className="font-mono text-[#F1F5F9] font-medium mr-1.5">
+                        <span className="text-white font-medium mr-1.5">
                           {act.event_type}
                         </span>
                         {act.tool_name && (
-                          <span className="text-[11px] font-mono text-[#94A3B8]">
+                          <span className="text-[11px] font-mono text-slate-400">
                             ({act.tool_name})
                           </span>
                         )}
                       </div>
                     </div>
-                    <span className="text-[10px] text-[#64748B] font-mono shrink-0 ml-2 font-tabular">
+                    <span className="text-[11px] text-slate-500 font-mono shrink-0 ml-2 font-tabular">
                       {new Date(act.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                     </span>
                   </div>
@@ -337,42 +334,42 @@ export default function DashboardPage() {
           </div>
 
           {/* SECTION 4 — AGENT STATUS */}
-          <div className="rounded-xl surface-card p-5 space-y-3">
-            <div className="flex items-center justify-between pb-3 border-b border-[#252D3A]">
+          <div className="rounded-xl bg-slate-900 border border-slate-800 p-5 space-y-3">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
               <div className="flex items-center space-x-2">
-                <Bot className="h-4 w-4 text-emerald-400" />
-                <h3 className="text-sm font-semibold text-[#F1F5F9]">Agent Status</h3>
+                <Bot className="h-4 w-4 text-indigo-400" />
+                <h3 className="text-xs font-semibold text-slate-200 uppercase tracking-wider">Agent Status</h3>
               </div>
               <Link
                 href="/agents"
-                className="text-[11px] font-mono text-[#818CF8] hover:underline flex items-center gap-1"
+                className="text-xs text-indigo-400 hover:underline flex items-center gap-1"
               >
                 <span>View runs</span>
-                <ChevronRight className="h-3 w-3" />
+                <ChevronRight className="h-3.5 w-3.5" />
               </Link>
             </div>
 
             <div className="space-y-2">
               {runs.length === 0 ? (
-                <div className="text-center py-8 text-xs text-[#64748B] font-mono">
+                <div className="text-center py-6 text-xs text-slate-500">
                   No agent runs logged yet. Execute workflows via chat.
                 </div>
               ) : (
                 runs.slice(0, 5).map((run) => (
                   <div
                     key={run.id}
-                    className="p-2.5 rounded-lg bg-[#0D1017] border border-[#252D3A] flex items-center justify-between text-xs"
+                    className="p-2.5 rounded-lg bg-slate-950 border border-slate-800/80 flex items-center justify-between text-xs"
                   >
                     <div className="truncate pr-2">
-                      <div className="font-medium text-[#F1F5F9] truncate">
+                      <div className="font-medium text-white truncate">
                         {run.user_request}
                       </div>
-                      <div className="text-[10px] text-[#64748B] font-mono truncate mt-0.5">
+                      <div className="text-[11px] text-slate-400 font-mono truncate mt-0.5">
                         {run.repo_name || "global"}
                       </div>
                     </div>
                     <span
-                      className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded-full shrink-0 border ${
+                      className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded shrink-0 border ${
                         run.status === "COMPLETED"
                           ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
                           : run.status === "RUNNING"
@@ -391,25 +388,27 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* SECTION 5 & 6 — PULL REQUESTS & WORKFLOW HEALTH */}
-        <div className="rounded-xl surface-card p-5 space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-[#252D3A]">
+        {/* SECTION 5 — WORKFLOW HEALTH & EXECUTION RUNS */}
+        <div className="rounded-xl bg-slate-900 border border-slate-800 p-5 space-y-3">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-800">
             <div className="flex items-center space-x-2">
-              <Terminal className="h-4 w-4 text-[#818CF8]" />
-              <h3 className="text-sm font-semibold text-[#F1F5F9]">Workflow Health & Execution Runs</h3>
+              <Terminal className="h-4 w-4 text-indigo-400" />
+              <h3 className="text-xs font-semibold text-slate-200 uppercase tracking-wider">
+                Workflow Health &amp; Execution Runs
+              </h3>
             </div>
             <Link
               href="/coding-tasks"
-              className="text-[11px] font-mono text-[#818CF8] hover:underline flex items-center gap-1"
+              className="text-xs text-indigo-400 hover:underline flex items-center gap-1"
             >
               <span>Coding tasks</span>
-              <ChevronRight className="h-3 w-3" />
+              <ChevronRight className="h-3.5 w-3.5" />
             </Link>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#0D1017] text-[#64748B] font-mono border-b border-[#252D3A]">
+              <thead className="bg-slate-950 text-slate-400 font-mono border-b border-slate-800">
                 <tr>
                   <th className="p-3">Run ID</th>
                   <th className="p-3">Instruction / Target</th>
@@ -418,27 +417,27 @@ export default function DashboardPage() {
                   <th className="p-3">Timestamp</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#252D3A]">
+              <tbody className="divide-y divide-slate-800/80">
                 {runs.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="p-4 text-center text-[#64748B] font-mono">
+                    <td colSpan={5} className="p-6 text-center text-slate-500">
                       No workflow runs recorded yet.
                     </td>
                   </tr>
                 ) : (
                   runs.slice(0, 4).map((r) => (
-                    <tr key={r.id} className="hover:bg-[#171E2B]/50 transition-colors">
-                      <td className="p-3 font-mono text-[#818CF8]">{r.id.slice(0, 8)}</td>
-                      <td className="p-3 font-medium text-[#F1F5F9] max-w-sm truncate">
+                    <tr key={r.id} className="hover:bg-slate-800/40 transition-colors">
+                      <td className="p-3 font-mono text-indigo-400">{r.id.slice(0, 8)}</td>
+                      <td className="p-3 font-medium text-white max-w-sm truncate">
                         {r.user_request}
                       </td>
-                      <td className="p-3 font-mono text-[#94A3B8]">{r.repo_name || "—"}</td>
+                      <td className="p-3 font-mono text-slate-400">{r.repo_name || "—"}</td>
                       <td className="p-3">
-                        <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-[#0D1017] border border-[#252D3A] text-[#F1F5F9]">
+                        <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-slate-950 border border-slate-800 text-slate-200">
                           {r.status}
                         </span>
                       </td>
-                      <td className="p-3 font-mono text-[#64748B] font-tabular">
+                      <td className="p-3 font-mono text-slate-400 font-tabular">
                         {new Date(r.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                       </td>
                     </tr>

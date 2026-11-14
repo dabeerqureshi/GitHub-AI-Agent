@@ -34,13 +34,13 @@ export default function CodingTasksPage() {
     <AppLayout>
       <div className="max-w-7xl mx-auto p-4 sm:p-6 md:p-8 space-y-6">
         {/* Page Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#252D3A] gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#2b2b2b] gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#F1F5F9] flex items-center gap-2">
-              <Terminal className="h-6 w-6 text-[#818CF8]" />
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#ffffff] flex items-center gap-2">
+              <Terminal className="h-6 w-6 text-[#007acc]" />
               <span>Coding Tasks</span>
             </h1>
-            <p className="text-xs text-[#94A3B8] mt-0.5">
+            <p className="text-xs text-[#8c8c8c] mt-0.5">
               Autonomous code modifications, test execution, and pull request generation.
             </p>
           </div>
@@ -51,7 +51,7 @@ export default function CodingTasksPage() {
               startNewConversation(`Coding Task: ${activeRepo || "Workspace"}`);
               sendUserMessage(`Implement unit tests and fix defects in ${activeRepo || "the repository"}`);
             }}
-            className="self-start sm:self-auto flex items-center space-x-1.5 px-3 py-1.5 rounded-md bg-[#818CF8] hover:bg-[#818CF8]/90 text-[#090B10] text-xs font-semibold transition-colors"
+            className="self-start sm:self-auto flex items-center space-x-1.5 px-3 py-1.5 rounded-md bg-[#007acc] hover:bg-[#007acc]/90 text-white text-xs font-semibold transition-colors"
           >
             <Sparkles className="h-3.5 w-3.5" />
             <span>New Coding Task</span>
@@ -61,12 +61,12 @@ export default function CodingTasksPage() {
         {/* Tasks List */}
         <div className="space-y-3">
           {runs.length === 0 ? (
-            <div className="text-center py-16 border border-dashed border-[#252D3A] rounded-xl surface-card">
-              <div className="w-12 h-12 rounded-xl bg-[#0D1017] text-[#64748B] flex items-center justify-center mx-auto mb-3 border border-[#252D3A]">
-                <FileCode className="h-6 w-6 text-[#818CF8]" />
+            <div className="text-center py-16 border border-dashed border-[#2b2b2b] rounded-md bg-[#252526]">
+              <div className="w-12 h-12 rounded-md bg-[#1e1e1e] text-[#8c8c8c] flex items-center justify-center mx-auto mb-3 border border-[#2b2b2b]">
+                <FileCode className="h-6 w-6 text-[#007acc]" />
               </div>
-              <div className="text-sm font-semibold text-[#F1F5F9]">No coding tasks recorded</div>
-              <p className="text-xs text-[#94A3B8] mt-1 max-w-sm mx-auto">
+              <div className="text-sm font-semibold text-[#ffffff]">No coding tasks recorded</div>
+              <p className="text-xs text-[#8c8c8c] mt-1 max-w-sm mx-auto">
                 Ask the agent in the chat to write code, fix bugs, or create tests to see automated coding tasks here.
               </p>
             </div>
@@ -74,11 +74,11 @@ export default function CodingTasksPage() {
             runs.map((run) => (
               <div
                 key={run.id}
-                className="p-4 rounded-xl surface-card border border-[#252D3A] flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                className="p-4 rounded-md bg-[#252526] border border-[#2b2b2b] flex flex-col sm:flex-row sm:items-center justify-between gap-3"
               >
                 <div className="space-y-1 truncate">
                   <div className="flex items-center space-x-2">
-                    <span className="font-mono text-xs text-[#818CF8] font-semibold">
+                    <span className="font-mono text-xs text-[#007acc] font-semibold">
                       {run.id.slice(0, 8)}
                     </span>
                     <span
@@ -95,22 +95,22 @@ export default function CodingTasksPage() {
                       {run.status}
                     </span>
                     {run.repo_name && (
-                      <span className="text-xs font-mono text-[#94A3B8] flex items-center gap-1">
-                        <FolderGit2 className="h-3 w-3 text-[#64748B]" />
+                      <span className="text-xs font-mono text-[#8c8c8c] flex items-center gap-1">
+                        <FolderGit2 className="h-3 w-3 text-[#8c8c8c]" />
                         <span>{run.repo_name}</span>
                       </span>
                     )}
                   </div>
-                  <div className="text-sm font-semibold text-[#F1F5F9] truncate">
+                  <div className="text-sm font-semibold text-[#ffffff] truncate">
                     {run.user_request}
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-3 shrink-0 text-xs font-mono text-[#64748B]">
+                <div className="flex items-center space-x-3 shrink-0 text-xs font-mono text-[#8c8c8c]">
                   <span>{new Date(run.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
                   <Link
                     href="/agents"
-                    className="px-2.5 py-1 text-xs font-medium rounded-md bg-[#121722] hover:bg-[#171E2B] text-[#818CF8] border border-[#252D3A] transition-colors"
+                    className="px-2.5 py-1 text-xs font-medium rounded-md bg-[#252526] hover:bg-[#2a2d2e] text-[#007acc] border border-[#2b2b2b] transition-colors"
                   >
                     View Timeline &rarr;
                   </Link>

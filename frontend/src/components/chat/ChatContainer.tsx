@@ -16,6 +16,7 @@ import {
 import { useChatStore } from "@/store/use-chat-store";
 import { MessageItem } from "@/components/chat/MessageItem";
 import { ApprovalCard } from "@/components/approvals/ApprovalCard";
+import { ModelDropdown } from "@/components/models/ModelDropdown";
 
 export function ChatContainer() {
   const {
@@ -85,19 +86,19 @@ export function ChatContainer() {
 
   if (!activeConversation) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center text-muted-foreground animate-fade-in">
-        <div className="w-16 h-16 rounded-3xl bg-primary/10 text-primary flex items-center justify-center border border-primary/20 shadow-lg mb-4 animate-pulse-slow">
+      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center text-slate-400 animate-fade-in bg-slate-950">
+        <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center border border-indigo-500/20 shadow-lg mb-4">
           <Sparkles className="h-8 w-8" />
         </div>
-        <h3 className="text-xl font-bold text-foreground tracking-tight">GitHub AI Workspace</h3>
-        <p className="text-xs md:text-sm max-w-md text-muted-foreground mt-2 leading-relaxed">
+        <h3 className="text-xl font-bold text-white tracking-tight">GitHub AI Workspace</h3>
+        <p className="text-sm max-w-md text-slate-400 mt-2 leading-relaxed">
           Autonomous developer agent powered by hybrid model routing, Model Context Protocol (MCP),
           and strict Human-In-The-Loop cryptographic approvals.
         </p>
-        <div className="mt-6 flex items-center space-x-2 text-xs font-mono text-muted-foreground bg-secondary/40 px-3.5 py-1.5 rounded-full border border-border">
-          <FolderGit2 className="h-3.5 w-3.5 text-primary" />
+        <div className="mt-6 flex items-center space-x-2 text-xs font-mono text-slate-400 bg-slate-900 px-3.5 py-1.5 rounded-full border border-slate-800">
+          <FolderGit2 className="h-3.5 w-3.5 text-indigo-400" />
           <span>Active Target:</span>
-          <span className="font-semibold text-foreground truncate max-w-[200px]">
+          <span className="font-semibold text-white truncate max-w-[200px]">
             {activeRepo || "No repository selected"}
           </span>
         </div>
@@ -108,47 +109,53 @@ export function ChatContainer() {
   const hasMessages = activeConversation.messages.length > 0;
 
   return (
-    <div className="flex-1 flex flex-col h-[calc(100vh-53px)] bg-background overflow-hidden">
+    <div className="flex-1 flex flex-col h-full bg-slate-950 overflow-hidden font-sans">
       {/* Conversation Subheader */}
-      <div className="px-3 sm:px-6 py-2.5 glass-panel border-b border-border flex flex-wrap items-center justify-between gap-2 text-xs">
-        <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
-          <span className="font-semibold text-foreground text-sm tracking-tight truncate max-w-[160px] sm:max-w-none">
+      <div className="px-4 py-2.5 bg-slate-900/60 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div className="flex items-center space-x-2.5 min-w-0">
+          <span className="font-semibold text-white text-sm tracking-tight truncate max-w-[180px] sm:max-w-none">
             {activeConversation.title.startsWith("Chat on ")
               ? "Workspace Session"
               : activeConversation.title}
           </span>
-          <span className="text-border font-mono hidden sm:inline">/</span>
-          <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-secondary text-xs font-mono text-muted-foreground border border-border shadow-xs truncate">
-            <FolderGit2 className="h-3.5 w-3.5 text-primary shrink-0" />
-            <span className="text-foreground font-semibold truncate max-w-[130px] sm:max-w-[220px]">
+          <span className="text-slate-600 hidden sm:inline">/</span>
+          <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-slate-900 text-xs text-slate-300 border border-slate-800 truncate">
+            <FolderGit2 className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
+            <span className="font-medium truncate max-w-[140px] sm:max-w-[240px]">
               {activeRepo || "No repo selected"}
             </span>
           </div>
         </div>
-        <div className="flex items-center space-x-1.5 text-xs text-emerald-400 font-mono bg-emerald-500/10 border border-emerald-500/25 px-2.5 py-1 rounded-full shrink-0 shadow-xs">
-          <Shield className="h-3 w-3 text-emerald-400 shrink-0" />
-          <span className="hidden sm:inline">Cryptographic HITL Enforced</span>
-          <span className="sm:hidden text-[11px]">HITL Enforced</span>
+        <div className="flex items-center space-x-2">
+          {/* Quick Model Selector in Header */}
+          <div className="sm:hidden">
+            <ModelDropdown compact />
+          </div>
+          <div className="flex items-center space-x-1.5 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-md shrink-0">
+            <Shield className="h-3 w-3 text-emerald-400 shrink-0" />
+            <span className="hidden sm:inline font-medium">Cryptographic HITL Enforced</span>
+            <span className="sm:hidden font-medium">HITL</span>
+          </div>
         </div>
       </div>
 
       {/* Plan Visualizer (if active) */}
       {currentPlan.length > 0 && (
-        <div className="bg-secondary/40 border-b border-border px-3 sm:px-6 py-2 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 text-xs animate-slide-up">
-          <div className="flex items-center space-x-1.5 font-semibold text-primary shrink-0">
+        <div className="bg-slate-900/40 border-b border-slate-800 px-4 py-2 flex flex-col sm:flex-row items-start sm:items-center gap-2 text-xs animate-slide-up">
+          <div className="flex items-center space-x-1.5 font-semibold text-indigo-400 shrink-0 text-xs">
             <ListOrdered className="h-3.5 w-3.5" />
             <span>Agent Plan:</span>
           </div>
-          <div className="flex items-center space-x-2 overflow-x-auto w-full py-1 text-muted-foreground font-mono">
+          <div className="flex items-center space-x-2 overflow-x-auto w-full py-0.5 text-slate-400">
             {currentPlan.map((step, idx) => {
               const cleanStep = step.replace(/^\d+[\.\)]\s*/, "");
               return (
                 <div
                   key={idx}
-                  className="whitespace-nowrap bg-card px-3 py-1 rounded-lg border border-border text-[11px] flex items-center space-x-1.5 shadow-xs shrink-0"
+                  className="whitespace-nowrap bg-slate-900 px-2.5 py-1 rounded-md border border-slate-800 text-xs flex items-center space-x-1.5 shrink-0"
                 >
-                  <span className="text-primary font-bold">{idx + 1}.</span>
-                  <span className="text-foreground font-medium">{cleanStep}</span>
+                  <span className="text-indigo-400 font-bold">{idx + 1}.</span>
+                  <span className="text-slate-200">{cleanStep}</span>
                 </div>
               );
             })}
@@ -157,121 +164,136 @@ export function ChatContainer() {
       )}
 
       {/* Message List / Starter Screen */}
-      <div className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 space-y-3" role="log" aria-live="polite">
-        {!hasMessages ? (
-          /* Empty State: Quick Action Starter Cards */
-          <div className="max-w-3xl mx-auto py-6 sm:py-8 animate-fade-in space-y-6">
-            <div className="text-center space-y-2">
-              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-primary/15 border border-primary/30 text-primary text-xs font-mono font-medium mb-2 shadow-xs">
-                <Sparkles className="h-3.5 w-3.5" />
-                <span>Ready for instructions</span>
+      <div className="flex-1 overflow-y-auto px-3 sm:px-6 md:px-8 py-5 space-y-4 bg-slate-950" role="log" aria-live="polite">
+        <div className="max-w-4xl mx-auto space-y-4">
+          {!hasMessages ? (
+            /* Empty State: Quick Action Starter Cards */
+            <div className="py-6 sm:py-10 animate-fade-in space-y-6">
+              <div className="text-center space-y-2">
+                <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 text-xs font-medium mb-1">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  <span>Agent ready for instructions</span>
+                </div>
+                <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+                  How can I assist with <span className="text-indigo-400 font-mono">{activeRepo}</span>?
+                </h2>
+                <p className="text-sm text-slate-400 max-w-lg mx-auto leading-relaxed">
+                  Select an autonomous workflow below or enter your technical prompt.
+                </p>
               </div>
-              <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-                How can I assist with <span className="text-primary font-mono">{activeRepo}</span>?
-              </h2>
-              <p className="text-xs text-muted-foreground max-w-lg mx-auto">
-                Select a high-leverage workflow below or enter any natural language instruction.
-              </p>
-            </div>
 
-            {/* 4 Enterprise Starter Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-              {starterCards.map((card, i) => {
-                const Icon = card.icon;
-                return (
-                  <button
-                    key={i}
-                    onClick={() => handleQuickPrompt(card.prompt)}
-                    disabled={isSending}
-                    className="flex items-start space-x-3.5 p-4 rounded-2xl surface-card text-left interactive-card group cursor-pointer"
-                  >
-                    <div className="p-2.5 rounded-xl bg-primary/15 text-primary border border-primary/30 group-hover:scale-105 transition-transform shrink-0 shadow-inner">
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-xs text-foreground group-hover:text-primary transition-colors">
+              {/* 4 Enterprise Starter Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                {starterCards.map((card, i) => {
+                  const Icon = card.icon;
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => handleQuickPrompt(card.prompt)}
+                      disabled={isSending}
+                      className="flex items-start space-x-3.5 p-4 rounded-xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-indigo-500/50 text-left transition-all group cursor-pointer shadow-sm hover:shadow-md"
+                    >
+                      <div className="p-2 rounded-lg bg-slate-950 text-indigo-400 border border-slate-800 group-hover:border-indigo-500/40 transition-colors shrink-0">
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="font-semibold text-sm text-white group-hover:text-indigo-300 transition-colors block">
                           {card.title}
                         </span>
+                        <p className="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+                          {card.desc}
+                        </p>
                       </div>
-                      <p className="text-[11px] text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
-                        {card.desc}
-                      </p>
-                    </div>
-                  </button>
-                );
-              })}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ) : (
-          /* Render Messages */
-          activeConversation.messages.map((msg) => (
-            <MessageItem key={msg.id} message={msg} />
-          ))
-        )}
+          ) : (
+            /* Render Messages */
+            activeConversation.messages.map((msg) => (
+              <MessageItem key={msg.id} message={msg} />
+            ))
+          )}
 
-        {/* Pending Approval Cards */}
-        {pendingApprovals.map((approval) => (
-          <ApprovalCard key={approval.id} approval={approval} />
-        ))}
+          {/* Pending Approval Cards */}
+          {pendingApprovals.map((approval) => (
+            <ApprovalCard key={approval.id} approval={approval} />
+          ))}
 
-        {/* Streaming / Tool Execution Status Indicator */}
-        {isSending && (
-          <div
-            className="flex items-center space-x-3 text-muted-foreground text-xs py-3 px-4 rounded-xl bg-secondary/80 border border-border max-w-md animate-pulse shadow-sm"
-            role="status"
-          >
-            <Loader2 className="h-4 w-4 animate-spin text-primary flex-shrink-0" />
-            <span className="font-mono text-[11px] text-foreground">
-              {streamingStatus || "Agent is synthesizing execution plan..."}
-            </span>
-          </div>
-        )}
+          {/* Streaming / Tool Execution Status Indicator */}
+          {isSending && (
+            <div
+              className="flex items-center space-x-3 text-sm py-2.5 px-4 rounded-xl bg-slate-900 border border-indigo-500/40 max-w-md animate-pulse shadow-md font-medium text-slate-200"
+              role="status"
+            >
+              <Loader2 className="h-4 w-4 animate-spin text-indigo-400 shrink-0" />
+              <span>
+                {streamingStatus || "Agent is synthesizing execution plan..."}
+              </span>
+            </div>
+          )}
 
-        <div ref={messagesEndRef} />
+          <div ref={messagesEndRef} />
+        </div>
       </div>
 
-      {/* Input Bar */}
-      <div className="p-3 sm:p-4 border-t border-border glass-panel">
-        <form
-          onSubmit={handleSubmit}
-          className="flex items-end space-x-2 sm:space-x-3 max-w-4xl mx-auto"
-          aria-label="Message input form"
-        >
-          <div className="flex-1 rounded-2xl border border-border bg-secondary/70 focus-within:ring-2 focus-within:ring-primary/40 focus-within:border-primary transition-all shadow-inner">
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              aria-label="Instruction input"
-              placeholder={`Instruct agent on ${activeRepo || "repository"} (e.g. 'Explain architecture', 'Check failing tests')...`}
-              rows={2}
-              className="w-full resize-none bg-transparent p-2.5 sm:p-3 text-xs md:text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
-            />
+      {/* Input Bar & Controls */}
+      <div className="p-3 sm:p-4 border-t border-slate-800 bg-slate-950/90 backdrop-blur-md">
+        <div className="max-w-4xl mx-auto space-y-2">
+          {/* Quick Toolbar: Model Selector & Repository Scope */}
+          <div className="flex items-center justify-between text-xs text-slate-400 px-1">
+            <div className="flex items-center space-x-2">
+              <span className="text-slate-500 hidden sm:inline">Engine:</span>
+              <ModelDropdown compact />
+            </div>
+            <div className="flex items-center space-x-1.5 text-xs text-slate-400">
+              <FolderGit2 className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
+              <span>
+                Scoped to: <strong className="text-slate-200 font-mono">{activeRepo || "global"}</strong>
+              </span>
+            </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={!input.trim() || isSending}
-            aria-label="Send instruction"
-            className="h-10 sm:h-11 px-4 sm:px-5 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-2xl text-xs md:text-sm flex items-center space-x-1.5 transition-all shadow-md shadow-primary/25 disabled:opacity-40 disabled:pointer-events-none shrink-0 cursor-pointer"
+          <form
+            onSubmit={handleSubmit}
+            className="flex items-end space-x-2"
+            aria-label="Message input form"
           >
-            {isSending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Send className="h-4 w-4" />
-            )}
-            <span>Send</span>
-          </button>
-        </form>
-        <div className="text-[10px] text-center text-muted-foreground/80 mt-2 font-mono flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5">
-          <span>Enter to send</span>
-          <span>•</span>
-          <span>Shift+Enter for new line</span>
-          <span>•</span>
-          <span>
-            Scoped to <span className="text-foreground font-semibold">{activeRepo || "global"}</span>
-          </span>
+            <div className="flex-1 rounded-xl border border-slate-800 bg-slate-900 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 transition-all">
+              <textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                aria-label="Instruction input"
+                placeholder={`Instruct agent on ${activeRepo || "repository"} (e.g. 'Explain architecture', 'Check failing tests')...`}
+                rows={2}
+                className="w-full resize-none bg-transparent p-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none leading-relaxed"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={!input.trim() || isSending}
+              aria-label="Send instruction"
+              className="h-11 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-xl text-sm flex items-center space-x-2 transition-all shadow-md hover:shadow-indigo-500/25 disabled:opacity-40 disabled:pointer-events-none shrink-0 cursor-pointer"
+            >
+              {isSending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+              <span>Send</span>
+            </button>
+          </form>
+
+          <div className="text-[11px] text-center text-slate-500 flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 pt-0.5">
+            <span>Enter to send</span>
+            <span>•</span>
+            <span>Shift+Enter for new line</span>
+            <span>•</span>
+            <span>Cryptographic HITL Enforced</span>
+          </div>
         </div>
       </div>
     </div>

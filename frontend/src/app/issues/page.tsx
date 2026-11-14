@@ -71,20 +71,20 @@ export default function IssuesPage() {
     <AppLayout>
       <div className="max-w-7xl mx-auto p-4 sm:p-6 md:p-8 space-y-6">
         {/* Page Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#252D3A] gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#2b2b2b] gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#F1F5F9] flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#ffffff] flex items-center gap-2">
               <CircleDot className="h-6 w-6 text-emerald-400" />
               <span>Issues</span>
             </h1>
-            <p className="text-xs text-[#94A3B8] mt-0.5">
+            <p className="text-xs text-[#8c8c8c] mt-0.5">
               Track defects, triage backlogs, and investigate root causes using autonomous agents.
             </p>
           </div>
 
           <button
             onClick={() => handleAiAction(`Find and analyze open issues in ${activeRepo || "the repository"}`)}
-            className="self-start sm:self-auto flex items-center space-x-1.5 px-3 py-1.5 rounded-md bg-[#818CF8] hover:bg-[#818CF8]/90 text-[#090B10] text-xs font-semibold transition-colors cursor-pointer"
+            className="self-start sm:self-auto flex items-center space-x-1.5 px-3 py-1.5 rounded-md bg-[#007acc] hover:bg-[#007acc]/90 text-white text-xs font-semibold transition-colors cursor-pointer"
           >
             <Sparkles className="h-3.5 w-3.5" />
             <span>AI Triage Open Issues</span>
@@ -94,13 +94,13 @@ export default function IssuesPage() {
         {/* Filter Controls */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-[#64748B]" />
+            <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-[#8c8c8c]" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search issues by title..."
-              className="w-full pl-8 pr-3 py-1.5 text-xs bg-[#121722] border border-[#252D3A] rounded-md text-[#F1F5F9] placeholder:text-[#64748B] focus:outline-none focus:border-[#818CF8]"
+              className="w-full pl-8 pr-3 py-1.5 text-xs bg-[#252526] border border-[#2b2b2b] rounded-md text-[#ffffff] placeholder:text-[#8c8c8c] focus:outline-none focus:border-[#007acc]"
             />
           </div>
 
@@ -111,8 +111,8 @@ export default function IssuesPage() {
                 onClick={() => setFilter(st)}
                 className={`px-2.5 py-1 text-xs font-mono rounded-md transition-colors ${
                   filter === st
-                    ? "bg-[#171E2B] text-[#F1F5F9] font-semibold border border-[#818CF8]/40"
-                    : "bg-[#0D1017] text-[#64748B] hover:text-[#F1F5F9] border border-[#252D3A]"
+                    ? "bg-[#2a2d2e] text-[#ffffff] font-semibold border border-[#007acc]/40"
+                    : "bg-[#1e1e1e] text-[#8c8c8c] hover:text-[#ffffff] border border-[#2b2b2b]"
                 }`}
               >
                 {st}
@@ -122,10 +122,10 @@ export default function IssuesPage() {
         </div>
 
         {/* Issue Table */}
-        <div className="rounded-xl surface-card overflow-hidden border border-[#252D3A]">
+        <div className="rounded-md bg-[#252526] overflow-hidden border border-[#2b2b2b]">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#0D1017] text-[#64748B] font-mono border-b border-[#252D3A]">
+              <thead className="bg-[#1e1e1e] text-[#8c8c8c] font-mono border-b border-[#2b2b2b]">
                 <tr>
                   <th className="p-3.5">#</th>
                   <th className="p-3.5">Title</th>
@@ -135,23 +135,23 @@ export default function IssuesPage() {
                   <th className="p-3.5 text-right">Agent Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#252D3A]">
+              <tbody className="divide-y divide-[#2b2b2b]">
                 {filteredIssues.map((issue) => (
-                  <tr key={issue.number} className="hover:bg-[#171E2B]/50 transition-colors">
-                    <td className="p-3.5 font-mono text-[#818CF8]">#{issue.number}</td>
-                    <td className="p-3.5 font-medium text-[#F1F5F9]">
+                  <tr key={issue.number} className="hover:bg-[#2a2d2e]/50 transition-colors">
+                    <td className="p-3.5 font-mono text-[#007acc]">#{issue.number}</td>
+                    <td className="p-3.5 font-medium text-[#ffffff]">
                       <div className="max-w-md truncate">{issue.title}</div>
-                      <div className="text-[10px] text-[#64748B] font-mono mt-0.5">
+                      <div className="text-[10px] text-[#8c8c8c] font-mono mt-0.5">
                         opened {issue.created_at} by {issue.author}
                       </div>
                     </td>
-                    <td className="p-3.5 font-mono text-[#94A3B8]">{issue.repo}</td>
+                    <td className="p-3.5 font-mono text-[#8c8c8c]">{issue.repo}</td>
                     <td className="p-3.5">
                       <div className="flex flex-wrap gap-1">
                         {issue.labels.map((lbl) => (
                           <span
                             key={lbl}
-                            className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[#0D1017] border border-[#252D3A] text-[#94A3B8]"
+                            className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[#1e1e1e] border border-[#2b2b2b] text-[#8c8c8c]"
                           >
                             {lbl}
                           </span>
@@ -163,7 +163,7 @@ export default function IssuesPage() {
                         className={`text-[10px] font-mono px-2 py-0.5 rounded-full border ${
                           issue.status === "OPEN"
                             ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
-                            : "bg-[#171E2B] text-[#64748B] border-[#252D3A]"
+                            : "bg-[#2a2d2e] text-[#8c8c8c] border-[#2b2b2b]"
                         }`}
                       >
                         {issue.status}
@@ -172,7 +172,7 @@ export default function IssuesPage() {
                     <td className="p-3.5 text-right">
                       <button
                         onClick={() => handleAiAction(`Investigate issue #${issue.number}: ${issue.title} in ${issue.repo}`)}
-                        className="inline-flex items-center space-x-1 px-2.5 py-1 text-xs font-medium rounded-md bg-[#121722] hover:bg-[#171E2B] text-[#818CF8] border border-indigo-500/30 transition-colors cursor-pointer"
+                        className="inline-flex items-center space-x-1 px-2.5 py-1 text-xs font-medium rounded-md bg-[#252526] hover:bg-[#2a2d2e] text-[#007acc] border border-indigo-500/30 transition-colors cursor-pointer"
                       >
                         <Bug className="h-3 w-3" />
                         <span>Diagnose Bug</span>

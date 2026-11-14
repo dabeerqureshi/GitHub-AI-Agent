@@ -80,20 +80,20 @@ export default function ModelsSettingsPage() {
     <AppLayout>
       <div className="max-w-4xl mx-auto p-4 sm:p-6 md:p-8 space-y-6">
         {/* Page Header */}
-        <div className="pb-4 border-b border-[#252D3A]">
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#F1F5F9] flex items-center gap-2">
-            <Cpu className="h-6 w-6 text-[#818CF8]" />
+        <div className="pb-4 border-b border-[#2b2b2b]">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#ffffff] flex items-center gap-2">
+            <Cpu className="h-6 w-6 text-[#007acc]" />
             <span>AI Model & Provider Settings</span>
           </h1>
-          <p className="text-xs text-[#94A3B8] mt-0.5">
+          <p className="text-xs text-[#8c8c8c] mt-0.5">
             Configure primary AI models, API keys, fallback routes, and privacy guardrails.
           </p>
         </div>
 
         <form onSubmit={handleSave} className="space-y-6">
           {/* Provider Selection */}
-          <div className="p-5 rounded-xl surface-card border border-[#252D3A] space-y-4">
-            <h3 className="text-sm font-semibold text-[#F1F5F9]">Select Active Provider</h3>
+          <div className="p-5 rounded-md bg-[#252526] border border-[#2b2b2b] space-y-4">
+            <h3 className="text-sm font-semibold text-[#ffffff]">Select Active Provider</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
               {providers.map((p) => {
                 const isSelected = selectedProvider === p.id;
@@ -108,18 +108,18 @@ export default function ModelsSettingsPage() {
                     }}
                     className={`p-3 rounded-lg text-left transition-all border cursor-pointer ${
                       isSelected
-                        ? "bg-[#171E2B] border-[#818CF8] text-[#F1F5F9]"
-                        : "bg-[#0D1017] border-[#252D3A] text-[#94A3B8] hover:text-[#F1F5F9] hover:bg-[#121722]"
+                        ? "bg-[#2a2d2e] border-[#007acc] text-[#ffffff]"
+                        : "bg-[#1e1e1e] border-[#2b2b2b] text-[#8c8c8c] hover:text-[#ffffff] hover:bg-[#252526]"
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-semibold text-xs text-[#F1F5F9]">{p.name}</span>
-                      {isSelected && <Check className="h-3.5 w-3.5 text-[#818CF8]" />}
+                      <span className="font-semibold text-xs text-[#ffffff]">{p.name}</span>
+                      {isSelected && <Check className="h-3.5 w-3.5 text-[#007acc]" />}
                     </div>
-                    <div className="text-[10px] font-mono text-[#64748B] mt-1 truncate">
+                    <div className="text-[10px] font-mono text-[#8c8c8c] mt-1 truncate">
                       {p.model}
                     </div>
-                    <div className="text-[10px] text-[#94A3B8] mt-0.5">{p.type}</div>
+                    <div className="text-[10px] text-[#8c8c8c] mt-0.5">{p.type}</div>
                   </button>
                 );
               })}
@@ -127,47 +127,47 @@ export default function ModelsSettingsPage() {
           </div>
 
           {/* Model & Credentials */}
-          <div className="p-5 rounded-xl surface-card border border-[#252D3A] space-y-4">
-            <h3 className="text-sm font-semibold text-[#F1F5F9]">Configuration & API Key</h3>
+          <div className="p-5 rounded-md bg-[#252526] border border-[#2b2b2b] space-y-4">
+            <h3 className="text-sm font-semibold text-[#ffffff]">Configuration & API Key</h3>
             <div className="space-y-3 text-xs">
               <div>
-                <label className="block text-[#94A3B8] mb-1 font-medium">Model ID</label>
+                <label className="block text-[#8c8c8c] mb-1 font-medium">Model ID</label>
                 <input
                   type="text"
                   value={selectedModel}
                   onChange={(e) => setSelectedModel(e.target.value)}
-                  className="w-full px-3 py-1.5 rounded-md bg-[#0D1017] border border-[#252D3A] text-[#F1F5F9] font-mono text-xs focus:outline-none focus:border-[#818CF8]"
+                  className="w-full px-3 py-1.5 rounded-md bg-[#1e1e1e] border border-[#2b2b2b] text-[#ffffff] font-mono text-xs focus:outline-none focus:border-[#007acc]"
                 />
               </div>
 
               {selectedProvider !== "ollama" && (
                 <div>
-                  <label className="block text-[#94A3B8] mb-1 font-medium">API Key</label>
+                  <label className="block text-[#8c8c8c] mb-1 font-medium">API Key</label>
                   <input
                     type="password"
                     value={apiKey}
                     onChange={(e) => setApiKey(e.target.value)}
                     placeholder="Enter API key (persisted securely to .env)..."
-                    className="w-full px-3 py-1.5 rounded-md bg-[#0D1017] border border-[#252D3A] text-[#F1F5F9] font-mono text-xs focus:outline-none focus:border-[#818CF8]"
+                    className="w-full px-3 py-1.5 rounded-md bg-[#1e1e1e] border border-[#2b2b2b] text-[#ffffff] font-mono text-xs focus:outline-none focus:border-[#007acc]"
                   />
                 </div>
               )}
 
               {/* Privacy Guardrail */}
               <div className="pt-2">
-                <div className="p-3 rounded-lg bg-[#0D1017] border border-[#252D3A] flex items-start space-x-2.5">
+                <div className="p-3 rounded-lg bg-[#1e1e1e] border border-[#2b2b2b] flex items-start space-x-2.5">
                   <ShieldAlert className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
                   <div className="text-xs">
-                    <div className="font-semibold text-[#F1F5F9]">Cloud Privacy Guardrail</div>
-                    <p className="text-[#94A3B8] text-[11px] mt-0.5">
+                    <div className="font-semibold text-[#ffffff]">Cloud Privacy Guardrail</div>
+                    <p className="text-[#8c8c8c] text-[11px] mt-0.5">
                       When enabled, source code fragments may be routed to the configured cloud provider for reasoning. Local-only mode falls back to Ollama.
                     </p>
-                    <label className="flex items-center space-x-2 mt-2 text-[#F1F5F9] cursor-pointer">
+                    <label className="flex items-center space-x-2 mt-2 text-[#ffffff] cursor-pointer">
                       <input
                         type="checkbox"
                         checked={allowCloudCode}
                         onChange={(e) => setAllowCloudCode(e.target.checked)}
-                        className="rounded accent-[#818CF8]"
+                        className="rounded accent-[#007acc]"
                       />
                       <span>Allow cloud code analysis</span>
                     </label>
@@ -184,9 +184,9 @@ export default function ModelsSettingsPage() {
                 type="button"
                 onClick={handleTest}
                 disabled={testing}
-                className="px-3.5 py-1.5 rounded-md bg-[#121722] hover:bg-[#171E2B] border border-[#252D3A] text-xs font-medium text-[#F1F5F9] flex items-center space-x-1.5 transition-colors cursor-pointer"
+                className="px-3.5 py-1.5 rounded-md bg-[#252526] hover:bg-[#2a2d2e] border border-[#2b2b2b] text-xs font-medium text-[#ffffff] flex items-center space-x-1.5 transition-colors cursor-pointer"
               >
-                <RefreshCw className={`h-3 w-3 ${testing ? "animate-spin text-[#818CF8]" : ""}`} />
+                <RefreshCw className={`h-3 w-3 ${testing ? "animate-spin text-[#007acc]" : ""}`} />
                 <span>Test Connection</span>
               </button>
 
@@ -212,7 +212,7 @@ export default function ModelsSettingsPage() {
               )}
               <button
                 type="submit"
-                className="px-4 py-2 bg-[#818CF8] hover:bg-[#818CF8]/90 text-[#090B10] font-semibold text-xs rounded-md transition-colors cursor-pointer"
+                className="px-4 py-2 bg-[#007acc] hover:bg-[#007acc]/90 text-white font-semibold text-xs rounded-md transition-colors cursor-pointer"
               >
                 Save & Activate
               </button>

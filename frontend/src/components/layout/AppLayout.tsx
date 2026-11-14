@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { AppSidebar } from "@/components/layout/AppSidebar";
-import { AppHeader } from "@/components/layout/AppHeader";
+import { Navbar } from "@/components/layout/Navbar";
 import { GitHubAuthModal } from "@/components/auth/GitHubAuthModal";
 import { ModelSelectorModal } from "@/components/models/ModelSelectorModal";
 import { useChatStore } from "@/store/use-chat-store";
@@ -21,20 +20,14 @@ export function AppLayout({ children }: AppLayoutProps) {
   }, [loadAuthStatus, loadRepositories, loadModelsConfig]);
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#090B10] text-[#F1F5F9]">
-      {/* 3-Tier Left Navigation Sidebar */}
-      <AppSidebar />
+    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 antialiased selection:bg-indigo-500/30 selection:text-indigo-200">
+      {/* Modern Responsive SaaS Web Navbar with Integrated Model Dropdown */}
+      <Navbar />
 
-      {/* Main Body Area */}
-      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
-        {/* Global Top Navigation */}
-        <AppHeader />
-
-        {/* Dynamic Route Content */}
-        <main className="flex-1 overflow-y-auto bg-[#090B10]">
-          {children}
-        </main>
-      </div>
+      {/* Main Responsive Content Viewport */}
+      <main className="flex-1 flex flex-col min-h-0 w-full overflow-hidden relative">
+        {children}
+      </main>
 
       {/* Global Modals */}
       <GitHubAuthModal />

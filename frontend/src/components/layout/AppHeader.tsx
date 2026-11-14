@@ -1,16 +1,12 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Menu,
-  Sparkles,
   Database,
   ChevronDown,
   Search,
-  Bell,
-  Command,
   Key,
 } from "lucide-react";
 import { useChatStore } from "@/store/use-chat-store";
@@ -52,25 +48,28 @@ export function AppHeader() {
       .catch(() => setHealth({ status: "offline", default_provider: "gemini" }));
   }, []);
 
-  const currentLabel = ROUTE_LABELS[pathname] || pathname.split("/").filter(Boolean).pop() || "Workspace";
+  const currentLabel =
+    (pathname && ROUTE_LABELS[pathname]) ||
+    (pathname ? pathname.split("/").filter(Boolean).pop() : undefined) ||
+    "Workspace";
 
   return (
-    <header className="h-12 border-b border-[#252D3A] bg-[#090B10] px-3 sm:px-5 flex items-center justify-between sticky top-0 z-30 select-none">
+    <header className="h-9 border-b border-[#2b2b2b] bg-[#1e1e1e] px-3 sm:px-4 flex items-center justify-between sticky top-0 z-30 select-none font-sans text-[#cccccc]">
       {/* Left: Mobile Toggle & Breadcrumbs */}
-      <div className="flex items-center space-x-3">
+      <div className="flex items-center space-x-2.5">
         <button
           type="button"
           onClick={toggleSidebar}
-          className="p-1 rounded-md text-[#94A3B8] hover:text-[#F1F5F9] hover:bg-[#121722] md:hidden transition-colors cursor-pointer"
+          className="p-1 rounded text-[#8c8c8c] hover:text-[#ffffff] hover:bg-[#2a2d2e] md:hidden transition-colors cursor-pointer"
           aria-label="Toggle navigation sidebar"
         >
           <Menu className="h-4 w-4" />
         </button>
 
-        <div className="flex items-center space-x-1.5 text-xs font-medium">
-          <span className="text-[#64748B] hidden sm:inline">Workspace</span>
-          <span className="text-[#64748B] hidden sm:inline">/</span>
-          <span className="text-[#F1F5F9] font-semibold">{currentLabel}</span>
+        <div className="flex items-center space-x-1.5 text-xs">
+          <span className="text-[#8c8c8c] hidden sm:inline">VS CODE</span>
+          <span className="text-[#8c8c8c] hidden sm:inline">/</span>
+          <span className="text-[#ffffff] font-medium uppercase">{currentLabel}</span>
         </div>
       </div>
 
@@ -78,10 +77,10 @@ export function AppHeader() {
       <div className="flex items-center space-x-2">
         <RepoCombobox />
 
-        <div className="hidden lg:flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-[#121722] border border-[#252D3A] text-xs text-[#64748B]">
-          <Search className="h-3.5 w-3.5" />
-          <span className="text-[11px] font-mono">Search or run command...</span>
-          <kbd className="text-[10px] bg-[#171E2B] px-1.5 py-0.5 rounded text-[#94A3B8] font-mono border border-[#252D3A]">
+        <div className="hidden lg:flex items-center space-x-1.5 px-2.5 py-1 rounded bg-[#252526] border border-[#3c3c3c] text-xs text-[#8c8c8c]">
+          <Search className="h-3 w-3" />
+          <span className="text-[10px]">Search files or actions...</span>
+          <kbd className="text-[9px] bg-[#1e1e1e] px-1 rounded text-[#cccccc] border border-[#3c3c3c]">
             ⌘K
           </kbd>
         </div>
@@ -93,33 +92,29 @@ export function AppHeader() {
         <button
           type="button"
           onClick={() => setModelModalOpen(true)}
-          className="flex items-center space-x-1.5 px-2.5 py-1 rounded-md border border-[#252D3A] bg-[#121722] hover:bg-[#171E2B] font-mono text-[11px] transition-all cursor-pointer"
+          className="flex items-center space-x-1.5 px-2 py-0.5 rounded border border-[#3c3c3c] bg-[#252526] hover:border-[#007acc] text-[11px] transition-all cursor-pointer"
           title="Change active LLM provider and model"
         >
-          <Sparkles className="h-3 w-3 text-[#818CF8]" />
-          <span className="text-[#94A3B8] hidden sm:inline">Engine:</span>
-          <span className="capitalize font-semibold text-[#F1F5F9]">
+          <span className="h-1.5 w-1.5 rounded-full bg-[#007acc] animate-pulse" />
+          <span className="text-[#8c8c8c] hidden sm:inline text-[10px]">ENGINE:</span>
+          <span className="capitalize font-semibold text-[#ffffff]">
             {activeProvider || "gemini"}
           </span>
-          <span className="text-[10px] text-[#64748B] font-normal truncate max-w-[90px] hidden md:inline font-tabular">
+          <span className="text-[10px] text-[#38bdf8] font-normal truncate max-w-[90px] hidden md:inline font-mono">
             ({(activeModel || "gemini-3.8-flash").split("/").pop()})
           </span>
-          <ChevronDown className="h-3 w-3 text-[#64748B]" />
+          <ChevronDown className="h-3 w-3 text-[#8c8c8c]" />
         </button>
 
         {/* Backend Health Badge */}
-        <div className="hidden xl:flex items-center space-x-1.5 px-2 py-1 rounded-md border border-[#252D3A] bg-[#121722] font-mono text-[11px]">
-          <Database className="h-3 w-3 text-emerald-400" />
+        <div className="hidden xl:flex items-center space-x-1.5 px-2 py-0.5 rounded border border-[#3c3c3c] bg-[#252526] text-[10px]">
+          <Database className="h-3 w-3 text-[#007acc]" />
           {health?.status === "ok" ? (
-            <span className="flex items-center text-emerald-400 font-medium">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse" />
-              API Online
+            <span className="text-emerald-400 font-semibold flex items-center gap-1">
+              <span>ONLINE</span>
             </span>
           ) : (
-            <span className="flex items-center text-amber-400 font-medium">
-              <span className="h-1.5 w-1.5 rounded-full bg-amber-400 mr-1.5" />
-              API Offline
-            </span>
+            <span className="text-amber-400 font-semibold">OFFLINE</span>
           )}
         </div>
 
@@ -127,17 +122,17 @@ export function AppHeader() {
         {githubUser ? (
           <button
             onClick={() => setAuthModalOpen(true)}
-            className="flex items-center space-x-1.5 p-1 rounded-md border border-[#252D3A] bg-[#121722] hover:bg-[#171E2B] cursor-pointer"
+            className="flex items-center space-x-1.5 p-0.5 rounded border border-[#3c3c3c] bg-[#252526] hover:border-[#007acc] cursor-pointer"
             title={`Connected as @${githubUser.login}`}
           >
             {githubUser.avatar_url ? (
               <img
                 src={githubUser.avatar_url}
                 alt={githubUser.login}
-                className="w-5 h-5 rounded-full border border-indigo-500/40"
+                className="w-5 h-5 rounded border border-[#007acc]/40"
               />
             ) : (
-              <div className="w-5 h-5 rounded-full bg-[#818CF8]/20 text-[#818CF8] flex items-center justify-center text-[10px] font-bold">
+              <div className="w-5 h-5 rounded bg-[#007acc]/20 text-[#007acc] flex items-center justify-center text-[9px] font-bold">
                 {githubUser.login.substring(0, 2).toUpperCase()}
               </div>
             )}
@@ -145,10 +140,10 @@ export function AppHeader() {
         ) : (
           <button
             onClick={() => setAuthModalOpen(true)}
-            className="flex items-center space-x-1 px-2 py-1 text-xs font-medium bg-[#171E2B] text-[#818CF8] hover:bg-[#121722] border border-indigo-500/30 rounded-md transition-colors cursor-pointer"
+            className="flex items-center space-x-1 px-2 py-0.5 text-xs font-semibold bg-[#007acc] text-white hover:bg-[#0062a3] rounded transition-colors cursor-pointer"
           >
             <Key className="h-3 w-3" />
-            <span className="hidden sm:inline">Connect</span>
+            <span className="hidden sm:inline">CONNECT</span>
           </button>
         )}
       </div>

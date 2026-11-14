@@ -16,7 +16,6 @@ import {
   Bot,
   Zap,
   Server,
-  Layers,
 } from "lucide-react";
 import { useChatStore } from "@/store/use-chat-store";
 import { testModelConnection } from "@/lib/api";
@@ -108,21 +107,23 @@ export function ModelSelectorModal() {
   const currentProviderConfig = modelsConfig?.providers?.[selectedProvider];
   const supportedModels = currentProviderConfig?.supported_models || [];
 
-  const handleProviderChange = (providerId: string) => {
-    setSelectedProvider(providerId);
-    setTestResult(null);
-    setErrorMessage(null);
-    setSuccessMessage(null);
-    const provConfig = modelsConfig?.providers?.[providerId];
+  const handleProviderChange = (provider: string) => {
+    setSelectedProvider(provider);
+    const provConfig = modelsConfig?.providers?.[provider];
     if (provConfig) {
       setSelectedModel(provConfig.model || provConfig.supported_models[0] || "");
     }
+    setCustomModel("");
+    setApiKey("");
+    setTestResult(null);
+    setErrorMessage(null);
   };
 
   const handleTestConnection = async () => {
     setIsTesting(true);
     setTestResult(null);
     setErrorMessage(null);
+
     try {
       const finalModel = customModel.trim() || selectedModel;
       const res = await testModelConnection({
@@ -131,24 +132,17 @@ export function ModelSelectorModal() {
         api_key: apiKey.trim() || undefined,
       });
 
-      if (res.is_available) {
-        setTestResult({
-          success: true,
-          message: `Connection successful! Tool calling: ${
-            res.supports_tool_calling ? "Supported" : "Basic chat only"
-          }`,
-          latency: res.latency_ms,
-        });
-      } else {
-        setTestResult({
-          success: false,
-          message: res.error_message || "Model capability probe reported unavailable",
-        });
-      }
+      setTestResult({
+        success: res.is_available,
+        message: res.is_available
+          ? `Connected to ${finalModel} (${res.latency_ms}ms)`
+          : (res.error_message || "Failed to reach model provider"),
+        latency: res.latency_ms,
+      });
     } catch (err: any) {
       setTestResult({
         success: false,
-        message: err.message || "Failed to connect to model provider",
+        message: err.message || "Failed to reach model provider endpoint",
       });
     } finally {
       setIsTesting(false);
@@ -170,43 +164,50 @@ export function ModelSelectorModal() {
         apiKey.trim() || undefined,
         allowCloudCode
       );
-      setSuccessMessage(`Activated ${PROVIDER_METADATA[selectedProvider]?.name || selectedProvider} (${finalModel})!`);
+
+      setSuccessMessage(`Activated ${finalModel} (${selectedProvider}) as primary engine!`);
       setTimeout(() => {
         setModelModalOpen(false);
-      }, 1000);
+        setSuccessMessage(null);
+      }, 1200);
     } catch (err: any) {
-      setErrorMessage(err.message || "Failed to update model configuration");
+      setErrorMessage(err.message || "Failed to save model settings");
     } finally {
       setIsSaving(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-2xl p-6 rounded-2xl glass-panel border border-border shadow-2xl animate-slide-up text-card-foreground">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in font-sans">
+      <div className="relative w-full max-w-2xl p-6 rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl animate-slide-up text-slate-100 max-h-[92vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 mb-4 border-b border-border/60">
+        <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-800">
           <div className="flex items-center space-x-3">
-            <div className="p-2.5 rounded-xl bg-primary/10 text-primary border border-primary/20">
-              <Cpu className="h-6 w-6" />
+            <div className="p-2.5 rounded-xl bg-indigo-500/15 text-indigo-400 border border-indigo-500/30">
+              <Cpu className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="font-semibold text-lg tracking-tight">AI Engine & Model Configuration</h3>
-              <p className="text-xs text-muted-foreground">
-                Select your preferred LLM provider, enter API keys, and configure active models
+              <div className="flex items-center space-x-2">
+                <h3 className="font-semibold text-base tracking-tight text-white">AI Engine &amp; Model Configuration</h3>
+                <span className="text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded-full font-mono">
+                  Multi-LLM
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Configure AI providers with fallback and local execution options
               </p>
             </div>
           </div>
           <button
             onClick={() => setModelModalOpen(false)}
-            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
         {/* Provider Selection Tabs */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-5">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-4">
           {Object.entries(PROVIDER_METADATA).map(([pid, meta]) => {
             const Icon = meta.icon;
             const isSelected = selectedProvider === pid;
@@ -219,19 +220,19 @@ export function ModelSelectorModal() {
                 onClick={() => handleProviderChange(pid)}
                 className={`flex flex-col items-center justify-center p-3 rounded-xl border text-center transition-all cursor-pointer ${
                   isSelected
-                    ? "bg-primary/10 border-primary text-primary font-semibold shadow-sm"
-                    : "bg-secondary/40 border-border/70 hover:bg-secondary/80 text-muted-foreground hover:text-foreground"
+                    ? "bg-indigo-600/20 border-indigo-500 text-white font-semibold shadow-xs"
+                    : "bg-slate-950 border-slate-800 hover:bg-slate-800 text-slate-400 hover:text-white"
                 }`}
               >
-                <Icon className="h-5 w-5 mb-1.5" />
+                <Icon className="h-5 w-5 mb-1 text-indigo-400" />
                 <span className="text-xs font-medium">{meta.name}</span>
                 <span
-                  className={`text-[9px] mt-1 font-mono px-1.5 py-0.2 rounded-full ${
+                  className={`text-[9px] mt-1.5 font-mono px-2 py-0.5 rounded-full ${
                     isConfigured
-                      ? "text-emerald-400 bg-emerald-500/10"
+                      ? "text-emerald-400 bg-emerald-500/15 border border-emerald-500/25"
                       : pid === "ollama"
-                      ? "text-blue-400 bg-blue-500/10"
-                      : "text-muted-foreground bg-muted/60"
+                      ? "text-blue-400 bg-blue-500/15"
+                      : "text-slate-500 bg-slate-900"
                   }`}
                 >
                   {isConfigured ? "Ready" : pid === "ollama" ? "Local" : "No Key"}
@@ -244,12 +245,12 @@ export function ModelSelectorModal() {
         {/* Form Body */}
         <form onSubmit={handleSave} className="space-y-4">
           {/* Active Provider Info Banner */}
-          <div className="flex items-center justify-between p-3.5 rounded-xl bg-secondary/30 border border-border/80 text-xs">
-            <div className="flex items-center space-x-2.5">
-              <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold border ${PROVIDER_METADATA[selectedProvider]?.color}`}>
+          <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs">
+            <div className="flex items-center space-x-2">
+              <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-indigo-500/15 border border-indigo-500/30 text-indigo-300">
                 {PROVIDER_METADATA[selectedProvider]?.name}
               </span>
-              <span className="text-muted-foreground text-[11px]">
+              <span className="text-slate-400 text-xs truncate max-w-[280px]">
                 {currentProviderConfig?.description}
               </span>
             </div>
@@ -259,7 +260,7 @@ export function ModelSelectorModal() {
                 href={PROVIDER_METADATA[selectedProvider].link}
                 target="_blank"
                 rel="noreferrer"
-                className="text-primary hover:underline text-[11px] font-mono shrink-0 ml-2"
+                className="text-indigo-400 hover:text-indigo-300 hover:underline text-xs font-medium shrink-0 ml-2"
               >
                 Get API Key &rarr;
               </a>
@@ -268,9 +269,9 @@ export function ModelSelectorModal() {
 
           {/* Model Selector */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-medium text-foreground flex items-center justify-between">
+            <label className="block text-xs font-medium text-slate-300 flex items-center justify-between">
               <span>Select Model</span>
-              <span className="text-[10px] text-muted-foreground font-mono">
+              <span className="text-[11px] text-slate-400 font-mono">
                 Active: {currentProviderConfig?.model || selectedModel}
               </span>
             </label>
@@ -281,10 +282,10 @@ export function ModelSelectorModal() {
                   setSelectedModel(e.target.value);
                   setCustomModel("");
                 }}
-                className="w-full px-3 py-2 text-xs bg-secondary/50 border border-border rounded-xl text-foreground font-mono focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
+                className="w-full px-3 py-2 text-xs bg-slate-950 border border-slate-800 rounded-lg text-white font-mono focus:outline-none focus:border-indigo-500"
               >
                 {supportedModels.map((m) => (
-                  <option key={m} value={m} className="bg-card text-foreground">
+                  <option key={m} value={m} className="bg-slate-900 text-white">
                     {m}
                   </option>
                 ))}
@@ -295,7 +296,7 @@ export function ModelSelectorModal() {
                 value={customModel}
                 onChange={(e) => setCustomModel(e.target.value)}
                 placeholder="Or enter custom model ID..."
-                className="w-full px-3 py-2 text-xs bg-secondary/50 border border-border rounded-xl text-foreground font-mono focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary placeholder:text-muted-foreground/60"
+                className="w-full px-3 py-2 text-xs bg-slate-950 border border-slate-800 rounded-lg text-white font-mono focus:outline-none focus:border-indigo-500 placeholder:text-slate-500"
               />
             </div>
           </div>
@@ -303,17 +304,17 @@ export function ModelSelectorModal() {
           {/* API Key Input (if not local Ollama) */}
           {selectedProvider !== "ollama" ? (
             <div className="space-y-1.5">
-              <label className="block text-xs font-medium text-foreground flex items-center justify-between">
+              <label className="block text-xs font-medium text-slate-300 flex items-center justify-between">
                 <span>API Key</span>
                 {currentProviderConfig?.has_key && (
-                  <span className="text-[10px] text-emerald-400 font-mono flex items-center">
-                    <CheckCircle2 className="h-2.5 w-2.5 mr-1" />
+                  <span className="text-[11px] text-emerald-400 font-mono flex items-center">
+                    <CheckCircle2 className="h-3 w-3 mr-1" />
                     Key saved ({currentProviderConfig.masked_key})
                   </span>
                 )}
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted-foreground">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
                   <Key className="h-4 w-4" />
                 </div>
                 <input
@@ -325,36 +326,36 @@ export function ModelSelectorModal() {
                       ? "Enter new key to update, or leave blank to keep existing"
                       : `Enter ${PROVIDER_METADATA[selectedProvider]?.name} API key...`
                   }
-                  className="w-full pl-9 pr-10 py-2.5 text-xs font-mono bg-secondary/50 border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all text-foreground placeholder:text-muted-foreground/60"
+                  className="w-full pl-9 pr-10 py-2 text-xs font-mono bg-slate-950 border border-slate-800 rounded-lg focus:outline-none focus:border-indigo-500 transition-all text-white placeholder:text-slate-500"
                 />
                 <button
                   type="button"
                   onClick={() => setShowKey(!showKey)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-white transition-colors cursor-pointer"
                 >
                   {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
             </div>
           ) : (
-            <div className="p-3 rounded-xl bg-violet-500/10 border border-violet-500/20 text-xs text-violet-300 flex items-center space-x-2">
-              <ShieldCheck className="h-4 w-4 flex-shrink-0" />
+            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-400 flex items-center space-x-2.5">
+              <ShieldCheck className="h-5 w-5 text-emerald-400 shrink-0" />
               <span>Ollama runs completely locally on your machine. No API key required.</span>
             </div>
           )}
 
           {/* Cloud Code Consent Toggle */}
           {selectedProvider !== "ollama" && (
-            <div className="flex items-center space-x-2.5 pt-1">
+            <div className="flex items-center space-x-2 pt-1">
               <input
                 type="checkbox"
                 id="cloud-consent"
                 checked={allowCloudCode}
                 onChange={(e) => setAllowCloudCode(e.target.checked)}
-                className="rounded border-border text-primary focus:ring-primary h-4 w-4"
+                className="rounded border-slate-800 bg-slate-950 text-indigo-600 focus:ring-indigo-500 h-4 w-4"
               />
-              <label htmlFor="cloud-consent" className="text-xs text-muted-foreground cursor-pointer">
-                Consent to send repository diffs & source queries to {PROVIDER_METADATA[selectedProvider]?.name}
+              <label htmlFor="cloud-consent" className="text-xs text-slate-400 cursor-pointer">
+                Consent to send repository diffs &amp; source queries to {PROVIDER_METADATA[selectedProvider]?.name}
               </label>
             </div>
           )}
@@ -362,76 +363,76 @@ export function ModelSelectorModal() {
           {/* Test Status Feedback */}
           {testResult && (
             <div
-              className={`p-3 rounded-xl border text-xs flex items-center space-x-2 animate-fade-in ${
+              className={`p-3 rounded-lg border text-xs flex items-center space-x-2.5 animate-fade-in ${
                 testResult.success
-                  ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-                  : "bg-destructive/10 border-destructive/20 text-destructive"
+                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                  : "bg-rose-500/10 border-rose-500/30 text-rose-400"
               }`}
             >
               {testResult.success ? (
-                <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+                <CheckCircle2 className="h-4 w-4 shrink-0" />
               ) : (
-                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                <AlertCircle className="h-4 w-4 shrink-0" />
               )}
               <span>{testResult.message}</span>
             </div>
           )}
 
           {errorMessage && (
-            <div className="p-3 rounded-xl border border-destructive/20 bg-destructive/10 text-destructive text-xs flex items-center space-x-2">
-              <AlertCircle className="h-4 w-4 flex-shrink-0" />
+            <div className="p-3 rounded-lg border border-rose-500/30 bg-rose-500/10 text-rose-400 text-xs flex items-center space-x-2">
+              <AlertCircle className="h-4 w-4 shrink-0" />
               <span>{errorMessage}</span>
             </div>
           )}
 
           {successMessage && (
-            <div className="p-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 text-xs flex items-center space-x-2">
-              <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+            <div className="p-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-xs flex items-center space-x-2">
+              <CheckCircle2 className="h-4 w-4 shrink-0" />
               <span>{successMessage}</span>
             </div>
           )}
 
           {/* Footer Actions */}
-          <div className="flex items-center justify-between pt-3 border-t border-border/60">
+          <div className="flex items-center justify-between pt-3 border-t border-slate-800">
             <button
               type="button"
               onClick={handleTestConnection}
               disabled={isTesting}
-              className="flex items-center space-x-1.5 px-3.5 py-2 text-xs font-medium bg-secondary hover:bg-secondary/80 text-foreground rounded-xl transition-all cursor-pointer border border-border"
+              className="flex items-center space-x-1.5 px-3.5 py-2 text-xs font-medium bg-slate-950 hover:bg-slate-800 text-slate-200 rounded-lg transition-all cursor-pointer border border-slate-800"
             >
               {isTesting ? (
                 <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin text-indigo-400" />
                   <span>Probing...</span>
                 </>
               ) : (
                 <>
-                  <Zap className="h-3.5 w-3.5 text-primary" />
+                  <Zap className="h-4 w-4 text-indigo-400" />
                   <span>Test Connection</span>
                 </>
               )}
             </button>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2.5">
               <button
                 type="button"
                 onClick={() => setModelModalOpen(false)}
-                className="px-4 py-2 text-xs font-medium text-muted-foreground hover:text-foreground rounded-xl transition-colors cursor-pointer"
+                className="px-3.5 py-2 text-xs font-medium text-slate-400 hover:text-white rounded-lg transition-colors cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSaving}
-                className="flex items-center space-x-1.5 px-4 py-2 text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 rounded-xl shadow-sm shadow-primary/20 transition-all cursor-pointer"
+                className="flex items-center space-x-1.5 px-4 py-2 text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-40 rounded-lg shadow-md transition-all cursor-pointer"
               >
                 {isSaving ? (
                   <>
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                     <span>Saving...</span>
                   </>
                 ) : (
-                  <span>Save & Activate Model</span>
+                  <span>Save &amp; Activate Model</span>
                 )}
               </button>
             </div>

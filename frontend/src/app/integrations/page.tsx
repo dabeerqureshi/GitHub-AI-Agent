@@ -61,34 +61,34 @@ export default function IntegrationsPage() {
     <AppLayout>
       <div className="max-w-7xl mx-auto p-4 sm:p-6 md:p-8 space-y-6">
         {/* Page Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#252D3A] gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#2b2b2b] gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#F1F5F9] flex items-center gap-2">
-              <Boxes className="h-6 w-6 text-[#818CF8]" />
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#ffffff] flex items-center gap-2">
+              <Boxes className="h-6 w-6 text-[#007acc]" />
               <span>Model Context Protocol (MCP) Integrations</span>
             </h1>
-            <p className="text-xs text-[#94A3B8] mt-0.5">
+            <p className="text-xs text-[#8c8c8c] mt-0.5">
               Protocol-standardized server connections, runtime tools, and execution environments.
             </p>
           </div>
         </div>
 
         {/* Server Status Banner */}
-        <div className="p-5 rounded-xl surface-card border border-[#252D3A] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="p-5 rounded-md bg-[#252526] border border-[#2b2b2b] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center space-x-3.5">
-            <div className="p-2.5 rounded-lg bg-indigo-500/15 text-[#818CF8] border border-indigo-500/30">
+            <div className="p-2.5 rounded-lg bg-indigo-500/15 text-[#007acc] border border-indigo-500/30">
               <Server className="h-5 w-5" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="font-semibold text-sm text-[#F1F5F9]">
+                <span className="font-semibold text-sm text-[#ffffff]">
                   @modelcontextprotocol/server-github
                 </span>
                 <span className="font-mono text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                   Connected
                 </span>
               </div>
-              <p className="text-xs text-[#94A3B8] mt-0.5 font-mono">
+              <p className="text-xs text-[#8c8c8c] mt-0.5 font-mono">
                 Transport: {health?.mcp_transport || "stdio"} • Service: {health?.service || "github-ai-workspace-backend"}
               </p>
             </div>
@@ -98,23 +98,23 @@ export default function IntegrationsPage() {
         {/* Discovered Toolsets Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {toolsets.map((ts) => (
-            <div key={ts.group} className="p-4 rounded-xl surface-card border border-[#252D3A] space-y-3">
+            <div key={ts.group} className="p-4 rounded-md bg-[#252526] border border-[#2b2b2b] space-y-3">
               <div className="flex items-center justify-between">
-                <span className="font-mono text-xs font-bold text-[#818CF8]">{ts.group}</span>
-                <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-[#0D1017] border border-[#252D3A] text-[#94A3B8]">
+                <span className="font-mono text-xs font-bold text-[#007acc]">{ts.group}</span>
+                <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-[#1e1e1e] border border-[#2b2b2b] text-[#8c8c8c]">
                   {ts.status}
                 </span>
               </div>
-              <p className="text-xs text-[#94A3B8]">{ts.description}</p>
-              <div className="pt-2 border-t border-[#252D3A]">
-                <div className="text-[10px] font-mono text-[#64748B] uppercase mb-1.5">
+              <p className="text-xs text-[#8c8c8c]">{ts.description}</p>
+              <div className="pt-2 border-t border-[#2b2b2b]">
+                <div className="text-[10px] font-mono text-[#8c8c8c] uppercase mb-1.5">
                   Available Tools
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {ts.tools.map((t) => (
                     <span
                       key={t}
-                      className="px-2 py-0.5 rounded text-[11px] font-mono bg-[#0D1017] border border-[#252D3A] text-[#F1F5F9]"
+                      className="px-2 py-0.5 rounded text-[11px] font-mono bg-[#1e1e1e] border border-[#2b2b2b] text-[#ffffff]"
                     >
                       {t}
                     </span>

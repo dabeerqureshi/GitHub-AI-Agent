@@ -80,13 +80,13 @@ export default function PullRequestsPage() {
     <AppLayout>
       <div className="max-w-7xl mx-auto p-4 sm:p-6 md:p-8 space-y-6">
         {/* Page Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#252D3A] gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#2b2b2b] gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#F1F5F9] flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#ffffff] flex items-center gap-2">
               <GitPullRequest className="h-6 w-6 text-[#38BDF8]" />
               <span>Pull Requests</span>
             </h1>
-            <p className="text-xs text-[#94A3B8] mt-0.5">
+            <p className="text-xs text-[#8c8c8c] mt-0.5">
               Automated diff analysis, security checks, and Human-In-The-Loop PR governance.
             </p>
           </div>
@@ -97,7 +97,7 @@ export default function PullRequestsPage() {
               sendUserMessage(`Review all pending pull requests and summarize diffs in ${activeRepo || "the repository"}`);
               router.push("/chat");
             }}
-            className="self-start sm:self-auto flex items-center space-x-1.5 px-3 py-1.5 rounded-md bg-[#818CF8] hover:bg-[#818CF8]/90 text-[#090B10] text-xs font-semibold transition-colors cursor-pointer"
+            className="self-start sm:self-auto flex items-center space-x-1.5 px-3 py-1.5 rounded-md bg-[#007acc] hover:bg-[#007acc]/90 text-white text-xs font-semibold transition-colors cursor-pointer"
           >
             <Sparkles className="h-3.5 w-3.5" />
             <span>AI Review All PRs</span>
@@ -107,13 +107,13 @@ export default function PullRequestsPage() {
         {/* Filter Controls */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-[#64748B]" />
+            <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-[#8c8c8c]" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search pull requests..."
-              className="w-full pl-8 pr-3 py-1.5 text-xs bg-[#121722] border border-[#252D3A] rounded-md text-[#F1F5F9] placeholder:text-[#64748B] focus:outline-none focus:border-[#818CF8]"
+              className="w-full pl-8 pr-3 py-1.5 text-xs bg-[#252526] border border-[#2b2b2b] rounded-md text-[#ffffff] placeholder:text-[#8c8c8c] focus:outline-none focus:border-[#007acc]"
             />
           </div>
 
@@ -124,8 +124,8 @@ export default function PullRequestsPage() {
                 onClick={() => setFilter(st)}
                 className={`px-2.5 py-1 text-xs font-mono rounded-md transition-colors ${
                   filter === st
-                    ? "bg-[#171E2B] text-[#F1F5F9] font-semibold border border-[#818CF8]/40"
-                    : "bg-[#0D1017] text-[#64748B] hover:text-[#F1F5F9] border border-[#252D3A]"
+                    ? "bg-[#2a2d2e] text-[#ffffff] font-semibold border border-[#007acc]/40"
+                    : "bg-[#1e1e1e] text-[#8c8c8c] hover:text-[#ffffff] border border-[#2b2b2b]"
                 }`}
               >
                 {st}
@@ -135,10 +135,10 @@ export default function PullRequestsPage() {
         </div>
 
         {/* Pull Requests Table */}
-        <div className="rounded-xl surface-card overflow-hidden border border-[#252D3A]">
+        <div className="rounded-md bg-[#252526] overflow-hidden border border-[#2b2b2b]">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#0D1017] text-[#64748B] font-mono border-b border-[#252D3A]">
+              <thead className="bg-[#1e1e1e] text-[#8c8c8c] font-mono border-b border-[#2b2b2b]">
                 <tr>
                   <th className="p-3.5">#</th>
                   <th className="p-3.5">Pull Request</th>
@@ -148,21 +148,21 @@ export default function PullRequestsPage() {
                   <th className="p-3.5 text-right">Review Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#252D3A]">
+              <tbody className="divide-y divide-[#2b2b2b]">
                 {filteredPRs.map((pr) => (
-                  <tr key={pr.number} className="hover:bg-[#171E2B]/50 transition-colors">
+                  <tr key={pr.number} className="hover:bg-[#2a2d2e]/50 transition-colors">
                     <td className="p-3.5 font-mono text-[#38BDF8]">#{pr.number}</td>
-                    <td className="p-3.5 font-medium text-[#F1F5F9]">
+                    <td className="p-3.5 font-medium text-[#ffffff]">
                       <div className="max-w-md truncate font-semibold">{pr.title}</div>
-                      <div className="text-[10px] text-[#64748B] font-mono mt-0.5">
+                      <div className="text-[10px] text-[#8c8c8c] font-mono mt-0.5">
                         {pr.author} • {pr.changed_files} files changed • updated {pr.updated_at}
                       </div>
                     </td>
-                    <td className="p-3.5 font-mono text-[11px] text-[#94A3B8]">
+                    <td className="p-3.5 font-mono text-[11px] text-[#8c8c8c]">
                       <div className="flex items-center space-x-1">
                         <span>{pr.branch}</span>
-                        <ArrowRight className="h-3 w-3 text-[#64748B]" />
-                        <span className="text-[#F1F5F9]">{pr.target}</span>
+                        <ArrowRight className="h-3 w-3 text-[#8c8c8c]" />
+                        <span className="text-[#ffffff]">{pr.target}</span>
                       </div>
                     </td>
                     <td className="p-3.5">
@@ -185,7 +185,7 @@ export default function PullRequestsPage() {
                     <td className="p-3.5 text-right">
                       <button
                         onClick={() => handleAiReview(pr.title, pr.number)}
-                        className="inline-flex items-center space-x-1 px-2.5 py-1 text-xs font-semibold rounded-md bg-[#121722] hover:bg-[#171E2B] text-[#818CF8] border border-indigo-500/30 transition-colors cursor-pointer"
+                        className="inline-flex items-center space-x-1 px-2.5 py-1 text-xs font-semibold rounded-md bg-[#252526] hover:bg-[#2a2d2e] text-[#007acc] border border-indigo-500/30 transition-colors cursor-pointer"
                       >
                         <ShieldCheck className="h-3 w-3" />
                         <span>AI Review</span>

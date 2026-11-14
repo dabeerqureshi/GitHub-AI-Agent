@@ -24,34 +24,34 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
   };
 
   return (
-    <div className="my-4 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 shadow-lg backdrop-blur-xs">
+    <div className="my-2.5 rounded border border-amber-500/40 bg-[#252526] p-3 shadow-md font-mono">
       <div className="flex items-start justify-between">
-        <div className="flex items-center space-x-2.5">
-          <div className="p-1.5 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-400">
+        <div className="flex items-center space-x-2">
+          <div className="p-1 rounded bg-amber-500/15 border border-amber-500/30 text-amber-400">
             <ShieldAlert className="h-4 w-4 shrink-0" />
           </div>
           <div>
-            <h4 className="text-sm font-bold text-foreground">
-              Approval Required: <span className="font-mono text-primary font-semibold">{approval.tool_name}</span>
+            <h4 className="text-xs sm:text-sm font-semibold text-white">
+              Approval Required: <span className="font-mono text-[#007acc] font-bold">{approval.tool_name}</span>
             </h4>
-            <p className="text-xs text-muted-foreground mt-0.5">{approval.description}</p>
+            <p className="text-[11px] text-[#858585] mt-0.5">{approval.description}</p>
           </div>
         </div>
-        <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 font-semibold border border-amber-500/30 shadow-xs">
+        <span className="text-[9px] uppercase font-mono px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-400 font-semibold border border-amber-500/30 shrink-0">
           Pending
         </span>
       </div>
 
       {/* Action Hash Badge */}
-      <div className="mt-3 flex items-center space-x-1.5 bg-card/80 px-3 py-1.5 rounded-lg text-[11px] font-mono text-muted-foreground border border-border">
-        <Hash className="h-3 w-3 shrink-0 text-primary" />
-        <span className="font-semibold text-foreground">Signature:</span>
+      <div className="mt-2.5 flex items-center space-x-1.5 bg-[#1e1e1e] px-2 py-1 rounded text-[10px] font-mono text-[#858585] border border-[#3c3c3c]">
+        <Hash className="h-3 w-3 shrink-0 text-[#007acc]" />
+        <span className="font-semibold text-white">Signature:</span>
         <span className="truncate font-tabular">{approval.action_hash}</span>
       </div>
 
       {/* Code Diff Viewer if patch is present */}
       {(approval.payload?.structured_diff || approval.payload?.diff) && (
-        <div className="mt-3">
+        <div className="mt-2.5">
           <DiffViewer
             structuredDiff={approval.payload.structured_diff}
             rawDiff={approval.payload.diff}
@@ -60,49 +60,49 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
       )}
 
       {/* Payload Inspector Accordion */}
-      <div className="mt-3">
+      <div className="mt-2">
         <button
           onClick={() => setShowPayload(!showPayload)}
-          className="flex items-center text-xs text-muted-foreground hover:text-foreground font-medium"
+          className="flex items-center text-[10px] text-[#858585] hover:text-[#cccccc] font-medium cursor-pointer"
         >
           <span>{showPayload ? "Hide Action Parameters" : "Inspect Action Parameters"}</span>
           {showPayload ? <ChevronUp className="h-3 w-3 ml-1" /> : <ChevronDown className="h-3 w-3 ml-1" />}
         </button>
 
         {showPayload && (
-          <pre className="mt-2 text-[11px] font-mono p-3 bg-background/80 rounded border overflow-x-auto text-foreground max-h-48">
+          <pre className="mt-1.5 text-[10px] font-mono p-2 bg-[#1e1e1e] rounded border border-[#3c3c3c] overflow-x-auto text-[#cccccc] max-h-40">
             {JSON.stringify(approval.payload, null, 2)}
           </pre>
         )}
       </div>
 
       {/* Reviewer Note Input */}
-      <div className="mt-3">
+      <div className="mt-2">
         <input
           type="text"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Optional reviewer notes or instructions..."
-          className="w-full text-xs px-3 py-1.5 rounded border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          className="w-full text-xs px-2 py-1 rounded border border-[#3c3c3c] bg-[#1e1e1e] text-[#cccccc] placeholder:text-[#858585] focus:outline-none focus:border-[#007acc] font-mono"
         />
       </div>
 
       {/* Action Controls */}
-      <div className="mt-4 flex items-center justify-end space-x-3">
+      <div className="mt-3 flex items-center justify-end space-x-2">
         <button
           onClick={onReject}
           disabled={isSending}
-          className="flex items-center space-x-1.5 px-3 py-1.5 rounded-md border border-destructive/50 text-destructive hover:bg-destructive/10 text-xs font-semibold transition-colors disabled:opacity-50"
+          className="flex items-center space-x-1 px-2.5 py-1 rounded border border-rose-500/40 text-rose-400 hover:bg-rose-500/10 text-xs font-medium font-mono transition-colors disabled:opacity-40 cursor-pointer"
         >
-          <X className="h-3.5 w-3.5" />
+          <X className="h-3 w-3" />
           <span>Reject</span>
         </button>
         <button
           onClick={onApprove}
           disabled={isSending}
-          className="flex items-center space-x-1.5 px-4 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-colors shadow-sm disabled:opacity-50"
+          className="flex items-center space-x-1 px-3 py-1 rounded bg-[#007acc] hover:bg-[#0e639c] text-white text-xs font-medium font-mono transition-colors shadow-xs disabled:opacity-40 cursor-pointer"
         >
-          <Check className="h-3.5 w-3.5" />
+          <Check className="h-3 w-3" />
           <span>Approve & Execute</span>
         </button>
       </div>

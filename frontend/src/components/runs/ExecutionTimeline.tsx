@@ -97,31 +97,31 @@ export function ExecutionTimeline() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-full bg-background text-foreground overflow-hidden">
+    <div className="flex flex-col md:flex-row h-full bg-[#1e1e1e] text-[#cccccc] overflow-hidden font-mono">
       {/* Runs Sidebar List */}
-      <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-border flex flex-col h-72 md:h-full bg-card/60 backdrop-blur-md">
-        <div className="p-3.5 border-b border-border flex items-center justify-between">
-          <h2 className="text-xs font-mono font-semibold uppercase tracking-wider text-foreground flex items-center gap-2">
-            <Activity className="h-4 w-4 text-primary" />
+      <div className="w-full md:w-64 border-b md:border-b-0 md:border-r border-[#2b2b2b] flex flex-col h-72 md:h-full bg-[#252526]">
+        <div className="p-2.5 border-b border-[#2b2b2b] flex items-center justify-between bg-[#252526]">
+          <h2 className="text-xs font-mono font-semibold uppercase tracking-wider text-white flex items-center gap-2">
+            <Activity className="h-3.5 w-3.5 text-[#007acc]" />
             <span>Execution Runs</span>
           </h2>
           <button
             onClick={loadRuns}
             disabled={loading}
-            className="flex items-center space-x-1 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            className="flex items-center space-x-1 text-xs text-[#858585] hover:text-white transition-colors cursor-pointer"
           >
-            <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin text-primary" : ""}`} />
+            <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin text-[#007acc]" : ""}`} />
             <span>Refresh</span>
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-2.5 space-y-1.5">
+        <div className="flex-1 overflow-y-auto p-1.5 space-y-1">
           {loading && runs.length === 0 && (
-            <div className="text-center py-8 text-xs text-muted-foreground font-mono">Loading runs...</div>
+            <div className="text-center py-6 text-xs text-[#858585] font-mono">Loading runs...</div>
           )}
 
           {!loading && runs.length === 0 && (
-            <div className="text-center py-8 text-xs text-muted-foreground font-mono">No execution runs yet.</div>
+            <div className="text-center py-6 text-xs text-[#858585] font-mono">No execution runs yet.</div>
           )}
 
           {runs.map((r) => {
@@ -130,30 +130,30 @@ export function ExecutionTimeline() {
               <div
                 key={r.id}
                 onClick={() => setSelectedRun(r)}
-                className={`p-3 rounded-xl border text-xs cursor-pointer transition-all ${
+                className={`p-2 rounded border text-xs cursor-pointer transition-colors ${
                   isSelected
-                    ? "bg-secondary text-foreground font-semibold border-primary/40 shadow-xs"
-                    : "bg-card/70 border-border text-muted-foreground hover:bg-secondary/70 hover:text-foreground"
+                    ? "bg-[#37373d] text-white font-medium border-l-2 border-l-[#007acc] border-y border-r border-[#2b2b2b]"
+                    : "bg-[#1e1e1e] border-[#2b2b2b] text-[#858585] hover:bg-[#2a2d2e] hover:text-white"
                 }`}
               >
-                <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center justify-between mb-1">
                   <span
-                    className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border uppercase ${getStatusBadge(
+                    className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded border uppercase ${getStatusBadge(
                       r.status
                     )}`}
                   >
                     {r.status}
                   </span>
-                  <span className="text-[10px] text-muted-foreground font-mono font-tabular">
+                  <span className="text-[10px] text-[#858585] font-mono font-tabular">
                     {new Date(r.created_at).toLocaleTimeString()}
                   </span>
                 </div>
-                <div className="font-medium text-foreground line-clamp-2">
+                <div className="font-medium text-white line-clamp-2 text-[11px]">
                   {r.user_request}
                 </div>
                 {r.repo_name && (
-                  <div className="mt-1.5 text-[11px] text-muted-foreground font-mono truncate flex items-center gap-1">
-                    <FolderGit2 className="h-3 w-3 text-primary shrink-0" />
+                  <div className="mt-1 text-[10px] text-[#858585] font-mono truncate flex items-center gap-1">
+                    <FolderGit2 className="h-3 w-3 text-[#007acc] shrink-0" />
                     <span>{r.repo_name}</span>
                   </div>
                 )}
@@ -164,38 +164,38 @@ export function ExecutionTimeline() {
       </div>
 
       {/* Main Timeline & Diagnostic Detail */}
-      <div className="flex-1 flex flex-col h-full overflow-y-auto p-4 sm:p-6 md:p-8 bg-background">
+      <div className="flex-1 flex flex-col h-full overflow-y-auto p-4 sm:p-6 bg-[#1e1e1e]">
         {error && (
-          <div className="p-3 mb-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-mono">
+          <div className="p-2.5 mb-3 rounded bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-mono">
             {error}
           </div>
         )}
 
         {selectedRun ? (
-          <div className="space-y-6 max-w-4xl">
+          <div className="space-y-4 max-w-4xl font-mono">
             {/* Header / Summary Card */}
-            <div className="p-5 rounded-2xl surface-card interactive-card">
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+            <div className="p-3.5 rounded bg-[#252526] border border-[#2b2b2b]">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                 <div>
-                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
                     <span
-                      className={`text-xs font-mono font-bold px-2.5 py-0.5 rounded-full border uppercase ${getStatusBadge(
+                      className={`text-[10px] font-mono font-bold px-2 py-0.2 rounded border uppercase ${getStatusBadge(
                         selectedRun.status
                       )}`}
                     >
                       {selectedRun.status}
                     </span>
                     {selectedRun.repo_name && (
-                      <span className="text-xs font-mono px-2.5 py-0.5 rounded-lg bg-secondary text-foreground border border-border flex items-center gap-1">
-                        <FolderGit2 className="h-3 w-3 text-primary" />
+                      <span className="text-[11px] font-mono px-2 py-0.2 rounded bg-[#1e1e1e] text-white border border-[#2b2b2b] flex items-center gap-1">
+                        <FolderGit2 className="h-3 w-3 text-[#007acc]" />
                         {selectedRun.repo_name}
                       </span>
                     )}
-                    <span className="text-xs text-muted-foreground font-mono font-tabular">
+                    <span className="text-[11px] text-[#858585] font-mono font-tabular">
                       Run ID: {selectedRun.id.slice(0, 8)}...
                     </span>
                   </div>
-                  <h1 className="text-base font-semibold text-foreground">
+                  <h1 className="text-sm font-semibold text-white">
                     {selectedRun.user_request}
                   </h1>
                 </div>
@@ -207,7 +207,7 @@ export function ExecutionTimeline() {
                     <button
                       disabled={actionInProgress === selectedRun.id}
                       onClick={() => handleResume(selectedRun.id)}
-                      className="px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-primary hover:bg-primary/90 text-white shadow-sm shadow-primary/25 transition-all cursor-pointer disabled:opacity-50"
+                      className="px-3 py-1 text-xs font-medium rounded bg-[#007acc] hover:bg-[#0e639c] text-white shadow-xs transition-colors cursor-pointer disabled:opacity-40"
                     >
                       ▶ Resume Run
                     </button>
@@ -218,7 +218,7 @@ export function ExecutionTimeline() {
                     <button
                       disabled={actionInProgress === selectedRun.id}
                       onClick={() => handleCancel(selectedRun.id)}
-                      className="px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-secondary hover:bg-rose-500/20 hover:text-rose-400 border border-border text-muted-foreground transition-all cursor-pointer disabled:opacity-50"
+                      className="px-3 py-1 text-xs font-medium rounded bg-[#1e1e1e] hover:bg-rose-500/20 hover:text-rose-400 border border-[#2b2b2b] text-[#858585] transition-colors cursor-pointer disabled:opacity-40"
                     >
                       ✕ Cancel Run
                     </button>
@@ -228,7 +228,7 @@ export function ExecutionTimeline() {
 
               {/* Error diagnostic banner if failed or interrupted */}
               {selectedRun.error_message && (
-                <div className="mt-4 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-mono">
+                <div className="mt-3 p-2.5 rounded bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-mono">
                   <div className="font-bold mb-1 flex items-center gap-1.5">
                     <AlertOctagon className="h-4 w-4 text-rose-400" />
                     <span>Diagnostic Detail:</span>
@@ -240,34 +240,34 @@ export function ExecutionTimeline() {
 
             {/* Execution Step Timeline */}
             <div>
-              <h2 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
-                <Clock className="h-4 w-4 text-primary" />
+              <h2 className="text-xs font-bold text-white mb-2.5 flex items-center gap-2 uppercase tracking-wider">
+                <Clock className="h-3.5 w-3.5 text-[#007acc]" />
                 <span>Execution Step History & Tool Activity</span>
               </h2>
 
-              <div className="space-y-3 relative before:absolute before:inset-0 before:left-3.5 before:w-0.5 before:bg-border">
+              <div className="space-y-2.5 relative before:absolute before:inset-0 before:left-2.5 before:w-[1px] before:bg-[#2b2b2b]">
                 {selectedRun.step_history?.map((step, idx) => (
-                  <div key={idx} className="relative flex items-start gap-4 pl-8">
-                    <div className="absolute left-2 top-2.5 w-3.5 h-3.5 rounded-full border-2 border-background bg-primary shadow-xs" />
-                    <div className="flex-1 p-4 rounded-xl surface-card interactive-card">
+                  <div key={idx} className="relative flex items-start gap-3 pl-6">
+                    <div className="absolute left-1 top-2.5 w-2.5 h-2.5 rounded-full border border-[#1e1e1e] bg-[#007acc]" />
+                    <div className="flex-1 p-3 rounded bg-[#252526] border border-[#2b2b2b]">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="font-semibold text-foreground font-mono">
+                        <span className="font-semibold text-white font-mono">
                           {step.step || "Workflow Action"}
                         </span>
-                        <span className="text-[11px] font-mono text-muted-foreground font-tabular">
+                        <span className="text-[10px] font-mono text-[#858585] font-tabular">
                           {step.timestamp ? new Date(step.timestamp).toLocaleTimeString() : ""}
                         </span>
                       </div>
                       {step.status && (
-                        <div className="text-[11px] font-medium text-muted-foreground mt-1 font-mono">
-                          Status: <span className="text-foreground">{step.status}</span>
+                        <div className="text-[10px] font-medium text-[#858585] mt-0.5 font-mono">
+                          Status: <span className="text-white">{step.status}</span>
                         </div>
                       )}
                       {step.message && (
-                        <div className="text-xs text-muted-foreground mt-1 leading-relaxed">{step.message}</div>
+                        <div className="text-xs text-[#858585] mt-1 leading-relaxed">{step.message}</div>
                       )}
                       {step.details && Object.keys(step.details).length > 0 && (
-                        <pre className="mt-2.5 p-3 rounded-lg bg-background/90 border border-border text-[11px] text-foreground font-mono overflow-x-auto">
+                        <pre className="mt-2 p-2 rounded bg-[#1e1e1e] border border-[#2b2b2b] text-[10px] text-[#cccccc] font-mono overflow-x-auto">
                           {JSON.stringify(step.details, null, 2)}
                         </pre>
                       )}
@@ -278,7 +278,7 @@ export function ExecutionTimeline() {
             </div>
           </div>
         ) : (
-          <div className="flex items-center justify-center h-full text-xs text-muted-foreground font-mono">
+          <div className="flex items-center justify-center h-full text-xs text-[#858585] font-mono">
             Select an execution run to view its timeline and tool activity.
           </div>
         )}

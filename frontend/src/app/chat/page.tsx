@@ -9,14 +9,9 @@ import { ChatContextPanel } from "@/components/chat/ChatContextPanel";
 export default function ChatPage() {
   return (
     <AppLayout>
-      <div className="flex h-full overflow-hidden">
-        {/* Left: Conversation History */}
+      <div className="flex flex-1 w-full h-[calc(100vh-3.5rem)] overflow-hidden bg-slate-950">
         <Sidebar />
-
-        {/* Center: AI Conversation Workspace */}
         <ChatContainer />
-
-        {/* Right: Technical Context Panel */}
         <ChatContextPanel />
       </div>
     </AppLayout>

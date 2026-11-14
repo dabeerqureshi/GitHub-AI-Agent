@@ -35,7 +35,7 @@ export function MessageItem({ message }: MessageItemProps) {
       )}
 
       <div
-        className={`relative group max-w-[82%] rounded-2xl px-4 py-3 text-sm leading-relaxed transition-all ${
+        className={`relative group max-w-[92%] sm:max-w-[85%] md:max-w-[82%] rounded-2xl px-4 py-3 text-sm leading-relaxed transition-all ${
           isUser
             ? "bg-primary text-primary-foreground font-medium rounded-tr-sm shadow-md"
             : "glass-panel border border-border/80 text-foreground rounded-tl-sm shadow-md"

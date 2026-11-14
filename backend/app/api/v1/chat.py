@@ -129,7 +129,14 @@ async def send_message(
         "metadata": None,
     }
 
-    final_state = await workflow.graph.ainvoke(initial_state)
+    try:
+        final_state = await workflow.graph.ainvoke(initial_state)
+    except Exception as exc:
+        final_state = {
+            "final_response": f"I received your request, but the selected AI model encountered an issue: `{str(exc)}`. Please verify your model API key in the top navigation bar.",
+            "plan": ["1. Understand question", "2. Formulate assistant response"],
+            "metadata": {"error": str(exc)},
+        }
 
     # Check if workflow paused for HITL approval
     pending = final_state.get("pending_approval")
@@ -251,120 +258,156 @@ async def stream_message(
             "metadata": None,
         }
 
-        # 1. Plan node
-        plan_update = await workflow.plan_and_route(state)
-        state.update(plan_update)
-        yield {
-            "event": "plan",
-            "data": json.dumps({"plan": state["plan"], "intent": state["intent"]}),
-        }
-
-        # 2. Tool select node
-        tool_update = await workflow.tool_selection(state)
-        state.update(tool_update)
-
-        tool = state.get("tool_to_execute")
-        if tool:
+        try:
+            # 1. Plan node
+            plan_update = await workflow.plan_and_route(state)
+            state.update(plan_update)
             yield {
-                "event": "status",
-                "data": json.dumps({"step": "TOOL_SELECTED", "tool": tool["name"]}),
+                "event": "plan",
+                "data": json.dumps({"plan": state["plan"], "intent": state["intent"]}),
             }
 
-            # 3. Approval gate
-            appr_update = await workflow.approval_gate(state)
-            state.update(appr_update)
+            # 2. Tool select node
+            tool_update = await workflow.tool_selection(state)
+            state.update(tool_update)
 
-            pending = state.get("pending_approval")
-            if pending and state.get("approval_status") == "PENDING":
-                approval_manager = ApprovalManager(db)
-                approval = await approval_manager.create_approval_request(
-                    conversation_id=conversation_id,
-                    tool_name=pending["tool_name"],
-                    step_id=pending["step_id"],
-                    description=pending["description"],
-                    payload=pending["arguments"],
-                    repo_name=conv.active_repo,
-                )
+            tool = state.get("tool_to_execute")
+            if tool:
+                yield {
+                    "event": "status",
+                    "data": json.dumps({"step": "TOOL_SELECTED", "tool": tool["name"]}),
+                }
 
-                audit_service = AuditService(db)
-                await audit_service.log_event(
-                    event_type="APPROVAL_REQUESTED",
-                    conversation_id=conversation_id,
-                    action_hash=pending["action_hash"],
-                    tool_name=pending["tool_name"],
-                    status="PENDING",
-                    details=pending,
-                )
+                # 3. Approval gate
+                appr_update = await workflow.approval_gate(state)
+                state.update(appr_update)
+
+                pending = state.get("pending_approval")
+                if pending and state.get("approval_status") == "PENDING":
+                    approval_manager = ApprovalManager(db)
+                    approval = await approval_manager.create_approval_request(
+                        conversation_id=conversation_id,
+                        tool_name=pending["tool_name"],
+                        step_id=pending["step_id"],
+                        description=pending["description"],
+                        payload=pending["arguments"],
+                        repo_name=conv.active_repo,
+                    )
+
+                    audit_service = AuditService(db)
+                    await audit_service.log_event(
+                        event_type="APPROVAL_REQUESTED",
+                        conversation_id=conversation_id,
+                        action_hash=pending["action_hash"],
+                        tool_name=pending["tool_name"],
+                        status="PENDING",
+                        details=pending,
+                    )
+
+                    yield {
+                        "event": "approval_required",
+                        "data": json.dumps(
+                            {
+                                "approval": ApprovalResponse.model_validate(approval).model_dump(
+                                    mode="json"
+                                )
+                            }
+                        ),
+                    }
+                    yield {
+                        "event": "done",
+                        "data": json.dumps({"status": "NEEDS_APPROVAL"}),
+                    }
+                    return
+
+                # 4. Tool execution
+                yield {
+                    "event": "tool_call",
+                    "data": json.dumps({"tool": tool["name"], "arguments": tool.get("arguments", {})}),
+                }
+                exec_update = await workflow.execute_tool(state)
+                state.update(exec_update)
 
                 yield {
-                    "event": "approval_required",
+                    "event": "tool_result",
+                    "data": json.dumps({"tool": tool["name"], "result": state.get("tool_result")}),
+                }
+
+            # 5. Verification and Final Response
+            yield {
+                "event": "status",
+                "data": json.dumps(
+                    {
+                        "step": "VERIFYING",
+                        "message": "Verifying actual GitHub results and formulating response...",
+                    }
+                ),
+            }
+
+            resp_update = await workflow.verify_and_respond(state)
+            state.update(resp_update)
+
+            assistant_text = state.get("final_response") or "Instruction completed."
+            assistant_msg = ConversationMessage(
+                conversation_id=conversation_id,
+                role="assistant",
+                content=assistant_text,
+            )
+            db.add(assistant_msg)
+            await db.commit()
+            await db.refresh(assistant_msg)
+
+            yield {
+                "event": "response",
+                "data": json.dumps(
+                    {
+                        "content": assistant_text,
+                        "message": MessageResponse.model_validate(assistant_msg).model_dump(
+                            mode="json"
+                        ),
+                    }
+                ),
+            }
+
+            yield {
+                "event": "done",
+                "data": json.dumps({"status": "COMPLETED", "metadata": state.get("metadata")}),
+            }
+        except Exception as exc:
+            import logging
+            logging.getLogger("app.api.v1.chat").error("Chat execution stream error: %s", str(exc), exc_info=True)
+            fallback_text = (
+                f"I encountered an issue executing your request: `{str(exc)}`.\n\n"
+                f"Please verify your AI model connection in the top navigation bar and try again."
+            )
+            try:
+                fallback_msg = ConversationMessage(
+                    conversation_id=conversation_id,
+                    role="assistant",
+                    content=fallback_text,
+                )
+                db.add(fallback_msg)
+                await db.commit()
+                await db.refresh(fallback_msg)
+                yield {
+                    "event": "response",
                     "data": json.dumps(
                         {
-                            "approval": ApprovalResponse.model_validate(approval).model_dump(
-                                mode="json"
-                            )
+                            "content": fallback_text,
+                            "message": MessageResponse.model_validate(fallback_msg).model_dump(mode="json"),
                         }
                     ),
                 }
-                yield {
-                    "event": "done",
-                    "data": json.dumps({"status": "NEEDS_APPROVAL"}),
-                }
-                return
-
-            # 4. Tool execution
+            except Exception:
+                pass
             yield {
-                "event": "tool_call",
-                "data": json.dumps({"tool": tool["name"], "arguments": tool.get("arguments", {})}),
+                "event": "error",
+                "data": json.dumps({"detail": str(exc)}),
             }
-            exec_update = await workflow.execute_tool(state)
-            state.update(exec_update)
-
             yield {
-                "event": "tool_result",
-                "data": json.dumps({"tool": tool["name"], "result": state.get("tool_result")}),
+                "event": "done",
+                "data": json.dumps({"status": "FAILED"}),
             }
-
-        # 5. Verification and Final Response
-        yield {
-            "event": "status",
-            "data": json.dumps(
-                {
-                    "step": "VERIFYING",
-                    "message": "Verifying actual GitHub results and formulating response...",
-                }
-            ),
-        }
-
-        resp_update = await workflow.verify_and_respond(state)
-        state.update(resp_update)
-
-        assistant_text = state.get("final_response") or "Instruction completed."
-        assistant_msg = ConversationMessage(
-            conversation_id=conversation_id,
-            role="assistant",
-            content=assistant_text,
-        )
-        db.add(assistant_msg)
-        await db.commit()
-        await db.refresh(assistant_msg)
-
-        yield {
-            "event": "response",
-            "data": json.dumps(
-                {
-                    "content": assistant_text,
-                    "message": MessageResponse.model_validate(assistant_msg).model_dump(
-                        mode="json"
-                    ),
-                }
-            ),
-        }
-
-        yield {
-            "event": "done",
-            "data": json.dumps({"status": "COMPLETED", "metadata": state.get("metadata")}),
-        }
 
     return EventSourceResponse(sse_generator())
 

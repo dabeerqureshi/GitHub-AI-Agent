@@ -1,5 +1,6 @@
 """LangGraph agent workflow definition for GitHub AI Workspace."""
 
+import logging
 import re
 import time
 from typing import Any
@@ -12,6 +13,8 @@ from app.agent.router import BaseLLMClient, ModelRouter
 from app.agent.state import AgentState, IntentAnalysis
 from app.agent.tools.registry import ToolRegistry
 from app.core.security import detect_prompt_injection, generate_action_hash
+
+logger = logging.getLogger("app.agent.graph")
 
 
 class GitHubAgentWorkflow:
@@ -1360,10 +1363,34 @@ class GitHubAgentWorkflow:
             prompt_messages = [{"role": "system", "content": SYSTEM_AGENT_PROMPT}] + state.get(
                 "messages", []
             )
-            completion = await client.chat_completion(prompt_messages)
-            response_text = completion.content
-            meta["provider"] = completion.provider
-            meta["model"] = completion.model
+            try:
+                completion = await client.chat_completion(prompt_messages)
+                response_text = completion.content
+                meta["provider"] = completion.provider
+                meta["model"] = completion.model
+            except Exception as llm_err:
+                logger.error("LLM chat completion error: %s", str(llm_err))
+                user_msg = state.get("messages", [{}])[-1].get("content", "").strip().lower()
+                repo = state.get("active_repo") or "the workspace"
+                if any(w in user_msg for w in ("hello", "hi", "hey", "help", "who are you")):
+                    response_text = (
+                        f"👋 **Hello! Welcome to GitHub AI Workspace.**\n\n"
+                        f"I am an enterprise autonomous agent connected to `{repo}`.\n\n"
+                        f"**Available Actions:**\n"
+                        f"- Ask architectural questions (e.g. `Explain architecture of {repo}`)\n"
+                        f"- Inspect issues & bug reports (e.g. `Find open issues in {repo}`)\n"
+                        f"- Review pull requests and diffs\n"
+                        f"- Investigate failing CI workflows\n"
+                        f"- Execute autonomous code improvements with Human-In-The-Loop cryptographic approvals"
+                    )
+                else:
+                    response_text = (
+                        f"I received your request regarding `{repo}`: *\"{state.get('messages', [{}])[-1].get('content', '')}\"*.\n\n"
+                        f"However, the configured AI provider ({getattr(client, 'model', 'model')}) encountered an issue: `{str(llm_err)}`.\n\n"
+                        f"💡 **Tip**: Please verify your model API key in the top navigation bar or make sure your local Ollama daemon has the model installed."
+                    )
+                meta["provider"] = getattr(client, "model", "fallback")
+                meta["model"] = "graceful-fallback"
 
         new_assistant_message = {
             "role": "assistant",

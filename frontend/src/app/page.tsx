@@ -9,7 +9,7 @@ export default function WorkspacePage() {
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-background">
       <Navbar />
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden relative">
         <Sidebar />
         <ChatContainer />
       </div>

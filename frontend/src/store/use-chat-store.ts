@@ -35,6 +35,7 @@ interface ChatState {
   activeProvider: string;
   activeModel: string;
   isModelModalOpen: boolean;
+  isSidebarOpen: boolean;
   pendingApprovals: ApprovalRequest[];
   isLoading: boolean;
   isSending: boolean;
@@ -49,6 +50,8 @@ interface ChatState {
   setActiveRepo: (repo: string) => void;
   setAuthModalOpen: (open: boolean) => void;
   setModelModalOpen: (open: boolean) => void;
+  setSidebarOpen: (open: boolean) => void;
+  toggleSidebar: () => void;
   loadModelsConfig: () => Promise<void>;
   saveModelConfig: (
     provider: string,
@@ -83,6 +86,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   activeProvider: "ollama",
   activeModel: "qwen2.5-coder:7b",
   isModelModalOpen: false,
+  isSidebarOpen: false,
   pendingApprovals: [],
   isLoading: false,
   isSending: false,
@@ -148,6 +152,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   setModelModalOpen: (open: boolean) => {
     set({ isModelModalOpen: open });
+  },
+
+  setSidebarOpen: (open: boolean) => {
+    set({ isSidebarOpen: open });
+  },
+
+  toggleSidebar: () => {
+    set((state) => ({ isSidebarOpen: !state.isSidebarOpen }));
   },
 
   loadModelsConfig: async () => {

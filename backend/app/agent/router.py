@@ -662,7 +662,9 @@ class ModelRouter:
     async def get_active_client(self, content_to_process: str = "") -> BaseLLMClient:
         """
         Select active LLM client with strict privacy guardrail enforcement.
+        Always reloads active configuration from settings so runtime updates are instantly effective.
         """
+        self.refresh_from_settings()
         has_code = contains_private_code(content_to_process)
 
         # Privacy gate: if content contains code and cloud consent not given, force local Ollama

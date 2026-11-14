@@ -4,21 +4,27 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import get_settings
 from app.core.database import get_db
 from app.models.repository import RepositoryRecord
 from app.schemas.repo import RepositoryResponse, RepositorySyncRequest
+from app.services.github_discovery import (
+    detect_local_git_repo,
+    fetch_github_user_and_repos,
+    sync_repositories_to_db,
+)
 
 router = APIRouter(prefix="/repos", tags=["Repositories"])
 
 
 @router.get("", response_model=list[RepositoryResponse])
 async def list_repositories(db: AsyncSession = Depends(get_db)):
-    """List all tracked repositories in the workspace."""
-    # Check if there are repositories
+    """List all tracked repositories in the workspace, auto-syncing if empty and token is present."""
     result = await db.execute(
         select(RepositoryRecord).order_by(RepositoryRecord.last_synced_at.desc())
     )
     records = result.scalars().all()
+
     # If other repositories exist alongside dummy, remove dummy
     if any(r.full_name != "octocat/Hello-World" for r in records):
         await db.execute(
@@ -29,13 +35,18 @@ async def list_repositories(db: AsyncSession = Depends(get_db)):
             select(RepositoryRecord).order_by(RepositoryRecord.last_synced_at.desc())
         )
         records = result.scalars().all()
+
+    # If completely empty and GITHUB_PERSONAL_ACCESS_TOKEN is configured, auto-sync
+    settings = get_settings()
+    if not records and settings.GITHUB_PERSONAL_ACCESS_TOKEN:
+        return await refresh_repositories(db=db)
+
     return records
 
 
 @router.post("/sync", response_model=RepositoryResponse)
 async def sync_repository(payload: RepositorySyncRequest, db: AsyncSession = Depends(get_db)):
     """Register or sync a repository in the workspace database, fetching metadata from GitHub if token is set."""
-    from app.core.config import get_settings
     import httpx
 
     parts = payload.full_name.strip().split("/")
@@ -78,6 +89,9 @@ async def sync_repository(payload: RepositorySyncRequest, db: AsyncSession = Dep
     )
     repo = result.scalar_one_or_none()
 
+    local_repo = detect_local_git_repo()
+    is_cloned = bool(local_repo and local_repo.lower() == payload.full_name.lower())
+
     if not repo:
         repo = RepositoryRecord(
             full_name=payload.full_name,
@@ -86,7 +100,7 @@ async def sync_repository(payload: RepositorySyncRequest, db: AsyncSession = Dep
             description=description,
             default_branch=default_branch,
             is_private=is_private,
-            is_cloned=False,
+            is_cloned=is_cloned,
         )
         db.add(repo)
     else:
@@ -94,6 +108,8 @@ async def sync_repository(payload: RepositorySyncRequest, db: AsyncSession = Dep
             repo.description = description
         repo.default_branch = default_branch
         repo.is_private = is_private
+        if is_cloned:
+            repo.is_cloned = True
         repo.last_synced_at = repo.created_at
 
     # Remove any dummy octocat/Hello-World
@@ -109,81 +125,31 @@ async def sync_repository(payload: RepositorySyncRequest, db: AsyncSession = Dep
 @router.post("/refresh", response_model=list[RepositoryResponse])
 async def refresh_repositories(db: AsyncSession = Depends(get_db)):
     """Fetch updated repositories from GitHub if authenticated and return all tracked repositories."""
-    from app.core.config import get_settings
-    import httpx
-
     settings = get_settings()
     token = settings.GITHUB_PERSONAL_ACCESS_TOKEN
 
-    # Remove any dummy repo
-    await db.execute(
-        delete(RepositoryRecord).where(RepositoryRecord.full_name == "octocat/Hello-World")
-    )
-    await db.commit()
-
     if token:
-        headers = {
-            "Authorization": f"Bearer {token}",
-            "Accept": "application/vnd.github+json",
-            "X-GitHub-Api-Version": "2022-11-28",
-            "User-Agent": "GitHub-AI-Workspace",
-        }
-        raw_repos = []
         try:
-            async with httpx.AsyncClient(timeout=15.0) as client:
-                res = await client.get(
-                    "https://api.github.com/user/repos?per_page=100&sort=updated&affiliation=owner,collaborator,organization_member",
-                    headers=headers,
-                )
-                if res.status_code == 200:
-                    raw_repos.extend(res.json())
-                else:
-                    res_alt = await client.get(
-                        "https://api.github.com/user/repos?per_page=100&sort=updated",
-                        headers=headers,
-                    )
-                    if res_alt.status_code == 200:
-                        raw_repos.extend(res_alt.json())
-
-                for r in raw_repos:
-                    if not isinstance(r, dict):
-                        continue
-                    full_name = r.get("full_name")
-                    if not full_name or full_name == "octocat/Hello-World":
-                        continue
-                    owner = r.get("owner", {}).get("login", full_name.split("/")[0])
-                    name = r.get("name", full_name.split("/")[-1])
-                    default_branch = r.get("default_branch", "main")
-                    is_private = bool(r.get("private", False))
-                    description = r.get("description")
-
-                    existing = await db.execute(
-                        select(RepositoryRecord).where(RepositoryRecord.full_name == full_name)
-                    )
-                    repo = existing.scalar_one_or_none()
-                    if not repo:
-                        repo = RepositoryRecord(
-                            full_name=full_name,
-                            owner=owner,
-                            name=name,
-                            description=description,
-                            default_branch=default_branch,
-                            is_private=is_private,
-                            is_cloned=False,
-                        )
-                        db.add(repo)
-                    else:
-                        repo.description = description
-                        repo.default_branch = default_branch
-                        repo.is_private = is_private
-                await db.commit()
+            _user_data, raw_repos = await fetch_github_user_and_repos(token=token)
+            await sync_repositories_to_db(db, raw_repos)
         except Exception:
             pass
 
     result = await db.execute(
         select(RepositoryRecord).order_by(RepositoryRecord.last_synced_at.desc())
     )
-    return result.scalars().all()
+    records = result.scalars().all()
+    # Remove dummy if other repos exist
+    if any(r.full_name != "octocat/Hello-World" for r in records):
+        await db.execute(
+            delete(RepositoryRecord).where(RepositoryRecord.full_name == "octocat/Hello-World")
+        )
+        await db.commit()
+        result = await db.execute(
+            select(RepositoryRecord).order_by(RepositoryRecord.last_synced_at.desc())
+        )
+        records = result.scalars().all()
+    return records
 
 
 @router.get("/{owner}/{repo}", response_model=RepositoryResponse)

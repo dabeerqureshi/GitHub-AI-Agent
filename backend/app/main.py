@@ -50,6 +50,29 @@ async def lifespan(_app: FastAPI):
     except Exception as e:
         logger.error("Could not check interrupted runs on startup: %s", str(e))
 
+    # 3. Auto-sync GitHub profile & repositories if PAT is configured
+    if settings.GITHUB_PERSONAL_ACCESS_TOKEN:
+        try:
+            import app.api.v1.auth as auth_mod
+            from app.services.github_discovery import (
+                fetch_github_user_and_repos,
+                sync_repositories_to_db,
+            )
+
+            async with AsyncSessionLocal() as db:
+                user_data, raw_repos = await fetch_github_user_and_repos(
+                    settings.GITHUB_PERSONAL_ACCESS_TOKEN
+                )
+                auth_mod._cached_gh_profile = user_data
+                synced = await sync_repositories_to_db(db, raw_repos)
+                logger.info(
+                    "Auto-synced %d repository/repositories on backend startup for user '%s'",
+                    synced,
+                    user_data.get("login", "unknown"),
+                )
+        except Exception as e:
+            logger.warning("Could not auto-sync GitHub repositories on startup: %s", str(e))
+
     yield
 
     # 3. Graceful shutdown

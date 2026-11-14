@@ -205,7 +205,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
           !safeRepos.some((r) => r.full_name === current)) &&
         safeRepos.length > 0
       ) {
-        set({ activeRepo: safeRepos[0].full_name });
+        const clonedRepo = safeRepos.find((r) => r.is_cloned);
+        set({ activeRepo: clonedRepo ? clonedRepo.full_name : safeRepos[0].full_name });
       } else if (safeRepos.length === 0) {
         set({ activeRepo: "" });
       }

@@ -29,6 +29,15 @@ async def lifespan(_app: FastAPI):
     """Application lifespan context manager handling initialization, recovery, and graceful shutdown."""
     settings = get_settings()
 
+    # 0. Ensure database tables exist
+    try:
+        from app.core.database import engine, Base
+        import app.models
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+    except Exception as db_err:
+        logger.warning("Could not auto-create tables: %s", db_err)
+
     # 1. Initialize logging
     configure_logging(app_env=settings.APP_ENV, debug=settings.APP_DEBUG)
     logger.info(

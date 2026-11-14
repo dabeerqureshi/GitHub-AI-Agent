@@ -119,6 +119,9 @@ start_services() {
   fi
   kill_port_process 3000
 
+  # Ensure database schema is migrated
+  (cd "${ROOT_DIR}/backend" && PYTHONPATH=. .venv/bin/alembic upgrade head >/dev/null 2>&1 || true)
+
   # 4. Start Backend Server (Detached process session)
   echo -e "${BLUE}[1/2] Starting Backend API (FastAPI / Uvicorn)...${RESET}"
   python3 -c "

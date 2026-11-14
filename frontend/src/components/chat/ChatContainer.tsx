@@ -115,11 +115,14 @@ export function ChatContainer() {
       <div className="px-6 py-2.5 glass-panel border-b border-border/60 flex items-center justify-between text-xs">
         <div className="flex items-center space-x-3">
           <span className="font-semibold text-foreground text-sm tracking-tight">
-            {activeConversation.title}
+            {activeConversation.title.startsWith("Chat on ")
+              ? "Workspace Session"
+              : activeConversation.title}
           </span>
-          <div className="flex items-center space-x-1.5 px-2.5 py-0.5 rounded-md bg-secondary/60 text-[11px] font-mono text-muted-foreground border border-border/60">
-            <FolderGit2 className="h-3 w-3 text-primary" />
-            <span className="text-foreground font-medium">
+          <span className="text-border/60 font-mono">/</span>
+          <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-secondary/60 text-xs font-mono text-muted-foreground border border-border/60 shadow-sm">
+            <FolderGit2 className="h-3.5 w-3.5 text-primary" />
+            <span className="text-foreground font-semibold">
               {activeRepo || "No repo selected"}
             </span>
           </div>
@@ -137,16 +140,19 @@ export function ChatContainer() {
             <ListOrdered className="h-3.5 w-3.5" />
             <span>Agent Plan:</span>
           </div>
-          <div className="flex items-center space-x-2 overflow-x-auto text-muted-foreground font-mono">
-            {currentPlan.map((step, idx) => (
-              <span
-                key={idx}
-                className="whitespace-nowrap bg-background/80 px-2.5 py-0.5 rounded-md border border-border/80 text-[11px] flex items-center space-x-1"
-              >
-                <span className="text-primary font-bold">{idx + 1}.</span>
-                <span>{step}</span>
-              </span>
-            ))}
+          <div className="flex items-center space-x-2 overflow-x-auto text-muted-foreground font-mono py-0.5">
+            {currentPlan.map((step, idx) => {
+              const cleanStep = step.replace(/^\d+[\.\)]\s*/, "");
+              return (
+                <span
+                  key={idx}
+                  className="whitespace-nowrap bg-background/90 px-3 py-1 rounded-lg border border-border text-[11px] flex items-center space-x-1.5 shadow-sm"
+                >
+                  <span className="text-primary font-bold">{idx + 1}.</span>
+                  <span className="text-foreground/90 font-medium">{cleanStep}</span>
+                </span>
+              );
+            })}
           </div>
         </div>
       )}
@@ -260,8 +266,12 @@ export function ChatContainer() {
             <span>Send</span>
           </button>
         </form>
-        <div className="text-[10px] text-center text-muted-foreground/70 mt-2 font-mono">
-          Enter to send • Shift+Enter for new line • Scoped to {activeRepo}
+        <div className="text-[10px] text-center text-muted-foreground/80 mt-2 font-mono flex items-center justify-center space-x-2">
+          <span>Enter to send</span>
+          <span>•</span>
+          <span>Shift+Enter for new line</span>
+          <span>•</span>
+          <span>Scoped to <span className="text-foreground font-semibold">{activeRepo}</span></span>
         </div>
       </div>
     </div>

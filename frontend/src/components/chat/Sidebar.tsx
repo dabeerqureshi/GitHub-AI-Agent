@@ -40,7 +40,13 @@ export function Sidebar() {
       {/* New Session Button */}
       <div className="p-3 border-b border-border/60">
         <button
-          onClick={() => startNewConversation(`Chat on ${activeRepo}`)}
+          onClick={() =>
+            startNewConversation(
+              activeRepo
+                ? `Session: ${activeRepo.split("/").pop()}`
+                : "New Workspace Session"
+            )
+          }
           className="w-full flex items-center justify-center space-x-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold py-2 px-4 rounded-xl text-xs transition-all shadow-sm shadow-primary/20 glow-hover cursor-pointer"
         >
           <Plus className="h-4 w-4" />

@@ -88,12 +88,12 @@ export function Navbar() {
               title="Change LLM Provider & API Key"
             >
               <Sparkles className="h-3 w-3 text-indigo-400 group-hover:rotate-12 transition-transform" />
-              <span className="text-muted-foreground">Engine:</span>
+              <span className="text-muted-foreground mr-1">Engine:</span>
               <span className="capitalize font-semibold text-foreground">
                 {activeProvider || health?.default_provider || "Gemini"}
               </span>
               {activeModel && (
-                <span className="text-[10px] text-muted-foreground font-normal truncate max-w-[100px]">
+                <span className="text-[10px] text-muted-foreground font-normal truncate max-w-[100px] ml-1">
                   ({activeModel.split("/").pop()})
                 </span>
               )}

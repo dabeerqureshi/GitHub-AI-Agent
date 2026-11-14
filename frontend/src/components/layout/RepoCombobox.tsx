@@ -97,12 +97,12 @@ export function RepoCombobox() {
         aria-expanded={isOpen}
       >
         <FolderGit2 className="h-3.5 w-3.5 text-primary group-hover:scale-105 transition-transform" />
-        <span className="font-mono font-semibold text-foreground max-w-[180px] truncate">
+        <span className="font-mono font-semibold text-foreground max-w-[220px] truncate">
           {activeRepo || "Select Repository"}
         </span>
 
         {selectedRepoRecord && (
-          <span className="flex items-center text-[10px] px-1.5 py-0.5 rounded bg-background/80 text-muted-foreground border border-border">
+          <span className="flex items-center text-[10px] px-1.5 py-0.5 rounded-md bg-background/80 text-muted-foreground border border-border/80 shadow-xs ml-1">
             {selectedRepoRecord.is_private ? (
               <Lock className="h-2.5 w-2.5 mr-1 text-amber-400" />
             ) : (

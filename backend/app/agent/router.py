@@ -448,15 +448,16 @@ class GeminiClient(BaseLLMClient):
                     if res.status_code == 404 and (
                         "not found" in res.text.lower()
                         or "no longer available" in res.text.lower()
+                        or "not supported for generatecontent" in res.text.lower()
                         or "not_found" in res.text.lower()
                     ):
-                        if payload.get("model") != "gemini-1.5-flash":
+                        if payload.get("model") != "gemini-3.8-flash":
                             logger.warning(
-                                "Gemini model '%s' unavailable or deprecated. Falling back to 'gemini-1.5-flash'",
+                                "Gemini model '%s' unavailable or deprecated. Falling back to 'gemini-3.8-flash'",
                                 payload.get("model"),
                             )
-                            payload["model"] = "gemini-1.5-flash"
-                            self.model = "gemini-1.5-flash"
+                            payload["model"] = "gemini-3.8-flash"
+                            self.model = "gemini-3.8-flash"
                             res = await client.post(
                                 f"{self.base_url}/chat/completions", headers=headers, json=payload
                             )

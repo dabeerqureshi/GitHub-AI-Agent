@@ -29,12 +29,11 @@ DEFAULT_PROVIDER_CATALOG = {
     "gemini": {
         "id": "gemini",
         "name": "Google Gemini",
-        "description": "High-performance multimodal models with native tool-calling.",
+        "description": "Google's frontier multimodal model with 1M context and native tool calling.",
         "supported_models": [
-            "gemini-1.5-flash",
-            "gemini-2.5-flash",
-            "gemini-1.5-pro",
-            "gemini-2.5-pro",
+            "gemini-3.8-flash",
+            "gemini-3.8-pro",
+            "gemini-3.8-flash-cyber",
         ],
     },
     "openai": {
@@ -142,11 +141,35 @@ async def get_models_config():
     )
 
 
+def _save_env_variable(var_name: str, var_value: str) -> None:
+    """Safely persist variable to root .env file if it exists."""
+    from app.core.config import ROOT_DIR
+    env_path = ROOT_DIR / ".env"
+    if not env_path.exists():
+        return
+    try:
+        content = env_path.read_text(encoding="utf-8")
+        lines = content.splitlines()
+        found = False
+        new_lines = []
+        for line in lines:
+            if line.startswith(f"{var_name}=") or line.startswith(f"# {var_name}="):
+                new_lines.append(f"{var_name}={var_value}")
+                found = True
+            else:
+                new_lines.append(line)
+        if not found:
+            new_lines.append(f"{var_name}={var_value}")
+        env_path.write_text("\n".join(new_lines) + "\n", encoding="utf-8")
+    except Exception as e:
+        logger.warning("Could not persist %s to .env: %s", var_name, str(e))
+
+
 @router.post("/config", response_model=ModelsConfigResponse)
 async def update_models_config(payload: UpdateModelConfigRequest):
     """
     Update active LLM provider, active model, and API key at runtime.
-    Automatically validates permissions and updates router.
+    Automatically validates permissions, updates router, and persists credentials.
     """
     settings = get_settings()
     provider = payload.provider.lower().strip()
@@ -162,31 +185,42 @@ async def update_models_config(payload: UpdateModelConfigRequest):
         key = payload.api_key.strip()
         if provider == "gemini":
             settings.GEMINI_API_KEY = key
+            _save_env_variable("GEMINI_API_KEY", key)
         elif provider == "openai":
             settings.OPENAI_API_KEY = key
+            _save_env_variable("OPENAI_API_KEY", key)
         elif provider == "anthropic":
             settings.ANTHROPIC_API_KEY = key
+            _save_env_variable("ANTHROPIC_API_KEY", key)
         elif provider == "openrouter":
             settings.OPENROUTER_API_KEY = key
+            _save_env_variable("OPENROUTER_API_KEY", key)
 
     # 2. Update model name if provided
     if payload.model and payload.model.strip():
         model_name = payload.model.strip()
         if provider == "gemini":
             settings.GEMINI_MODEL = model_name
+            _save_env_variable("GEMINI_MODEL", model_name)
         elif provider == "openai":
             settings.OPENAI_MODEL = model_name
+            _save_env_variable("OPENAI_MODEL", model_name)
         elif provider == "anthropic":
             settings.ANTHROPIC_MODEL = model_name
+            _save_env_variable("ANTHROPIC_MODEL", model_name)
         elif provider == "openrouter":
             settings.OPENROUTER_MODEL = model_name
+            _save_env_variable("OPENROUTER_MODEL", model_name)
         elif provider == "ollama":
             settings.OLLAMA_MODEL = model_name
+            _save_env_variable("OLLAMA_MODEL", model_name)
 
     # 3. Update active provider and cloud privacy consent
     settings.DEFAULT_AI_PROVIDER = provider
+    _save_env_variable("DEFAULT_AI_PROVIDER", provider)
     if provider != "ollama":
         settings.ALLOW_CLOUD_CODE_ANALYSIS = payload.allow_cloud_code
+        _save_env_variable("ALLOW_CLOUD_CODE_ANALYSIS", str(payload.allow_cloud_code).lower())
 
     logger.info("Updated active AI provider to '%s' (Model: %s)", provider, payload.model)
 

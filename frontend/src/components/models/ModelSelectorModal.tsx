@@ -29,7 +29,7 @@ const PROVIDER_METADATA: Record<
     name: "Gemini",
     icon: Sparkles,
     color: "text-indigo-400 bg-indigo-500/10 border-indigo-500/20",
-    badge: "Official API",
+    badge: "Gemini 3.8 Series",
     link: "https://aistudio.google.com/app/apikey",
   },
   openai: {

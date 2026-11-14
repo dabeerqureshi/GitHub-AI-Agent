@@ -1,16 +1,15 @@
 "use client";
 
 import React from "react";
-import { Navbar } from "@/components/layout/Navbar";
+import { AppLayout } from "@/components/layout/AppLayout";
 import { ApprovalCenter } from "@/components/approvals/ApprovalCenter";
 
 export default function ApprovalsPage() {
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      <Navbar />
-      <main className="flex-1 w-full mx-auto overflow-hidden">
+    <AppLayout>
+      <div className="h-full overflow-hidden">
         <ApprovalCenter />
-      </main>
-    </div>
+      </div>
+    </AppLayout>
   );
 }

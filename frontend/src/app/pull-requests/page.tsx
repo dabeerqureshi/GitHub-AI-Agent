@@ -1,18 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   GitPullRequest,
   Search,
-  Filter,
   Sparkles,
   GitBranch,
   CheckCircle2,
-  AlertCircle,
-  Clock,
-  ArrowRight,
   ShieldCheck,
 } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -78,15 +73,15 @@ export default function PullRequestsPage() {
 
   return (
     <AppLayout>
-      <div className="max-w-7xl mx-auto p-4 sm:p-6 md:p-8 space-y-6">
+      <div className="max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 space-y-6 font-sans">
         {/* Page Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#2b2b2b] gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-5 border-b border-slate-800 gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#ffffff] flex items-center gap-2">
-              <GitPullRequest className="h-6 w-6 text-[#38BDF8]" />
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
+              <GitPullRequest className="h-6 w-6 text-sky-400" />
               <span>Pull Requests</span>
             </h1>
-            <p className="text-xs text-[#8c8c8c] mt-0.5">
+            <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
               Automated diff analysis, security checks, and Human-In-The-Loop PR governance.
             </p>
           </div>
@@ -97,7 +92,7 @@ export default function PullRequestsPage() {
               sendUserMessage(`Review all pending pull requests and summarize diffs in ${activeRepo || "the repository"}`);
               router.push("/chat");
             }}
-            className="self-start sm:self-auto flex items-center space-x-1.5 px-3 py-1.5 rounded-md bg-[#007acc] hover:bg-[#007acc]/90 text-white text-xs font-semibold transition-colors cursor-pointer"
+            className="self-start sm:self-auto inline-flex items-center space-x-1.5 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-colors shadow-sm cursor-pointer"
           >
             <Sparkles className="h-3.5 w-3.5" />
             <span>AI Review All PRs</span>
@@ -107,25 +102,25 @@ export default function PullRequestsPage() {
         {/* Filter Controls */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-[#8c8c8c]" />
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search pull requests..."
-              className="w-full pl-8 pr-3 py-1.5 text-xs bg-[#252526] border border-[#2b2b2b] rounded-md text-[#ffffff] placeholder:text-[#8c8c8c] focus:outline-none focus:border-[#007acc]"
+              placeholder="Filter pull requests..."
+              className="w-full pl-9 pr-3.5 py-2 text-xs bg-slate-900 border border-slate-800 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-all"
             />
           </div>
 
-          <div className="flex items-center space-x-2">
-            {["ALL", "OPEN", "MERGED"].map((st) => (
+          <div className="flex items-center space-x-1.5">
+            {["OPEN", "MERGED", "ALL"].map((st) => (
               <button
                 key={st}
                 onClick={() => setFilter(st)}
-                className={`px-2.5 py-1 text-xs font-mono rounded-md transition-colors ${
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
                   filter === st
-                    ? "bg-[#2a2d2e] text-[#ffffff] font-semibold border border-[#007acc]/40"
-                    : "bg-[#1e1e1e] text-[#8c8c8c] hover:text-[#ffffff] border border-[#2b2b2b]"
+                    ? "bg-indigo-600 text-white shadow-sm"
+                    : "bg-slate-900 text-slate-400 hover:text-white border border-slate-800"
                 }`}
               >
                 {st}
@@ -134,68 +129,68 @@ export default function PullRequestsPage() {
           </div>
         </div>
 
-        {/* Pull Requests Table */}
-        <div className="rounded-md bg-[#252526] overflow-hidden border border-[#2b2b2b]">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-[#1e1e1e] text-[#8c8c8c] font-mono border-b border-[#2b2b2b]">
-                <tr>
-                  <th className="p-3.5">#</th>
-                  <th className="p-3.5">Pull Request</th>
-                  <th className="p-3.5">Branches</th>
-                  <th className="p-3.5">CI Check</th>
-                  <th className="p-3.5">Status</th>
-                  <th className="p-3.5 text-right">Review Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#2b2b2b]">
-                {filteredPRs.map((pr) => (
-                  <tr key={pr.number} className="hover:bg-[#2a2d2e]/50 transition-colors">
-                    <td className="p-3.5 font-mono text-[#38BDF8]">#{pr.number}</td>
-                    <td className="p-3.5 font-medium text-[#ffffff]">
-                      <div className="max-w-md truncate font-semibold">{pr.title}</div>
-                      <div className="text-[10px] text-[#8c8c8c] font-mono mt-0.5">
-                        {pr.author} • {pr.changed_files} files changed • updated {pr.updated_at}
-                      </div>
-                    </td>
-                    <td className="p-3.5 font-mono text-[11px] text-[#8c8c8c]">
-                      <div className="flex items-center space-x-1">
-                        <span>{pr.branch}</span>
-                        <ArrowRight className="h-3 w-3 text-[#8c8c8c]" />
-                        <span className="text-[#ffffff]">{pr.target}</span>
-                      </div>
-                    </td>
-                    <td className="p-3.5">
-                      <span className="inline-flex items-center gap-1 font-mono text-[10px] text-emerald-400">
-                        <CheckCircle2 className="h-3 w-3" />
-                        <span>Passing</span>
+        {/* Pull Requests List */}
+        <div className="rounded-xl bg-slate-900 border border-slate-800 divide-y divide-slate-800 shadow-sm overflow-hidden">
+          {filteredPRs.length === 0 ? (
+            <div className="p-12 text-center text-xs text-slate-500 font-mono">
+              No pull requests matching criteria.
+            </div>
+          ) : (
+            filteredPRs.map((pr) => (
+              <div
+                key={pr.number}
+                className="p-4 sm:p-5 hover:bg-slate-800/50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+              >
+                <div className="flex items-start space-x-3.5 min-w-0">
+                  <GitPullRequest
+                    className={`h-5 w-5 shrink-0 mt-0.5 ${
+                      pr.status === "OPEN" ? "text-emerald-400" : "text-purple-400"
+                    }`}
+                  />
+                  <div className="space-y-1.5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-semibold text-sm text-white hover:text-indigo-400 transition-colors cursor-pointer">
+                        {pr.title}
                       </span>
-                    </td>
-                    <td className="p-3.5">
                       <span
-                        className={`text-[10px] font-mono px-2 py-0.5 rounded-full border ${
+                        className={`text-[10px] font-mono px-2 py-0.5 rounded-full border uppercase ${
                           pr.status === "OPEN"
-                            ? "bg-blue-500/15 text-blue-400 border-blue-500/30"
+                            ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
                             : "bg-purple-500/15 text-purple-300 border-purple-500/30"
                         }`}
                       >
                         {pr.status}
                       </span>
-                    </td>
-                    <td className="p-3.5 text-right">
-                      <button
-                        onClick={() => handleAiReview(pr.title, pr.number)}
-                        className="inline-flex items-center space-x-1 px-2.5 py-1 text-xs font-semibold rounded-md bg-[#252526] hover:bg-[#2a2d2e] text-[#007acc] border border-indigo-500/30 transition-colors cursor-pointer"
-                      >
-                        <ShieldCheck className="h-3 w-3" />
-                        <span>AI Review</span>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400 font-mono">
+                      <span>#{pr.number} by @{pr.author}</span>
+                      <div className="flex items-center space-x-1">
+                        <GitBranch className="h-3 w-3 text-slate-500" />
+                        <span className="text-slate-300">{pr.branch}</span>
+                        <span>→</span>
+                        <span>{pr.target}</span>
+                      </div>
+                      <span>Updated {pr.updated_at}</span>
+                      <span className="text-emerald-400 flex items-center gap-1">
+                        <CheckCircle2 className="h-3 w-3" /> CI Passed
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2 shrink-0 self-start sm:self-auto">
+                  <button
+                    onClick={() => handleAiReview(pr.title, pr.number)}
+                    className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-700 text-xs font-semibold text-slate-200 transition-colors cursor-pointer shadow-sm"
+                  >
+                    <ShieldCheck className="h-3.5 w-3.5 text-indigo-400" />
+                    <span>AI Review Diff</span>
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </AppLayout>

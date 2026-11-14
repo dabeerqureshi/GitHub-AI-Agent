@@ -1,10 +1,22 @@
-.PHONY: install dev-backend dev-frontend test lint format clean
+.PHONY: install start stop restart status dev-backend dev-frontend test lint format clean
 
 VENV := backend/.venv
 PYTHON := $(VENV)/bin/python
 PIP := $(VENV)/bin/pip
 RUFF := $(VENV)/bin/ruff
 PYTEST := $(VENV)/bin/pytest
+
+start:
+	./manage.sh start
+
+stop:
+	./manage.sh stop
+
+restart:
+	./manage.sh restart
+
+status:
+	./manage.sh status
 
 install:
 	@echo "Setting up Python 3.12 virtual environment..."

@@ -92,6 +92,33 @@ Under a single unified LangGraph orchestrator, GitHub AI Workspace implements 6 
 
 ## 3. Quick Start & Installation
 
+### Quick Start: Start & Stop Application
+
+Run directly from the repository root:
+
+```bash
+# Start both Frontend & Backend with automatic readiness checks
+./start.sh
+# or: ./manage.sh start
+
+# Check live health status and PIDs
+./manage.sh status
+
+# Tail service logs
+./manage.sh logs [backend|frontend]
+
+# Stop all processes cleanly and release ports
+./stop.sh
+# or: ./manage.sh stop
+```
+
+Alternatively using Make:
+```bash
+make start
+make status
+make stop
+```
+
 ### Option A: Automated One-Click Setup (macOS / Linux)
 
 ```bash

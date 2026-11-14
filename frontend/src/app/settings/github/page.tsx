@@ -1,34 +1,20 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  Key,
-  ShieldCheck,
-  CheckCircle2,
-  FolderGit2,
-  ExternalLink,
-  RefreshCw,
-  AlertCircle,
-} from "lucide-react";
+import { Key, ShieldCheck, RefreshCw, FolderGit2 } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useChatStore } from "@/store/use-chat-store";
 import { refreshRepositories } from "@/lib/api";
 
 export default function GitHubSettingsPage() {
-  const {
-    githubUser,
-    repositories,
-    setAuthModalOpen,
-    loadRepositories,
-  } = useChatStore();
-
+  const { githubUser, repositories, loadRepositories, setAuthModalOpen } = useChatStore();
   const [refreshing, setRefreshing] = useState(false);
 
   const handleSync = async () => {
     setRefreshing(true);
     try {
       await refreshRepositories();
-      await loadRepositories();
+      await loadRepositories(true);
     } finally {
       setRefreshing(false);
     }
@@ -36,43 +22,44 @@ export default function GitHubSettingsPage() {
 
   return (
     <AppLayout>
-      <div className="max-w-4xl mx-auto p-4 sm:p-6 md:p-8 space-y-6">
+      <div className="max-w-4xl mx-auto w-full p-4 sm:p-6 lg:p-8 space-y-6 font-sans">
         {/* Page Header */}
-        <div className="pb-4 border-b border-[#2b2b2b]">
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#ffffff] flex items-center gap-2">
-            <Key className="h-6 w-6 text-[#007acc]" />
+        <div className="pb-5 border-b border-slate-800">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
+            <Key className="h-6 w-6 text-indigo-400" />
             <span>Connected GitHub Account</span>
           </h1>
-          <p className="text-xs text-[#8c8c8c] mt-0.5">
+          <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
             Manage your GitHub Personal Access Token (PAT), organization discovery, and repository permissions.
           </p>
         </div>
 
         {/* Identity Card */}
-        <div className="p-5 rounded-md bg-[#252526] border border-[#2b2b2b] space-y-4">
-          <div className="flex items-start justify-between">
+        <div className="p-5 rounded-xl bg-slate-900 border border-slate-800 shadow-sm space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center space-x-3.5">
               {githubUser?.avatar_url ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
                 <img
                   src={githubUser.avatar_url}
                   alt={githubUser.login}
-                  className="w-12 h-12 rounded-md border border-indigo-500/40"
+                  className="w-12 h-12 rounded-xl border border-indigo-500/40"
                 />
               ) : (
-                <div className="w-12 h-12 rounded-md bg-indigo-500/20 text-[#007acc] flex items-center justify-center text-lg font-bold">
+                <div className="w-12 h-12 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-lg font-bold">
                   GH
                 </div>
               )}
               <div>
                 <div className="flex items-center space-x-2">
-                  <h3 className="text-base font-bold text-[#ffffff]">
+                  <h3 className="text-base font-bold text-white">
                     {githubUser?.name || githubUser?.login || "Connected GitHub Account"}
                   </h3>
                   <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                     Active PAT
                   </span>
                 </div>
-                <div className="text-xs text-[#8c8c8c] font-mono mt-0.5">
+                <div className="text-xs text-slate-400 font-mono mt-0.5">
                   @{githubUser?.login || "dabeerqureshi"}
                 </div>
               </div>
@@ -80,44 +67,44 @@ export default function GitHubSettingsPage() {
 
             <button
               onClick={() => setAuthModalOpen(true)}
-              className="px-3 py-1.5 text-xs font-medium rounded-md bg-[#252526] hover:bg-[#2a2d2e] border border-[#2b2b2b] text-[#ffffff] transition-colors cursor-pointer"
+              className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-700 text-slate-200 transition-colors cursor-pointer shadow-sm self-start sm:self-auto"
             >
               Update Token
             </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-[#2b2b2b] text-xs">
-            <div className="p-3 rounded-lg bg-[#1e1e1e] border border-[#2b2b2b]">
-              <div className="text-[#8c8c8c] text-[11px] font-mono uppercase">Repositories</div>
-              <div className="text-lg font-bold text-[#ffffff] mt-0.5 font-tabular">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 border-t border-slate-800 text-xs">
+            <div className="p-3.5 rounded-lg bg-slate-950 border border-slate-800">
+              <div className="text-slate-400 text-[11px] font-mono uppercase">Repositories</div>
+              <div className="text-lg font-bold text-white mt-0.5 font-tabular">
                 {repositories.length}
               </div>
-              <div className="text-[10px] text-[#8c8c8c]">Auto-discovered</div>
+              <div className="text-[10px] text-slate-500">Auto-discovered</div>
             </div>
 
-            <div className="p-3 rounded-lg bg-[#1e1e1e] border border-[#2b2b2b]">
-              <div className="text-[#8c8c8c] text-[11px] font-mono uppercase">Token Scopes</div>
+            <div className="p-3.5 rounded-lg bg-slate-950 border border-slate-800">
+              <div className="text-slate-400 text-[11px] font-mono uppercase">Token Scopes</div>
               <div className="text-xs font-mono font-medium text-emerald-400 mt-1">
                 repo, read:org, workflow
               </div>
-              <div className="text-[10px] text-[#8c8c8c]">Fine-grained access</div>
+              <div className="text-[10px] text-slate-500">Fine-grained access</div>
             </div>
 
-            <div className="p-3 rounded-lg bg-[#1e1e1e] border border-[#2b2b2b]">
-              <div className="text-[#8c8c8c] text-[11px] font-mono uppercase">HITL Security</div>
-              <div className="text-xs font-mono font-medium text-[#007acc] mt-1">
+            <div className="p-3.5 rounded-lg bg-slate-950 border border-slate-800">
+              <div className="text-slate-400 text-[11px] font-mono uppercase">HITL Security</div>
+              <div className="text-xs font-mono font-medium text-indigo-400 mt-1">
                 HMAC SHA-256 Gated
               </div>
-              <div className="text-[10px] text-[#8c8c8c]">Write confirmation enforced</div>
+              <div className="text-[10px] text-slate-500">Write confirmation enforced</div>
             </div>
           </div>
         </div>
 
         {/* Sync Repositories Action */}
-        <div className="p-5 rounded-md bg-[#252526] border border-[#2b2b2b] flex items-center justify-between">
+        <div className="p-5 rounded-xl bg-slate-900 border border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h4 className="text-sm font-semibold text-[#ffffff]">Re-synchronize Repositories</h4>
-            <p className="text-xs text-[#8c8c8c] mt-0.5">
+            <h4 className="text-sm font-semibold text-white">Re-synchronize Repositories</h4>
+            <p className="text-xs text-slate-400 mt-0.5">
               Query GitHub API to detect any recently created, forked, or invited repositories.
             </p>
           </div>
@@ -125,7 +112,7 @@ export default function GitHubSettingsPage() {
           <button
             onClick={handleSync}
             disabled={refreshing}
-            className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-md bg-[#007acc] hover:bg-[#007acc]/90 text-white text-xs font-semibold transition-colors cursor-pointer"
+            className="flex items-center space-x-1.5 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-colors cursor-pointer shadow-sm self-start sm:self-auto"
           >
             <RefreshCw className={`h-3 w-3 ${refreshing ? "animate-spin" : ""}`} />
             <span>Sync Now</span>

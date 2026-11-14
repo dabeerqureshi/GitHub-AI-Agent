@@ -8,6 +8,7 @@ from app.agent.router import (
     MockLLMClient,
     ModelRouter,
     OpenAIClient,
+    OpenRouterClient,
 )
 
 
@@ -50,6 +51,21 @@ async def test_gemini_client_validation():
     assert report.provider == "gemini"
 
     client_with_key = GeminiClient(api_key="AIzaSyTestGeminiKey123")
+    assert await client_with_key.is_available() is True
+    report_valid = await client_with_key.validate_capabilities()
+    assert report_valid.is_available is True
+    assert report_valid.supports_tool_calling is True
+
+
+@pytest.mark.asyncio
+async def test_openrouter_client_validation():
+    """Verify OpenRouter client capability validation."""
+    client = OpenRouterClient(api_key="")
+    report = await client.validate_capabilities()
+    assert report.is_available is False
+    assert report.provider == "openrouter"
+
+    client_with_key = OpenRouterClient(api_key="sk-or-v1-testkey1234")
     assert await client_with_key.is_available() is True
     report_valid = await client_with_key.validate_capabilities()
     assert report_valid.is_available is True

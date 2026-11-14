@@ -80,6 +80,7 @@ SECRET_PATTERNS = [
     re.compile(r"github_pat_[A-Za-z0-9_]{82}"),  # GitHub Fine-Grained Token
     re.compile(r"gh[ousr]_[A-Za-z0-9_]{36,255}"),  # GitHub OAuth / User / Refresh tokens
     re.compile(r"sk-[A-Za-z0-9]{32,64}"),  # OpenAI API Key
+    re.compile(r"sk-or-v1-[A-Za-z0-9]{64}"),  # OpenRouter API Key
     re.compile(r"sk-ant-[A-Za-z0-9_\-]{32,100}"),  # Anthropic API Key
     re.compile(r"AKIA[0-9A-Z]{16}"),  # AWS Access Key ID
     re.compile(

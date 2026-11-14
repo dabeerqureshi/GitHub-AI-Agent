@@ -177,7 +177,7 @@ class OpenAIClient(BaseLLMClient):
         timeout: float | None = None,
     ):
         settings = get_settings()
-        self.api_key = api_key or settings.OPENAI_API_KEY
+        self.api_key = api_key if api_key is not None else settings.OPENAI_API_KEY
         self.model = model or settings.OPENAI_MODEL
         self.base_url = "https://api.openai.com/v1"
         self.timeout = timeout or float(settings.REQUEST_TIMEOUT_SECONDS)
@@ -272,7 +272,7 @@ class AnthropicClient(BaseLLMClient):
         timeout: float | None = None,
     ):
         settings = get_settings()
-        self.api_key = api_key or settings.ANTHROPIC_API_KEY
+        self.api_key = api_key if api_key is not None else settings.ANTHROPIC_API_KEY
         self.model = model or settings.ANTHROPIC_MODEL
         self.base_url = "https://api.anthropic.com/v1"
         self.timeout = timeout or float(settings.REQUEST_TIMEOUT_SECONDS)
@@ -388,7 +388,7 @@ class GeminiClient(BaseLLMClient):
         timeout: float | None = None,
     ):
         settings = get_settings()
-        self.api_key = api_key or settings.GEMINI_API_KEY
+        self.api_key = api_key if api_key is not None else settings.GEMINI_API_KEY
         self.model = model or settings.GEMINI_MODEL
         self.base_url = "https://generativelanguage.googleapis.com/v1beta/openai"
         self.timeout = timeout or float(settings.REQUEST_TIMEOUT_SECONDS)
@@ -473,6 +473,105 @@ class GeminiClient(BaseLLMClient):
         raise RuntimeError(f"Gemini request failed after {self.max_retries} attempts: {last_error}")
 
 
+class OpenRouterClient(BaseLLMClient):
+    """Client for OpenRouter API supporting hundreds of models via OpenAI-compatible endpoint."""
+
+    def __init__(
+        self,
+        api_key: str | None = None,
+        model: str | None = None,
+        timeout: float | None = None,
+    ):
+        settings = get_settings()
+        self.api_key = api_key if api_key is not None else settings.OPENROUTER_API_KEY
+        self.model = model or settings.OPENROUTER_MODEL
+        self.base_url = "https://openrouter.ai/api/v1"
+        self.timeout = timeout or float(settings.REQUEST_TIMEOUT_SECONDS)
+        self.max_retries = settings.MAX_RETRY_COUNT
+
+    async def is_available(self) -> bool:
+        return bool(self.api_key)
+
+    async def validate_capabilities(self) -> ModelCapabilityReport:
+        if not self.api_key:
+            return ModelCapabilityReport(
+                provider="openrouter",
+                model=self.model,
+                is_available=False,
+                supports_tool_calling=False,
+                error_message="OpenRouter API key not configured",
+            )
+        return ModelCapabilityReport(
+            provider="openrouter",
+            model=self.model,
+            is_available=True,
+            supports_tool_calling=True,
+        )
+
+    async def chat_completion(
+        self,
+        messages: list[dict[str, str]],
+        tools: list[dict[str, Any]] | None = None,
+        temperature: float = 0.2,
+    ) -> ChatCompletionResponse:
+        if not self.api_key:
+            raise ValueError("OpenRouter API key not configured")
+
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "HTTP-Referer": "http://localhost:3000",
+            "X-Title": "GitHub AI Workspace",
+            "Content-Type": "application/json",
+        }
+        payload: dict[str, Any] = {
+            "model": self.model,
+            "messages": messages,
+            "temperature": temperature,
+        }
+        if tools:
+            payload["tools"] = [{"type": "function", "function": t} for t in tools]
+
+        last_error = None
+        for attempt in range(self.max_retries):
+            try:
+                start = asyncio.get_event_loop().time()
+                async with httpx.AsyncClient(timeout=self.timeout) as client:
+                    res = await client.post(
+                        f"{self.base_url}/chat/completions", headers=headers, json=payload
+                    )
+                    if res.status_code != 200:
+                        raise RuntimeError(f"OpenRouter error ({res.status_code}): {res.text}")
+                    data = res.json()
+                    choice = data["choices"][0]["message"]
+                    raw_tool_calls = choice.get("tool_calls")
+                    parsed_tool_calls = None
+                    if raw_tool_calls:
+                        parsed_tool_calls = [
+                            {
+                                "name": tc["function"]["name"],
+                                "arguments": tc["function"]["arguments"],
+                                "id": tc.get("id"),
+                            }
+                            for tc in raw_tool_calls
+                        ]
+                    elapsed = asyncio.get_event_loop().time() - start
+                    return ChatCompletionResponse(
+                        content=choice.get("content") or "",
+                        tool_calls=parsed_tool_calls,
+                        provider="openrouter",
+                        model=self.model,
+                        raw_response=data,
+                        execution_time_seconds=round(elapsed, 3),
+                    )
+            except Exception as e:
+                last_error = e
+                await asyncio.sleep(0.5 * (2**attempt))
+
+        raise RuntimeError(
+            f"OpenRouter request failed after {self.max_retries} attempts: {last_error}"
+        )
+
+
 class MockLLMClient(BaseLLMClient):
     """Deterministic mock client for testing and offline environments."""
 
@@ -545,6 +644,20 @@ class ModelRouter:
         self.openai_client = OpenAIClient()
         self.anthropic_client = AnthropicClient()
         self.gemini_client = GeminiClient()
+        self.openrouter_client = OpenRouterClient()
+
+    def refresh_from_settings(self):
+        """Reload configuration and clients from active application settings."""
+        settings = get_settings()
+        self.preferred_provider = settings.DEFAULT_AI_PROVIDER.lower()
+        self.allow_cloud_code = settings.ALLOW_CLOUD_CODE_ANALYSIS
+        self.enable_fallback = settings.ENABLE_CLOUD_FALLBACK
+
+        self.ollama_client = OllamaClient(model=settings.OLLAMA_MODEL)
+        self.openai_client = OpenAIClient(api_key=settings.OPENAI_API_KEY, model=settings.OPENAI_MODEL)
+        self.anthropic_client = AnthropicClient(api_key=settings.ANTHROPIC_API_KEY, model=settings.ANTHROPIC_MODEL)
+        self.gemini_client = GeminiClient(api_key=settings.GEMINI_API_KEY, model=settings.GEMINI_MODEL)
+        self.openrouter_client = OpenRouterClient(api_key=settings.OPENROUTER_API_KEY, model=settings.OPENROUTER_MODEL)
 
     async def get_active_client(self, content_to_process: str = "") -> BaseLLMClient:
         """
@@ -563,6 +676,8 @@ class ModelRouter:
             if self.enable_fallback and not has_code:
                 if await self.gemini_client.is_available():
                     return self.gemini_client
+                if await self.openrouter_client.is_available():
+                    return self.openrouter_client
                 if await self.openai_client.is_available():
                     return self.openai_client
                 if await self.anthropic_client.is_available():
@@ -572,6 +687,12 @@ class ModelRouter:
         elif self.preferred_provider == "gemini":
             if await self.gemini_client.is_available():
                 return self.gemini_client
+            if await self.ollama_client.is_available():
+                return self.ollama_client
+
+        elif self.preferred_provider == "openrouter":
+            if await self.openrouter_client.is_available():
+                return self.openrouter_client
             if await self.ollama_client.is_available():
                 return self.ollama_client
 

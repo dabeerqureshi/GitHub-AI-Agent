@@ -80,6 +80,9 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: str = ""
     GEMINI_MODEL: str = "gemini-2.0-flash"
 
+    OPENROUTER_API_KEY: str = ""
+    OPENROUTER_MODEL: str = "meta-llama/llama-3.3-70b-instruct"
+
     # GitHub Integration
     GITHUB_PERSONAL_ACCESS_TOKEN: str = ""
     GITHUB_MCP_TRANSPORT: str = "stdio"

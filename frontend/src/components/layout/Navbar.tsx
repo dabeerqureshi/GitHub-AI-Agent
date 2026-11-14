@@ -12,11 +12,13 @@ import {
   Key,
   Github,
   Sparkles,
+  ChevronDown,
 } from "lucide-react";
 import { fetchHealth } from "@/lib/api";
 import { useChatStore } from "@/store/use-chat-store";
 import { RepoCombobox } from "@/components/layout/RepoCombobox";
 import { GitHubAuthModal } from "@/components/auth/GitHubAuthModal";
+import { ModelSelectorModal } from "@/components/models/ModelSelectorModal";
 
 export function Navbar() {
   const pathname = usePathname();
@@ -25,6 +27,10 @@ export function Navbar() {
     setAuthModalOpen,
     loadAuthStatus,
     loadRepositories,
+    activeProvider,
+    activeModel,
+    setModelModalOpen,
+    loadModelsConfig,
   } = useChatStore();
 
   const [health, setHealth] = useState<{ status: string; default_provider: string } | null>(null);
@@ -36,7 +42,8 @@ export function Navbar() {
 
     loadAuthStatus();
     loadRepositories();
-  }, [loadAuthStatus, loadRepositories]);
+    loadModelsConfig();
+  }, [loadAuthStatus, loadRepositories, loadModelsConfig]);
 
   const navLinks = [
     { href: "/", label: "Workspace" },
@@ -73,14 +80,25 @@ export function Navbar() {
         <div className="flex items-center space-x-4">
           {/* Status Badges */}
           <div className="hidden md:flex items-center space-x-2 text-xs">
-            {/* AI Engine Model Provider */}
-            <div className="flex items-center space-x-1.5 px-3 py-1 rounded-full border border-border/80 bg-secondary/50 font-mono text-[11px] shadow-sm">
-              <Sparkles className="h-3 w-3 text-indigo-400 animate-pulse" />
+            {/* Clickable AI Engine Model Provider Selector */}
+            <button
+              type="button"
+              onClick={() => setModelModalOpen(true)}
+              className="flex items-center space-x-1.5 px-3 py-1 rounded-full border border-border/80 bg-secondary/50 hover:bg-secondary/80 font-mono text-[11px] shadow-sm transition-all cursor-pointer glow-hover group"
+              title="Change LLM Provider & API Key"
+            >
+              <Sparkles className="h-3 w-3 text-indigo-400 group-hover:rotate-12 transition-transform" />
               <span className="text-muted-foreground">Engine:</span>
               <span className="capitalize font-semibold text-foreground">
-                {health?.default_provider || "Gemini / Ollama"}
+                {activeProvider || health?.default_provider || "Gemini"}
               </span>
-            </div>
+              {activeModel && (
+                <span className="text-[10px] text-muted-foreground font-normal truncate max-w-[100px]">
+                  ({activeModel.split("/").pop()})
+                </span>
+              )}
+              <ChevronDown className="h-3 w-3 text-muted-foreground group-hover:text-foreground transition-colors ml-0.5" />
+            </button>
 
             {/* Backend Health Status */}
             <div className="flex items-center space-x-1.5 px-3 py-1 rounded-full border border-border/80 bg-secondary/50 font-mono text-[11px] shadow-sm">
@@ -152,8 +170,9 @@ export function Navbar() {
         </div>
       </header>
 
-      {/* Auth Modal Component */}
+      {/* Modals */}
       <GitHubAuthModal />
+      <ModelSelectorModal />
     </>
   );
 }

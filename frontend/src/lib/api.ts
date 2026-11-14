@@ -97,6 +97,39 @@ export interface GitHubConnectResponse {
   synced_repositories: number;
 }
 
+export interface ProviderInfo {
+  id: string;
+  name: string;
+  model: string;
+  has_key: boolean;
+  masked_key?: string | null;
+  supported_models: string[];
+  description: string;
+}
+
+export interface ModelsConfigResponse {
+  active_provider: string;
+  active_model: string;
+  allow_cloud_code: boolean;
+  providers: Record<string, ProviderInfo>;
+}
+
+export interface UpdateModelConfigRequest {
+  provider: string;
+  model?: string;
+  api_key?: string;
+  allow_cloud_code?: boolean;
+}
+
+export interface TestModelResponse {
+  provider: string;
+  model: string;
+  is_available: boolean;
+  supports_tool_calling: boolean;
+  latency_ms: number;
+  error_message?: string | null;
+}
+
 export interface RepositoryRecord {
   id: string;
   full_name: string;
@@ -330,6 +363,42 @@ export async function disconnectGitHub(): Promise<{ status: string; message: str
     method: "POST",
   });
   if (!res.ok) throw new Error("Failed to disconnect GitHub account");
+  return res.json();
+}
+
+export async function fetchModelsConfig(): Promise<ModelsConfigResponse> {
+  const res = await fetch(`${API_BASE_URL}/api/v1/models/config`);
+  if (!res.ok) throw new Error("Failed to fetch models configuration");
+  return res.json();
+}
+
+export async function updateModelConfig(payload: UpdateModelConfigRequest): Promise<ModelsConfigResponse> {
+  const res = await fetch(`${API_BASE_URL}/api/v1/models/config`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Failed to update model configuration" }));
+    throw new Error(err.detail || "Failed to update model configuration");
+  }
+  return res.json();
+}
+
+export async function testModelConnection(payload: {
+  provider: string;
+  model?: string;
+  api_key?: string;
+}): Promise<TestModelResponse> {
+  const res = await fetch(`${API_BASE_URL}/api/v1/models/test`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Failed to test model connection" }));
+    throw new Error(err.detail || "Failed to test model connection");
+  }
   return res.json();
 }
 

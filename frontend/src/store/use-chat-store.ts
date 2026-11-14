@@ -4,6 +4,7 @@ import {
   Conversation,
   ConversationMessage,
   GitHubUserProfile,
+  ModelsConfigResponse,
   RepositoryRecord,
   connectGitHubToken,
   createConversation,
@@ -11,11 +12,13 @@ import {
   fetchConversation,
   fetchConversations,
   fetchGitHubAuthStatus,
+  fetchModelsConfig,
   fetchPendingApprovals,
   fetchRepositories,
   refreshRepositories,
   sendMessage,
   submitApprovalDecision,
+  updateModelConfig,
 } from "@/lib/api";
 import { streamMessage } from "@/lib/sse";
 
@@ -28,6 +31,10 @@ interface ChatState {
   githubUser: GitHubUserProfile | null;
   isAuthModalOpen: boolean;
   isConnectingToken: boolean;
+  modelsConfig: ModelsConfigResponse | null;
+  activeProvider: string;
+  activeModel: string;
+  isModelModalOpen: boolean;
   pendingApprovals: ApprovalRequest[];
   isLoading: boolean;
   isSending: boolean;
@@ -41,6 +48,14 @@ interface ChatState {
   startNewConversation: (title?: string) => Promise<string>;
   setActiveRepo: (repo: string) => void;
   setAuthModalOpen: (open: boolean) => void;
+  setModelModalOpen: (open: boolean) => void;
+  loadModelsConfig: () => Promise<void>;
+  saveModelConfig: (
+    provider: string,
+    model?: string,
+    apiKey?: string,
+    allowCloudCode?: boolean
+  ) => Promise<void>;
   loadRepositories: () => Promise<void>;
   loadAuthStatus: () => Promise<void>;
   connectToken: (token: string) => Promise<void>;
@@ -64,6 +79,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
   githubUser: null,
   isAuthModalOpen: false,
   isConnectingToken: false,
+  modelsConfig: null,
+  activeProvider: "ollama",
+  activeModel: "qwen2.5-coder:7b",
+  isModelModalOpen: false,
   pendingApprovals: [],
   isLoading: false,
   isSending: false,
@@ -127,6 +146,51 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set({ isAuthModalOpen: open });
   },
 
+  setModelModalOpen: (open: boolean) => {
+    set({ isModelModalOpen: open });
+  },
+
+  loadModelsConfig: async () => {
+    try {
+      const config = await fetchModelsConfig();
+      set({
+        modelsConfig: config,
+        activeProvider: config.active_provider,
+        activeModel: config.active_model,
+      });
+    } catch (err: any) {
+      console.error("Failed to load models configuration", err);
+    }
+  },
+
+  saveModelConfig: async (
+    provider: string,
+    model?: string,
+    apiKey?: string,
+    allowCloudCode: boolean = true
+  ) => {
+    try {
+      set({ isLoading: true, error: null });
+      const updated = await updateModelConfig({
+        provider,
+        model,
+        api_key: apiKey,
+        allow_cloud_code: allowCloudCode,
+      });
+      set({
+        modelsConfig: updated,
+        activeProvider: updated.active_provider,
+        activeModel: updated.active_model,
+        isModelModalOpen: false,
+      });
+    } catch (err: any) {
+      set({ error: err.message || "Failed to update model configuration" });
+      throw err;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
   loadRepositories: async () => {
     try {
       const repos = await fetchRepositories();
@@ -162,7 +226,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
       });
       // Immediately refresh repos
       await get().loadRepositories();
-      return res;
     } catch (err: any) {
       set({ error: err.message || "Failed to authenticate GitHub token" });
       throw err;

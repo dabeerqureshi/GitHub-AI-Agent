@@ -93,7 +93,7 @@ export function RepoCombobox() {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 text-xs bg-secondary/60 hover:bg-secondary/90 px-3 py-1.5 rounded-xl border border-border/80 transition-all shadow-sm glow-hover group cursor-pointer"
+        className="flex items-center space-x-2 text-xs bg-secondary/80 hover:bg-secondary px-3 py-1.5 rounded-xl border border-border transition-all shadow-xs interactive-card group cursor-pointer"
         aria-expanded={isOpen}
       >
         <FolderGit2 className="h-3.5 w-3.5 text-primary group-hover:scale-105 transition-transform" />
@@ -102,7 +102,7 @@ export function RepoCombobox() {
         </span>
 
         {selectedRepoRecord && (
-          <span className="flex items-center text-[10px] px-1.5 py-0.5 rounded-md bg-background/80 text-muted-foreground border border-border/80 shadow-xs ml-1">
+          <span className="flex items-center text-[10px] px-1.5 py-0.5 rounded-md bg-card text-muted-foreground border border-border shadow-xs ml-1">
             {selectedRepoRecord.is_private ? (
               <Lock className="h-2.5 w-2.5 mr-1 text-amber-400" />
             ) : (
@@ -123,7 +123,7 @@ export function RepoCombobox() {
       {isOpen && (
         <div className="absolute left-0 mt-2 w-80 rounded-2xl glass-panel border border-border shadow-2xl z-50 overflow-hidden animate-slide-up text-card-foreground">
           {/* Search Header */}
-          <div className="p-2.5 border-b border-border/60 bg-secondary/30">
+          <div className="p-2.5 border-b border-border bg-secondary/40">
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
               <input
@@ -131,7 +131,7 @@ export function RepoCombobox() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search repositories..."
-                className="w-full pl-8 pr-3 py-1.5 text-xs bg-background/80 border border-border rounded-lg text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono placeholder:text-muted-foreground/60"
+                className="w-full pl-8 pr-3 py-1.5 text-xs bg-card border border-border rounded-lg text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono placeholder:text-muted-foreground/60"
                 autoFocus
               />
             </div>

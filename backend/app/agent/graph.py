@@ -35,6 +35,7 @@ class GitHubAgentWorkflow:
     async def _get_client(self, content: str = "") -> BaseLLMClient:
         if self.llm_client:
             return self.llm_client
+        self._router.refresh_from_settings()
         return await self._router.get_active_client(content)
 
     def _build_graph(self):

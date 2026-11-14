@@ -1,6 +1,7 @@
 """Provider-independent Model Router with privacy guardrails and capability validation."""
 
 import asyncio
+import logging
 import re
 from abc import ABC, abstractmethod
 from typing import Any
@@ -9,6 +10,8 @@ import httpx
 from pydantic import BaseModel
 
 from app.core.config import get_settings
+
+logger = logging.getLogger("app.agent.router")
 
 
 class ChatCompletionResponse(BaseModel):
@@ -442,6 +445,21 @@ class GeminiClient(BaseLLMClient):
                     res = await client.post(
                         f"{self.base_url}/chat/completions", headers=headers, json=payload
                     )
+                    if res.status_code == 404 and (
+                        "not found" in res.text.lower()
+                        or "no longer available" in res.text.lower()
+                        or "not_found" in res.text.lower()
+                    ):
+                        if payload.get("model") != "gemini-1.5-flash":
+                            logger.warning(
+                                "Gemini model '%s' unavailable or deprecated. Falling back to 'gemini-1.5-flash'",
+                                payload.get("model"),
+                            )
+                            payload["model"] = "gemini-1.5-flash"
+                            self.model = "gemini-1.5-flash"
+                            res = await client.post(
+                                f"{self.base_url}/chat/completions", headers=headers, json=payload
+                            )
                     if res.status_code != 200:
                         raise RuntimeError(f"Gemini error ({res.status_code}): {res.text}")
                     data = res.json()
@@ -662,9 +680,7 @@ class ModelRouter:
     async def get_active_client(self, content_to_process: str = "") -> BaseLLMClient:
         """
         Select active LLM client with strict privacy guardrail enforcement.
-        Always reloads active configuration from settings so runtime updates are instantly effective.
         """
-        self.refresh_from_settings()
         has_code = contains_private_code(content_to_process)
 
         # Privacy gate: if content contains code and cloud consent not given, force local Ollama

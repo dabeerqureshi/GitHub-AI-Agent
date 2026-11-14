@@ -80,21 +80,21 @@ export function Sidebar() {
         className={`
           ${
             isSidebarOpen
-              ? "fixed inset-y-0 left-0 z-50 flex flex-col w-72 bg-card/95 backdrop-blur-xl shadow-2xl animate-slide-right"
+              ? "fixed inset-y-0 left-0 z-50 flex flex-col w-72 bg-card/98 backdrop-blur-xl shadow-2xl animate-slide-right"
               : "hidden"
           }
-          md:flex md:static md:flex-col md:w-72 md:bg-transparent border-r border-border/80 glass-panel h-[calc(100vh-53px)] select-none
+          md:flex md:static md:flex-col md:w-72 md:bg-transparent border-r border-border glass-panel h-[calc(100vh-53px)] select-none
         `}
       >
         {/* Header: Action & Filter */}
-        <div className="p-3 border-b border-border/60">
+        <div className="p-3 border-b border-border">
           <div className="flex items-center justify-between mb-2 md:hidden">
             <span className="text-xs font-mono font-semibold text-foreground uppercase tracking-wider">
               Workspace Sessions
             </span>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors cursor-pointer"
+              className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
             >
               <X className="h-4 w-4" />
             </button>
@@ -109,7 +109,7 @@ export function Sidebar() {
               );
               if (isSidebarOpen) setSidebarOpen(false);
             }}
-            className="w-full flex items-center justify-center space-x-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold py-2 px-4 rounded-xl text-xs transition-all shadow-sm shadow-primary/20 glow-hover cursor-pointer"
+            className="w-full flex items-center justify-center space-x-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold py-2 px-4 rounded-xl text-xs transition-all shadow-sm shadow-primary/25 cursor-pointer"
           >
             <Plus className="h-4 w-4" />
             <span>New Workspace Session</span>
@@ -122,8 +122,8 @@ export function Sidebar() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search sessions..."
-              className="w-full pl-8 pr-3 py-1.5 text-xs bg-secondary/40 border border-border/60 rounded-lg text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono placeholder:text-muted-foreground/60"
+              placeholder="Filter sessions..."
+              className="w-full pl-8 pr-3 py-1.5 text-xs bg-secondary/80 border border-border rounded-lg text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono placeholder:text-muted-foreground/60"
             />
           </div>
         </div>
@@ -131,7 +131,7 @@ export function Sidebar() {
         {/* Conversations List */}
         <div className="flex-1 overflow-y-auto p-2.5 space-y-1">
           <div className="px-2 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider font-mono">
-            Recent Sessions
+            Active Sessions
           </div>
 
           {filteredConversations.length === 0 ? (
@@ -147,8 +147,8 @@ export function Sidebar() {
                   onClick={() => handleSelect(conv.id)}
                   className={`group flex items-center justify-between p-2.5 rounded-xl cursor-pointer text-xs transition-all ${
                     isActive
-                      ? "bg-secondary text-foreground font-semibold border border-primary/30 shadow-sm"
-                      : "hover:bg-secondary/40 text-muted-foreground hover:text-foreground"
+                      ? "bg-secondary text-foreground font-semibold border border-primary/40 shadow-xs"
+                      : "hover:bg-secondary/60 text-muted-foreground hover:text-foreground border border-transparent"
                   }`}
                 >
                   <div className="flex items-center space-x-2.5 truncate min-w-0">

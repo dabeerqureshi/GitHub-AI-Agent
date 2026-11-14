@@ -24,27 +24,29 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
   };
 
   return (
-    <div className="my-4 rounded-lg border-2 border-amber-500/40 bg-amber-500/5 p-4 shadow-md">
+    <div className="my-4 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 shadow-lg backdrop-blur-xs">
       <div className="flex items-start justify-between">
-        <div className="flex items-center space-x-2">
-          <ShieldAlert className="h-5 w-5 text-amber-500 shrink-0" />
+        <div className="flex items-center space-x-2.5">
+          <div className="p-1.5 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-400">
+            <ShieldAlert className="h-4 w-4 shrink-0" />
+          </div>
           <div>
             <h4 className="text-sm font-bold text-foreground">
-              Approval Required: <span className="font-mono text-primary">{approval.tool_name}</span>
+              Approval Required: <span className="font-mono text-primary font-semibold">{approval.tool_name}</span>
             </h4>
             <p className="text-xs text-muted-foreground mt-0.5">{approval.description}</p>
           </div>
         </div>
-        <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 font-semibold border border-amber-500/30">
+        <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 font-semibold border border-amber-500/30 shadow-xs">
           Pending
         </span>
       </div>
 
       {/* Action Hash Badge */}
-      <div className="mt-3 flex items-center space-x-1.5 bg-muted/60 px-2.5 py-1 rounded text-[11px] font-mono text-muted-foreground border">
-        <Hash className="h-3 w-3 shrink-0" />
+      <div className="mt-3 flex items-center space-x-1.5 bg-card/80 px-3 py-1.5 rounded-lg text-[11px] font-mono text-muted-foreground border border-border">
+        <Hash className="h-3 w-3 shrink-0 text-primary" />
         <span className="font-semibold text-foreground">Signature:</span>
-        <span className="truncate">{approval.action_hash}</span>
+        <span className="truncate font-tabular">{approval.action_hash}</span>
       </div>
 
       {/* Code Diff Viewer if patch is present */}

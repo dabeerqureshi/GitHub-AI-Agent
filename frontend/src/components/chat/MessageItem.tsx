@@ -29,7 +29,7 @@ export function MessageItem({ message }: MessageItemProps) {
       }`}
     >
       {!isUser && (
-        <div className="h-8 w-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20 shadow-sm mt-0.5">
+        <div className="h-8 w-8 rounded-xl bg-primary/15 text-primary flex items-center justify-center shrink-0 border border-primary/30 shadow-xs mt-0.5">
           <Bot className="h-4 w-4" />
         </div>
       )}
@@ -37,13 +37,13 @@ export function MessageItem({ message }: MessageItemProps) {
       <div
         className={`relative group max-w-[92%] sm:max-w-[85%] md:max-w-[82%] rounded-2xl px-4 py-3 text-sm leading-relaxed transition-all ${
           isUser
-            ? "bg-primary text-primary-foreground font-medium rounded-tr-sm shadow-md"
-            : "glass-panel border border-border/80 text-foreground rounded-tl-sm shadow-md"
+            ? "bg-primary text-white font-medium rounded-tr-xs shadow-md shadow-primary/20"
+            : "surface-card text-foreground rounded-tl-xs shadow-md"
         }`}
       >
         {/* Assistant Header if verified operation */}
         {!isUser && isVerified && (
-          <div className="flex items-center space-x-1.5 text-xs text-emerald-400 font-semibold mb-2.5 pb-2 border-b border-border/40">
+          <div className="flex items-center space-x-1.5 text-xs text-emerald-400 font-semibold mb-2.5 pb-2 border-b border-border">
             <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
             <span className="font-mono text-[11px] tracking-wide uppercase">
               Verified GitHub MCP Operation
@@ -59,10 +59,10 @@ export function MessageItem({ message }: MessageItemProps) {
         {/* Message Footer: Timestamp & Copy Action */}
         <div
           className={`flex items-center justify-between mt-2 pt-1.5 border-t text-[10px] font-mono ${
-            isUser ? "border-primary-foreground/20 text-primary-foreground/70" : "border-border/40 text-muted-foreground"
+            isUser ? "border-white/20 text-white/70" : "border-border text-muted-foreground"
           }`}
         >
-          <span>
+          <span className="font-tabular">
             {new Date(message.created_at).toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit",
@@ -90,7 +90,7 @@ export function MessageItem({ message }: MessageItemProps) {
       </div>
 
       {isUser && (
-        <div className="h-8 w-8 rounded-xl bg-secondary text-secondary-foreground flex items-center justify-center shrink-0 border border-border shadow-sm mt-0.5">
+        <div className="h-8 w-8 rounded-xl bg-secondary text-secondary-foreground flex items-center justify-center shrink-0 border border-border shadow-xs mt-0.5">
           <User className="h-4 w-4" />
         </div>
       )}

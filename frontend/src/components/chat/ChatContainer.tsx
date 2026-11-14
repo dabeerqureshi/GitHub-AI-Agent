@@ -110,22 +110,22 @@ export function ChatContainer() {
   return (
     <div className="flex-1 flex flex-col h-[calc(100vh-53px)] bg-background overflow-hidden">
       {/* Conversation Subheader */}
-      <div className="px-3 sm:px-6 py-2.5 glass-panel border-b border-border/60 flex flex-wrap items-center justify-between gap-2 text-xs">
+      <div className="px-3 sm:px-6 py-2.5 glass-panel border-b border-border flex flex-wrap items-center justify-between gap-2 text-xs">
         <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
           <span className="font-semibold text-foreground text-sm tracking-tight truncate max-w-[160px] sm:max-w-none">
             {activeConversation.title.startsWith("Chat on ")
               ? "Workspace Session"
               : activeConversation.title}
           </span>
-          <span className="text-border/60 font-mono hidden sm:inline">/</span>
-          <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-secondary/60 text-xs font-mono text-muted-foreground border border-border/60 shadow-xs truncate">
+          <span className="text-border font-mono hidden sm:inline">/</span>
+          <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-secondary text-xs font-mono text-muted-foreground border border-border shadow-xs truncate">
             <FolderGit2 className="h-3.5 w-3.5 text-primary shrink-0" />
             <span className="text-foreground font-semibold truncate max-w-[130px] sm:max-w-[220px]">
               {activeRepo || "No repo selected"}
             </span>
           </div>
         </div>
-        <div className="flex items-center space-x-1.5 text-xs text-emerald-400 font-mono bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full shrink-0">
+        <div className="flex items-center space-x-1.5 text-xs text-emerald-400 font-mono bg-emerald-500/10 border border-emerald-500/25 px-2.5 py-1 rounded-full shrink-0 shadow-xs">
           <Shield className="h-3 w-3 text-emerald-400 shrink-0" />
           <span className="hidden sm:inline">Cryptographic HITL Enforced</span>
           <span className="sm:hidden text-[11px]">HITL Enforced</span>
@@ -134,7 +134,7 @@ export function ChatContainer() {
 
       {/* Plan Visualizer (if active) */}
       {currentPlan.length > 0 && (
-        <div className="bg-secondary/30 border-b border-border/60 px-3 sm:px-6 py-2 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 text-xs animate-slide-up">
+        <div className="bg-secondary/40 border-b border-border px-3 sm:px-6 py-2 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 text-xs animate-slide-up">
           <div className="flex items-center space-x-1.5 font-semibold text-primary shrink-0">
             <ListOrdered className="h-3.5 w-3.5" />
             <span>Agent Plan:</span>
@@ -145,10 +145,10 @@ export function ChatContainer() {
               return (
                 <div
                   key={idx}
-                  className="whitespace-nowrap bg-background/90 px-3 py-1 rounded-lg border border-border text-[11px] flex items-center space-x-1.5 shadow-xs shrink-0"
+                  className="whitespace-nowrap bg-card px-3 py-1 rounded-lg border border-border text-[11px] flex items-center space-x-1.5 shadow-xs shrink-0"
                 >
                   <span className="text-primary font-bold">{idx + 1}.</span>
-                  <span className="text-foreground/90 font-medium">{cleanStep}</span>
+                  <span className="text-foreground font-medium">{cleanStep}</span>
                 </div>
               );
             })}
@@ -162,7 +162,7 @@ export function ChatContainer() {
           /* Empty State: Quick Action Starter Cards */
           <div className="max-w-3xl mx-auto py-6 sm:py-8 animate-fade-in space-y-6">
             <div className="text-center space-y-2">
-              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-mono font-medium mb-2">
+              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-primary/15 border border-primary/30 text-primary text-xs font-mono font-medium mb-2 shadow-xs">
                 <Sparkles className="h-3.5 w-3.5" />
                 <span>Ready for instructions</span>
               </div>
@@ -183,9 +183,9 @@ export function ChatContainer() {
                     key={i}
                     onClick={() => handleQuickPrompt(card.prompt)}
                     disabled={isSending}
-                    className="flex items-start space-x-3.5 p-4 rounded-2xl glass-panel border border-border/80 text-left hover:border-primary/40 hover:bg-secondary/40 transition-all glow-hover group cursor-pointer"
+                    className="flex items-start space-x-3.5 p-4 rounded-2xl surface-card text-left interactive-card group cursor-pointer"
                   >
-                    <div className="p-2.5 rounded-xl bg-primary/10 text-primary border border-primary/20 group-hover:scale-105 transition-transform shrink-0">
+                    <div className="p-2.5 rounded-xl bg-primary/15 text-primary border border-primary/30 group-hover:scale-105 transition-transform shrink-0 shadow-inner">
                       <Icon className="h-5 w-5" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -218,11 +218,11 @@ export function ChatContainer() {
         {/* Streaming / Tool Execution Status Indicator */}
         {isSending && (
           <div
-            className="flex items-center space-x-3 text-muted-foreground text-xs py-3 px-4 rounded-xl bg-secondary/30 border border-border/60 max-w-md animate-pulse"
+            className="flex items-center space-x-3 text-muted-foreground text-xs py-3 px-4 rounded-xl bg-secondary/80 border border-border max-w-md animate-pulse shadow-sm"
             role="status"
           >
             <Loader2 className="h-4 w-4 animate-spin text-primary flex-shrink-0" />
-            <span className="font-mono text-[11px]">
+            <span className="font-mono text-[11px] text-foreground">
               {streamingStatus || "Agent is synthesizing execution plan..."}
             </span>
           </div>
@@ -232,13 +232,13 @@ export function ChatContainer() {
       </div>
 
       {/* Input Bar */}
-      <div className="p-3 sm:p-4 border-t border-border/60 glass-panel">
+      <div className="p-3 sm:p-4 border-t border-border glass-panel">
         <form
           onSubmit={handleSubmit}
           className="flex items-end space-x-2 sm:space-x-3 max-w-4xl mx-auto"
           aria-label="Message input form"
         >
-          <div className="flex-1 rounded-2xl border border-border/80 bg-secondary/50 focus-within:ring-2 focus-within:ring-primary/40 focus-within:border-primary transition-all shadow-inner">
+          <div className="flex-1 rounded-2xl border border-border bg-secondary/70 focus-within:ring-2 focus-within:ring-primary/40 focus-within:border-primary transition-all shadow-inner">
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -254,7 +254,7 @@ export function ChatContainer() {
             type="submit"
             disabled={!input.trim() || isSending}
             aria-label="Send instruction"
-            className="h-10 sm:h-11 px-4 sm:px-5 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-2xl text-xs md:text-sm flex items-center space-x-1.5 transition-all shadow-md shadow-primary/20 disabled:opacity-40 disabled:pointer-events-none shrink-0 cursor-pointer"
+            className="h-10 sm:h-11 px-4 sm:px-5 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-2xl text-xs md:text-sm flex items-center space-x-1.5 transition-all shadow-md shadow-primary/25 disabled:opacity-40 disabled:pointer-events-none shrink-0 cursor-pointer"
           >
             {isSending ? (
               <Loader2 className="h-4 w-4 animate-spin" />

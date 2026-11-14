@@ -29,6 +29,7 @@ export function GitHubAuthModal() {
   } = useChatStore();
 
   const [tokenInput, setTokenInput] = useState("");
+  const [targetRepoInput, setTargetRepoInput] = useState("");
   const [showToken, setShowToken] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -43,9 +44,10 @@ export function GitHubAuthModal() {
     setSuccessMsg(null);
 
     try {
-      await connectToken(tokenInput.trim());
+      await connectToken(tokenInput.trim(), targetRepoInput.trim() || undefined);
       setSuccessMsg("Successfully verified and connected to GitHub!");
       setTokenInput("");
+      setTargetRepoInput("");
       setTimeout(() => {
         setAuthModalOpen(false);
         setSuccessMsg(null);
@@ -190,30 +192,50 @@ export function GitHubAuthModal() {
                 <button
                   type="button"
                   onClick={() => setShowToken(!showToken)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground transition-colors"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                 >
                   {showToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
             </div>
 
+            {/* Optional Specific Repository */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-medium text-foreground">
+                Specific Repository <span className="text-muted-foreground font-normal">(Optional, e.g. username/repo)</span>
+              </label>
+              <input
+                type="text"
+                value={targetRepoInput}
+                onChange={(e) => setTargetRepoInput(e.target.value)}
+                placeholder="e.g. your-name/your-repository"
+                className="w-full px-3 py-2 text-xs font-mono bg-secondary/50 border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all text-foreground placeholder:text-muted-foreground/60"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Useful if your Fine-Grained PAT is scoped to selected repositories.
+              </p>
+            </div>
+
             {/* Scopes Guide */}
             <div className="p-3.5 rounded-xl bg-secondary/30 border border-border text-xs space-y-2">
               <span className="font-medium text-foreground flex items-center">
                 <ShieldCheck className="h-3.5 w-3.5 mr-1 text-primary" />
-                Required Scopes
+                Token Setup Requirements
               </span>
               <div className="flex flex-wrap gap-1.5">
                 <span className="px-2 py-0.5 rounded-md bg-secondary font-mono text-[11px] text-muted-foreground border">
-                  repo (full control)
+                  Contents: Read &amp; write
                 </span>
                 <span className="px-2 py-0.5 rounded-md bg-secondary font-mono text-[11px] text-muted-foreground border">
-                  read:org
+                  Issues: Read &amp; write
                 </span>
                 <span className="px-2 py-0.5 rounded-md bg-secondary font-mono text-[11px] text-muted-foreground border">
-                  workflow
+                  Pull requests: Read &amp; write
                 </span>
               </div>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                For Fine-grained tokens: In &quot;Repository access&quot;, select &quot;All repositories&quot; or choose your specific repositories. Under &quot;Repository permissions&quot;, enable Contents, Issues, and Pull Requests.
+              </p>
               <a
                 href="https://github.com/settings/tokens/new?scopes=repo,read:org,workflow&description=GitHub-AI-Workspace"
                 target="_blank"

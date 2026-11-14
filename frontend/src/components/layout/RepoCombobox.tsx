@@ -14,7 +14,7 @@ import {
   FolderGit2,
 } from "lucide-react";
 import { useChatStore } from "@/store/use-chat-store";
-import { refreshRepositories } from "@/lib/api";
+import { refreshRepositories, syncRepository } from "@/lib/api";
 
 export function RepoCombobox() {
   const {
@@ -29,6 +29,7 @@ export function RepoCombobox() {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isAddingCustom, setIsAddingCustom] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown on outside click
@@ -55,11 +56,36 @@ export function RepoCombobox() {
     }
   };
 
+  const handleAddCustomRepo = async (fullName: string) => {
+    const trimmed = fullName.trim();
+    if (!trimmed.includes("/") || trimmed.split("/").length !== 2) return;
+    setIsAddingCustom(true);
+    try {
+      await syncRepository(trimmed);
+      await loadRepositories();
+      setActiveRepo(trimmed);
+      setSearchQuery("");
+      setIsOpen(false);
+    } catch (err) {
+      console.error("Failed to add repository", err);
+    } finally {
+      setIsAddingCustom(false);
+    }
+  };
+
   const filteredRepos = repositories.filter((r) =>
     r.full_name.toLowerCase().includes(searchQuery.toLowerCase().trim())
   );
 
   const selectedRepoRecord = repositories.find((r) => r.full_name === activeRepo);
+  const canAddAsNew =
+    searchQuery.includes("/") &&
+    searchQuery.trim().split("/").length === 2 &&
+    searchQuery.trim().split("/")[0].length > 0 &&
+    searchQuery.trim().split("/")[1].length > 0 &&
+    !repositories.some(
+      (r) => r.full_name.toLowerCase() === searchQuery.trim().toLowerCase()
+    );
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -113,6 +139,23 @@ export function RepoCombobox() {
 
           {/* Repository List */}
           <div className="max-h-64 overflow-y-auto p-1.5 space-y-0.5 divide-y divide-border/20">
+            {canAddAsNew && (
+              <button
+                type="button"
+                disabled={isAddingCustom}
+                onClick={() => handleAddCustomRepo(searchQuery)}
+                className="w-full flex items-center justify-between p-2 mb-1 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 text-xs transition-colors cursor-pointer"
+              >
+                <div className="flex items-center space-x-2">
+                  <PlusCircle className="h-3.5 w-3.5 flex-shrink-0" />
+                  <span className="font-mono truncate">Add & sync &apos;{searchQuery.trim()}&apos;</span>
+                </div>
+                <span className="text-[10px] bg-primary/20 px-1.5 py-0.5 rounded font-mono flex-shrink-0 ml-1">
+                  {isAddingCustom ? "Syncing..." : "Click to add"}
+                </span>
+              </button>
+            )}
+
             {filteredRepos.length > 0 ? (
               filteredRepos.map((repo) => {
                 const isSelected = repo.full_name === activeRepo;
@@ -161,6 +204,9 @@ export function RepoCombobox() {
             ) : (
               <div className="p-4 text-center text-xs text-muted-foreground">
                 <p>No matching repositories found.</p>
+                <p className="text-[11px] mt-1 text-muted-foreground/80">
+                  Type <span className="font-mono text-foreground font-semibold">owner/repo</span> above to sync any repository.
+                </p>
                 {!githubUser && (
                   <button
                     type="button"
@@ -168,7 +214,7 @@ export function RepoCombobox() {
                       setIsOpen(false);
                       setAuthModalOpen(true);
                     }}
-                    className="mt-2 text-primary hover:underline font-medium inline-flex items-center"
+                    className="mt-2 text-primary hover:underline font-medium inline-flex items-center cursor-pointer"
                   >
                     <Key className="h-3 w-3 mr-1" />
                     Connect GitHub PAT

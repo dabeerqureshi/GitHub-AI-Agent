@@ -57,29 +57,30 @@ export function ChatContainer() {
     sendUserMessage(promptText);
   };
 
+  const targetName = activeRepo || "the repository";
   const starterCards = [
     {
       title: "Architecture Summary",
       desc: "Analyze tree, modules, dependencies & design patterns",
-      prompt: `Explain architecture of ${activeRepo}`,
+      prompt: `Explain architecture of ${targetName}`,
       icon: Layers,
     },
     {
       title: "Inspect Issues & Bugs",
       desc: "Search and categorize open defects and backlog",
-      prompt: `Find open issues and bug reports in ${activeRepo}`,
+      prompt: `Find open issues and bug reports in ${targetName}`,
       icon: Bug,
     },
     {
       title: "Review Pull Requests",
       desc: "Conduct automated diff analysis and security review",
-      prompt: `Review recent pull requests and diffs in ${activeRepo}`,
+      prompt: `Review recent pull requests and diffs in ${targetName}`,
       icon: GitPullRequest,
     },
     {
       title: "Diagnose CI Failures",
       desc: "Isolate failing workflow steps and synthesize fixes",
-      prompt: `Analyze failing CI workflow runs in ${activeRepo}`,
+      prompt: `Analyze failing CI workflow runs in ${targetName}`,
       icon: FileSearch,
     },
   ];
@@ -98,7 +99,9 @@ export function ChatContainer() {
         <div className="mt-6 flex items-center space-x-2 text-xs font-mono text-muted-foreground bg-secondary/40 px-3.5 py-1.5 rounded-full border border-border">
           <FolderGit2 className="h-3.5 w-3.5 text-primary" />
           <span>Active Target:</span>
-          <span className="font-semibold text-foreground">{activeRepo}</span>
+          <span className="font-semibold text-foreground">
+            {activeRepo || "No repository selected"}
+          </span>
         </div>
       </div>
     );
@@ -116,7 +119,9 @@ export function ChatContainer() {
           </span>
           <div className="flex items-center space-x-1.5 px-2.5 py-0.5 rounded-md bg-secondary/60 text-[11px] font-mono text-muted-foreground border border-border/60">
             <FolderGit2 className="h-3 w-3 text-primary" />
-            <span className="text-foreground font-medium">{activeRepo}</span>
+            <span className="text-foreground font-medium">
+              {activeRepo || "No repo selected"}
+            </span>
           </div>
         </div>
         <div className="flex items-center space-x-1.5 text-xs text-emerald-400 font-mono bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">

@@ -7,6 +7,10 @@ class GitHubConnectRequest(BaseModel):
     """Payload to connect or update GitHub Personal Access Token."""
 
     token: str = Field(..., min_length=10, description="GitHub Personal Access Token (PAT)")
+    target_repo: str | None = Field(
+        default=None,
+        description="Optional specific repository to sync immediately, e.g. owner/repo",
+    )
 
 
 class GitHubUserProfile(BaseModel):

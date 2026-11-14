@@ -9,6 +9,7 @@ from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
+ROOT_DIR = BACKEND_DIR.parent
 DEFAULT_STORAGE_DIR = BACKEND_DIR / "storage"
 DEFAULT_DB_PATH = DEFAULT_STORAGE_DIR / "github_agent.db"
 
@@ -17,7 +18,7 @@ class Settings(BaseSettings):
     """Application settings with environment variable overrides."""
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(str(ROOT_DIR / ".env"), str(BACKEND_DIR / ".env"), ".env"),
         env_file_encoding="utf-8",
         extra="ignore",
     )

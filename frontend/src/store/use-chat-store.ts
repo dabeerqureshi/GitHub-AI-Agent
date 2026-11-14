@@ -58,7 +58,7 @@ interface ChatState {
   ) => Promise<void>;
   loadRepositories: () => Promise<void>;
   loadAuthStatus: () => Promise<void>;
-  connectToken: (token: string) => Promise<void>;
+  connectToken: (token: string, targetRepo?: string) => Promise<void>;
   disconnectAccount: () => Promise<void>;
   sendUserMessage: (content: string) => Promise<void>;
   loadPendingApprovals: () => Promise<void>;
@@ -74,7 +74,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   conversations: [],
   activeConversationId: null,
   activeConversation: null,
-  activeRepo: "octocat/Hello-World",
+  activeRepo: "",
   repositories: [],
   githubUser: null,
   isAuthModalOpen: false,
@@ -194,10 +194,20 @@ export const useChatStore = create<ChatState>((set, get) => ({
   loadRepositories: async () => {
     try {
       const repos = await fetchRepositories();
-      const safeRepos = Array.isArray(repos) ? repos : [];
+      const safeRepos = Array.isArray(repos)
+        ? repos.filter((r) => r.full_name !== "octocat/Hello-World")
+        : [];
       set({ repositories: safeRepos });
-      if (safeRepos.length > 0 && !get().activeRepo) {
+      const current = get().activeRepo;
+      if (
+        (!current ||
+          current === "octocat/Hello-World" ||
+          !safeRepos.some((r) => r.full_name === current)) &&
+        safeRepos.length > 0
+      ) {
         set({ activeRepo: safeRepos[0].full_name });
+      } else if (safeRepos.length === 0) {
+        set({ activeRepo: "" });
       }
     } catch (err: any) {
       console.error("Failed to load repositories", err);
@@ -217,10 +227,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
 
-  connectToken: async (token: string) => {
+  connectToken: async (token: string, targetRepo?: string) => {
     try {
       set({ isConnectingToken: true, error: null });
-      const res = await connectGitHubToken(token);
+      const res = await connectGitHubToken(token, targetRepo);
       set({
         githubUser: res.user,
       });

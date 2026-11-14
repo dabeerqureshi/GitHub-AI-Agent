@@ -345,11 +345,14 @@ export async function fetchGitHubAuthStatus(): Promise<GitHubAuthStatus> {
   return res.json();
 }
 
-export async function connectGitHubToken(token: string): Promise<GitHubConnectResponse> {
+export async function connectGitHubToken(
+  token: string,
+  targetRepo?: string
+): Promise<GitHubConnectResponse> {
   const res = await fetch(`${API_BASE_URL}/api/v1/auth/github`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ token }),
+    body: JSON.stringify({ token, target_repo: targetRepo }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: "Failed to connect token" }));

@@ -5,7 +5,7 @@ from typing import Any
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
@@ -38,7 +38,13 @@ async def connect_github_account(
     global _cached_gh_profile
     token = payload.token.strip()
 
-    # 1. Validate token against GitHub API
+    # 1. Clean up any prior dummy fallback repository
+    await db.execute(
+        delete(RepositoryRecord).where(RepositoryRecord.full_name == "octocat/Hello-World")
+    )
+    await db.commit()
+
+    # 2. Validate token against GitHub API
     headers = {
         "Authorization": f"Bearer {token}",
         "Accept": "application/vnd.github+json",
@@ -47,32 +53,71 @@ async def connect_github_account(
     }
 
     user_data = {}
-    raw_repos = []
+    raw_repos: list[dict[str, Any]] = []
 
     try:
-        async with httpx.AsyncClient(timeout=4.0) as client:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            # A. Test user endpoint
             user_res = await client.get("https://api.github.com/user", headers=headers)
             if user_res.status_code == 200:
                 user_data = user_res.json()
-                repos_res = await client.get(
-                    "https://api.github.com/user/repos?per_page=100&sort=updated",
-                    headers=headers,
-                )
-                raw_repos = repos_res.json() if repos_res.status_code == 200 else []
-            elif user_res.status_code in (401, 403) and "Bad credentials" in user_res.text:
+            elif user_res.status_code == 401 or (
+                user_res.status_code == 403 and "Bad credentials" in user_res.text
+            ):
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Invalid GitHub Personal Access Token (Bad credentials). Please check your token.",
                 )
             else:
-                # Fine-grained tokens might not have user scope, or account is restricted
                 user_data = {"login": "github-user", "name": "Authenticated Developer"}
+
+            # B. ALWAYS attempt repository discovery with affiliation
+            repos_res = await client.get(
+                "https://api.github.com/user/repos?per_page=100&sort=updated&affiliation=owner,collaborator,organization_member",
+                headers=headers,
+            )
+            if repos_res.status_code == 200:
+                items = repos_res.json()
+                if isinstance(items, list):
+                    raw_repos.extend(items)
+            else:
+                # Secondary attempt: basic user repos
+                repos_res_alt = await client.get(
+                    "https://api.github.com/user/repos?per_page=100&sort=updated",
+                    headers=headers,
+                )
+                if repos_res_alt.status_code == 200:
+                    items = repos_res_alt.json()
+                    if isinstance(items, list):
+                        raw_repos.extend(items)
+
+            # C. If a specific target repository was passed in payload, query it directly
+            if payload.target_repo:
+                target = payload.target_repo.strip()
+                if "/" in target:
+                    target_res = await client.get(
+                        f"https://api.github.com/repos/{target}",
+                        headers=headers,
+                    )
+                    if target_res.status_code == 200:
+                        raw_repos.append(target_res.json())
+
+            # D. If user login is generic but repos exist, extract identity from first repo
+            if user_data.get("login") in ("github-user", "unknown") and raw_repos:
+                first_owner = raw_repos[0].get("owner", {}).get("login")
+                if first_owner:
+                    user_data["login"] = first_owner
+                    user_data["name"] = first_owner
+                    user_data["avatar_url"] = raw_repos[0].get("owner", {}).get("avatar_url")
+                    user_data["html_url"] = f"https://github.com/{first_owner}"
+
+    except HTTPException:
+        raise
     except (httpx.RequestError, httpx.TimeoutException) as exc:
         logger.warning(
             "GitHub API unreachable (%s). Registering token in resilient offline/local mode.",
             str(exc),
         )
-        # Resilient offline/local fallback for restricted or offline network environments
         if token.startswith("github_pat_") or token.startswith("ghp_") or len(token) >= 20:
             user_data = {"login": "github-user", "name": "Authenticated Developer (Offline Mode)"}
         else:
@@ -95,15 +140,18 @@ async def connect_github_account(
     )
     _cached_gh_profile = user_profile.model_dump()
 
-    # 4. Upsert discovered repositories into database
+    # 4. Upsert discovered real repositories into database (excluding any dummy octocat repo)
     synced_count = 0
+    seen_full_names: set[str] = set()
+
     if isinstance(raw_repos, list):
         for r in raw_repos:
             if not isinstance(r, dict):
                 continue
             full_name = r.get("full_name")
-            if not full_name:
+            if not full_name or full_name in seen_full_names or full_name == "octocat/Hello-World":
                 continue
+            seen_full_names.add(full_name)
 
             owner = r.get("owner", {}).get("login", full_name.split("/")[0])
             name = r.get("name", full_name.split("/")[-1])
@@ -136,33 +184,21 @@ async def connect_github_account(
 
         await db.commit()
 
-    if synced_count == 0:
-        existing = await db.execute(
-            select(RepositoryRecord).where(RepositoryRecord.full_name == "octocat/Hello-World")
-        )
-        if not existing.scalar_one_or_none():
-            db.add(
-                RepositoryRecord(
-                    full_name="octocat/Hello-World",
-                    owner="octocat",
-                    name="Hello-World",
-                    default_branch="main",
-                    is_private=False,
-                    is_cloned=False,
-                )
-            )
-            await db.commit()
-        synced_count = 1
-
     logger.info(
-        "Successfully connected GitHub account '%s' and synced %d repositories",
+        "Successfully connected GitHub account '%s' and synced %d real repositories",
         user_profile.login,
         synced_count,
     )
 
+    msg = (
+        f"Successfully connected as {user_profile.login} with {synced_count} repositories synced."
+        if synced_count > 0
+        else f"Token connected as {user_profile.login}. No repositories returned. If using a Fine-Grained token, verify repository permissions or add your repository name directly."
+    )
+
     return GitHubConnectResponse(
         status="connected",
-        message=f"Successfully connected as {user_profile.login}",
+        message=msg,
         user=user_profile,
         synced_repositories=synced_count,
     )

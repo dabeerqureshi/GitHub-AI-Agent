@@ -9,7 +9,7 @@ import { ChatContextPanel } from "@/components/chat/ChatContextPanel";
 export default function ChatPage() {
   return (
     <AppLayout>
-      <div className="flex flex-1 w-full h-[calc(100vh-3.5rem)] overflow-hidden bg-slate-950">
+      <div className="flex flex-1 w-full h-[calc(100vh-5.75rem)] overflow-hidden bg-slate-950">
         <Sidebar />
         <ChatContainer />
         <ChatContextPanel />

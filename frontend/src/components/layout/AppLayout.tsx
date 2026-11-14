@@ -11,21 +11,27 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
-  const { loadAuthStatus, loadRepositories, loadModelsConfig } = useChatStore();
+  const {
+    loadAuthStatus,
+    loadRepositories,
+    loadModelsConfig,
+    loadConversations,
+  } = useChatStore();
 
   useEffect(() => {
     loadAuthStatus();
     loadRepositories();
     loadModelsConfig();
-  }, [loadAuthStatus, loadRepositories, loadModelsConfig]);
+    loadConversations();
+  }, [loadAuthStatus, loadRepositories, loadModelsConfig, loadConversations]);
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 antialiased selection:bg-indigo-500/30 selection:text-indigo-200">
-      {/* Modern Responsive SaaS Web Navbar with Integrated Model Dropdown */}
+      {/* Modern Responsive SaaS Web Navbar with Clean 2-Tier Architecture */}
       <Navbar />
 
       {/* Main Responsive Content Viewport */}
-      <main className="flex-1 flex flex-col min-h-0 w-full overflow-hidden relative">
+      <main className="flex-1 flex flex-col h-[calc(100vh-5.75rem)] w-full overflow-y-auto relative">
         {children}
       </main>
 

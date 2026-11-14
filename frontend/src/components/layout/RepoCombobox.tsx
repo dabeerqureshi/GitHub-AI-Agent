@@ -38,16 +38,18 @@ export function RepoCombobox() {
         setIsOpen(false);
       }
     }
-    document.addEventListener("mousedown", handleClickOutside);
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [isOpen]);
 
   const handleRefresh = async (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsRefreshing(true);
     try {
       await refreshRepositories();
-      await loadRepositories();
+      await loadRepositories(true);
     } catch (err) {
       console.error("Failed to refresh repos", err);
     } finally {
@@ -61,7 +63,7 @@ export function RepoCombobox() {
     setIsAddingCustom(true);
     try {
       await syncRepository(trimmed);
-      await loadRepositories();
+      await loadRepositories(true);
       setActiveRepo(trimmed);
       setSearchQuery("");
       setIsOpen(false);
@@ -87,21 +89,21 @@ export function RepoCombobox() {
     );
 
   return (
-    <div className="relative font-sans" ref={dropdownRef}>
+    <div className="relative font-sans inline-block" ref={dropdownRef}>
       {/* Combobox Trigger */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 text-xs sm:text-sm bg-slate-900/90 hover:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700/80 hover:border-indigo-500/50 transition-all text-slate-200 group cursor-pointer shadow-sm"
+        className="flex items-center space-x-2 text-xs sm:text-sm bg-slate-900 hover:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 hover:border-indigo-500/50 transition-all text-slate-200 group cursor-pointer shadow-sm select-none"
         aria-expanded={isOpen}
       >
         <FolderGit2 className="h-4 w-4 text-indigo-400 group-hover:scale-105 transition-transform shrink-0" />
-        <span className="font-medium max-w-[150px] sm:max-w-[220px] truncate text-xs sm:text-sm">
+        <span className="font-medium max-w-[130px] sm:max-w-[200px] truncate text-xs sm:text-sm">
           {activeRepo || "Select Repository"}
         </span>
 
         {selectedRepoRecord && (
-          <span className="hidden sm:flex items-center text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700 font-mono ml-0.5">
+          <span className="hidden sm:flex items-center text-[10px] px-1.5 py-0.5 rounded bg-slate-950 text-slate-400 border border-slate-800 font-mono ml-0.5">
             {selectedRepoRecord.is_private ? (
               <Lock className="h-2.5 w-2.5 mr-1 text-amber-400" />
             ) : (
@@ -112,32 +114,32 @@ export function RepoCombobox() {
         )}
 
         <ChevronDown
-          className={`h-3.5 w-3.5 text-slate-400 transition-transform duration-200 ${
+          className={`h-3.5 w-3.5 text-slate-400 transition-transform duration-200 shrink-0 ${
             isOpen ? "rotate-180 text-white" : ""
           }`}
         />
       </button>
 
-      {/* Popover Dropdown */}
+      {/* Popover Dropdown (100% Solid, Opaque Slate, Left-Aligned) */}
       {isOpen && (
-        <div className="absolute left-0 sm:left-auto sm:right-0 mt-2 w-80 sm:w-96 rounded-xl bg-slate-900/98 border border-slate-700 shadow-2xl z-50 overflow-hidden animate-slide-up text-slate-200 backdrop-blur-md">
+        <div className="absolute left-0 top-full mt-2 w-[min(24rem,calc(100vw-1.5rem))] rounded-xl bg-slate-900 border border-slate-700 shadow-2xl shadow-black/90 z-50 overflow-hidden animate-slide-up text-slate-200">
           {/* Search Header */}
-          <div className="p-2 border-b border-slate-800 bg-slate-950/60">
+          <div className="p-2.5 border-b border-slate-800 bg-slate-950">
             <div className="relative">
-              <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-500" />
+              <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search repositories..."
-                className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-900 border border-slate-800 rounded-lg text-slate-100 focus:outline-none focus:border-indigo-500 placeholder:text-slate-500"
+                className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 placeholder:text-slate-500"
                 autoFocus
               />
             </div>
           </div>
 
           {/* Repository List */}
-          <div className="max-h-64 overflow-y-auto p-1.5 space-y-1">
+          <div className="max-h-64 overflow-y-auto p-1.5 space-y-1 bg-slate-900">
             {canAddAsNew && (
               <button
                 type="button"
@@ -168,8 +170,8 @@ export function RepoCombobox() {
                     }}
                     className={`w-full flex items-center justify-between p-2 rounded-lg text-left transition-all cursor-pointer ${
                       isSelected
-                        ? "bg-indigo-600/20 text-indigo-200 border border-indigo-500/40 font-medium"
-                        : "hover:bg-slate-800 text-slate-300"
+                        ? "bg-indigo-600/20 text-white border border-indigo-500/50 font-medium"
+                        : "hover:bg-slate-800 text-slate-300 hover:text-white"
                     }`}
                   >
                     <div className="flex items-center space-x-2.5 min-w-0 pr-2">
@@ -184,7 +186,7 @@ export function RepoCombobox() {
                           <span className="font-semibold text-white">{repo.name}</span>
                         </div>
                         {repo.description && (
-                          <div className="text-[11px] text-slate-500 truncate max-w-[220px]">
+                          <div className="text-[11px] text-slate-400 truncate max-w-[200px]">
                             {repo.description}
                           </div>
                         )}
@@ -224,7 +226,7 @@ export function RepoCombobox() {
           </div>
 
           {/* Footer Actions */}
-          <div className="p-2 border-t border-slate-800 bg-slate-950/80 flex items-center justify-between text-xs">
+          <div className="p-2 border-t border-slate-800 bg-slate-950 flex items-center justify-between text-xs">
             <button
               type="button"
               onClick={handleRefresh}

@@ -54,8 +54,15 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         self._history: dict[str, list[float]] = defaultdict(list)
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
-        # Exclude health checks from rate limiting
-        if request.url.path in ("/healthz", "/readyz", "/api/v1/healthz"):
+        # Exclude health checks and read-only system config metadata from rate limiting
+        if request.url.path in (
+            "/health",
+            "/healthz",
+            "/readyz",
+            "/api/v1/health",
+            "/api/v1/healthz",
+            "/api/v1/models/config",
+        ) and request.method == "GET":
             return await call_next(request)
 
         client_ip = request.client.host if request.client else "unknown"

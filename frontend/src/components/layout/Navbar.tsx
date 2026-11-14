@@ -64,8 +64,9 @@ export function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full border-b border-slate-800 bg-slate-950/90 backdrop-blur-md">
-        <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 h-14 flex items-center justify-between gap-2 sm:gap-4">
+      <header className="sticky top-0 z-40 w-full border-b border-slate-800 bg-slate-950">
+        {/* TIER 1: Brand Logo, Repository Switcher, Model Dropdown & Account Controls */}
+        <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 h-13 flex items-center justify-between gap-3">
           {/* Left: Mobile Toggle, Brand & Repository Selector */}
           <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
             {/* Mobile Hamburger Button */}
@@ -89,7 +90,7 @@ export function Navbar() {
               <div className="p-1.5 rounded-lg bg-indigo-500/15 text-indigo-400 border border-indigo-500/30 group-hover:bg-indigo-500/25 transition-all shrink-0">
                 <ShieldCheck className="h-5 w-5 text-indigo-400" />
               </div>
-              <div className="flex flex-col leading-tight hidden lg:flex">
+              <div className="flex flex-col leading-tight hidden sm:flex">
                 <span className="text-white font-semibold text-sm tracking-tight whitespace-nowrap">
                   GitHub AI Workspace
                 </span>
@@ -105,42 +106,13 @@ export function Navbar() {
             </div>
           </div>
 
-          {/* Center / Right: Desktop Navigation, Model Dropdown, Status, User */}
-          <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
-            {/* Desktop Navigation Links */}
-            <nav className="hidden xl:flex items-center space-x-1 text-xs font-medium bg-slate-900/80 p-1 rounded-lg border border-slate-800">
-              {navLinks.map((link) => {
-                const isActive =
-                  link.href === "/" ? pathname === "/" : Boolean(pathname?.startsWith(link.href));
-                const Icon = link.icon;
-
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-md transition-all ${
-                      isActive
-                        ? "bg-indigo-600 text-white font-semibold shadow-xs"
-                        : "text-slate-400 hover:text-white hover:bg-slate-800/60"
-                    }`}
-                  >
-                    <Icon className="h-3.5 w-3.5" />
-                    <span>{link.label}</span>
-                    {link.badge && (
-                      <span className="ml-1 px-1.5 py-0.2 text-[9px] rounded-full bg-amber-500 text-slate-950 font-bold">
-                        {link.badge}
-                      </span>
-                    )}
-                  </Link>
-                );
-              })}
-            </nav>
-
+          {/* Right: Model Dropdown, Status & User Controls */}
+          <div className="flex items-center space-x-2 sm:space-x-2.5 shrink-0">
             {/* Provider & Model Selector Dropdown */}
-            <ModelDropdown />
+            <ModelDropdown align="right" direction="down" />
 
             {/* Backend API Health Status */}
-            <div className="hidden sm:flex items-center space-x-1.5 px-2.5 py-1 rounded-lg border border-slate-800 bg-slate-900/60 font-mono text-[11px]">
+            <div className="hidden lg:flex items-center space-x-1.5 px-2.5 py-1 rounded-lg border border-slate-800 bg-slate-900 font-mono text-[11px]">
               <Database className="h-3 w-3 text-emerald-400 shrink-0" />
               {health?.status === "ok" ? (
                 <span className="text-emerald-400 font-medium flex items-center">
@@ -156,7 +128,7 @@ export function Navbar() {
             {githubUser ? (
               <button
                 onClick={() => setAuthModalOpen(true)}
-                className="flex items-center space-x-1.5 pl-1.5 pr-2.5 py-1 rounded-lg border border-slate-800 bg-slate-900/80 hover:bg-slate-800 transition-all cursor-pointer"
+                className="flex items-center space-x-1.5 pl-1.5 pr-2.5 py-1 rounded-lg border border-slate-800 bg-slate-900 hover:bg-slate-800 transition-all cursor-pointer"
                 title={`Connected as @${githubUser.login}`}
               >
                 {githubUser.avatar_url ? (
@@ -186,13 +158,50 @@ export function Navbar() {
           </div>
         </div>
 
+        {/* TIER 2: Clean Sub-Navigation Tab Strip (Zero Text Collision at Any Resolution) */}
+        <div className="w-full border-t border-slate-800 bg-slate-950">
+          <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 flex items-center space-x-1 sm:space-x-2 overflow-x-auto scrollbar-none h-9.5 text-xs font-medium">
+            {navLinks.map((link) => {
+              const isActive =
+                link.href === "/"
+                  ? pathname === "/" || pathname === "/chat"
+                  : Boolean(pathname?.startsWith(link.href)) ||
+                    (link.href === "/runs" && pathname === "/agents");
+              const Icon = link.icon;
+
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-t-md transition-all shrink-0 whitespace-nowrap ${
+                    isActive
+                      ? "text-indigo-400 font-semibold border-b-2 border-indigo-500 bg-indigo-500/10"
+                      : "text-slate-400 hover:text-white hover:bg-slate-900/60"
+                  }`}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  <span>{link.label}</span>
+                  {link.badge && (
+                    <span className="ml-1 px-1.5 py-0.2 text-[9px] rounded-full bg-amber-500 text-slate-950 font-bold font-mono">
+                      {link.badge}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
-          <div className="xl:hidden border-t border-slate-800 bg-slate-950 px-4 py-3 space-y-2 animate-slide-up">
+          <div className="md:hidden border-t border-slate-800 bg-slate-950 px-4 py-3 space-y-2 animate-slide-up">
             <div className="grid grid-cols-2 gap-1.5">
               {navLinks.map((link) => {
                 const isActive =
-                  link.href === "/" ? pathname === "/" : Boolean(pathname?.startsWith(link.href));
+                  link.href === "/"
+                    ? pathname === "/" || pathname === "/chat"
+                    : Boolean(pathname?.startsWith(link.href)) ||
+                      (link.href === "/runs" && pathname === "/agents");
                 const Icon = link.icon;
 
                 return (
@@ -209,7 +218,7 @@ export function Navbar() {
                     <Icon className="h-4 w-4 shrink-0" />
                     <span>{link.label}</span>
                     {link.badge && (
-                      <span className="ml-auto px-1.5 py-0.2 text-[9px] rounded-full bg-amber-500 text-slate-950 font-bold">
+                      <span className="ml-auto px-1.5 py-0.2 text-[9px] rounded-full bg-amber-500 text-slate-950 font-bold font-mono">
                         {link.badge}
                       </span>
                     )}

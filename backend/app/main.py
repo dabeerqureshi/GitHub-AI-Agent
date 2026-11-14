@@ -95,9 +95,14 @@ def create_app() -> FastAPI:
 
     # Middleware stack (applied in reverse order of addition)
     app.add_middleware(SecurityHeadersMiddleware)
+    rpm_limit = (
+        max(600, settings.RATE_LIMIT_PER_MINUTE * 10)
+        if settings.APP_ENV == "development"
+        else max(10, settings.RATE_LIMIT_PER_MINUTE * 2)
+    )
     app.add_middleware(
         RateLimitMiddleware,
-        requests_per_minute=max(10, settings.RATE_LIMIT_PER_MINUTE * 2),
+        requests_per_minute=rpm_limit,
     )
     app.add_middleware(CSRFProtectionMiddleware, allowed_origins=settings.ALLOWED_ORIGINS)
     app.add_middleware(

@@ -370,7 +370,12 @@ export async function disconnectGitHub(): Promise<{ status: string; message: str
 }
 
 export async function fetchModelsConfig(): Promise<ModelsConfigResponse> {
-  const res = await fetch(`${API_BASE_URL}/api/v1/models/config`);
+  let res = await fetch(`${API_BASE_URL}/api/v1/models/config`);
+  if (!res.ok && res.status === 429) {
+    // Retry once after 1.5 seconds if temporarily throttled
+    await new Promise((r) => setTimeout(r, 1500));
+    res = await fetch(`${API_BASE_URL}/api/v1/models/config`);
+  }
   if (!res.ok) throw new Error("Failed to fetch models configuration");
   return res.json();
 }

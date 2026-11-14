@@ -27,13 +27,14 @@ export function ChatContainer() {
     currentPlan,
     streamingStatus,
     sendUserMessage,
+    loadConversations,
   } = useChatStore();
 
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView?.({ behavior: "smooth" });
   }, [activeConversation?.messages, pendingApprovals]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -84,42 +85,24 @@ export function ChatContainer() {
     },
   ];
 
-  if (!activeConversation) {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center text-slate-400 animate-fade-in bg-slate-950">
-        <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center border border-indigo-500/20 shadow-lg mb-4">
-          <Sparkles className="h-8 w-8" />
-        </div>
-        <h3 className="text-xl font-bold text-white tracking-tight">GitHub AI Workspace</h3>
-        <p className="text-sm max-w-md text-slate-400 mt-2 leading-relaxed">
-          Autonomous developer agent powered by hybrid model routing, Model Context Protocol (MCP),
-          and strict Human-In-The-Loop cryptographic approvals.
-        </p>
-        <div className="mt-6 flex items-center space-x-2 text-xs font-mono text-slate-400 bg-slate-900 px-3.5 py-1.5 rounded-full border border-slate-800">
-          <FolderGit2 className="h-3.5 w-3.5 text-indigo-400" />
-          <span>Active Target:</span>
-          <span className="font-semibold text-white truncate max-w-[200px]">
-            {activeRepo || "No repository selected"}
-          </span>
-        </div>
-      </div>
-    );
-  }
-
-  const hasMessages = activeConversation.messages.length > 0;
+  const messages = activeConversation?.messages || [];
+  const hasMessages = messages.length > 0;
+  const conversationTitle = activeConversation
+    ? activeConversation.title.startsWith("Chat on ")
+      ? "Workspace Session"
+      : activeConversation.title
+    : "Workspace Session";
 
   return (
     <div className="flex-1 flex flex-col h-full bg-slate-950 overflow-hidden font-sans">
       {/* Conversation Subheader */}
-      <div className="px-4 py-2.5 bg-slate-900/60 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
+      <div className="px-4 py-2.5 bg-slate-900 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
         <div className="flex items-center space-x-2.5 min-w-0">
           <span className="font-semibold text-white text-sm tracking-tight truncate max-w-[180px] sm:max-w-none">
-            {activeConversation.title.startsWith("Chat on ")
-              ? "Workspace Session"
-              : activeConversation.title}
+            {conversationTitle}
           </span>
           <span className="text-slate-600 hidden sm:inline">/</span>
-          <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-slate-900 text-xs text-slate-300 border border-slate-800 truncate">
+          <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-slate-950 text-xs text-slate-300 border border-slate-800 truncate">
             <FolderGit2 className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
             <span className="font-medium truncate max-w-[140px] sm:max-w-[240px]">
               {activeRepo || "No repo selected"}
@@ -129,7 +112,7 @@ export function ChatContainer() {
         <div className="flex items-center space-x-2">
           {/* Quick Model Selector in Header */}
           <div className="sm:hidden">
-            <ModelDropdown compact />
+            <ModelDropdown compact align="right" direction="down" />
           </div>
           <div className="flex items-center space-x-1.5 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-md shrink-0">
             <Shield className="h-3 w-3 text-emerald-400 shrink-0" />
@@ -175,10 +158,10 @@ export function ChatContainer() {
                   <span>Agent ready for instructions</span>
                 </div>
                 <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
-                  How can I assist with <span className="text-indigo-400 font-mono">{activeRepo}</span>?
+                  How can I assist with <span className="text-indigo-400 font-mono">{activeRepo || "your code"}</span>?
                 </h2>
                 <p className="text-sm text-slate-400 max-w-lg mx-auto leading-relaxed">
-                  Select an autonomous workflow below or enter your technical prompt.
+                  Select an autonomous workflow below or enter your technical prompt to get started.
                 </p>
               </div>
 
@@ -211,7 +194,7 @@ export function ChatContainer() {
             </div>
           ) : (
             /* Render Messages */
-            activeConversation.messages.map((msg) => (
+            messages.map((msg) => (
               <MessageItem key={msg.id} message={msg} />
             ))
           )}
@@ -239,13 +222,13 @@ export function ChatContainer() {
       </div>
 
       {/* Input Bar & Controls */}
-      <div className="p-3 sm:p-4 border-t border-slate-800 bg-slate-950/90 backdrop-blur-md">
+      <div className="p-3 sm:p-4 border-t border-slate-800 bg-slate-950">
         <div className="max-w-4xl mx-auto space-y-2">
           {/* Quick Toolbar: Model Selector & Repository Scope */}
           <div className="flex items-center justify-between text-xs text-slate-400 px-1">
             <div className="flex items-center space-x-2">
               <span className="text-slate-500 hidden sm:inline">Engine:</span>
-              <ModelDropdown compact />
+              <ModelDropdown compact align="left" direction="up" />
             </div>
             <div className="flex items-center space-x-1.5 text-xs text-slate-400">
               <FolderGit2 className="h-3.5 w-3.5 text-indigo-400 shrink-0" />

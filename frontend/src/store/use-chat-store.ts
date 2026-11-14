@@ -22,6 +22,15 @@ import {
 } from "@/lib/api";
 import { streamMessage } from "@/lib/sse";
 
+let modelsConfigPromise: Promise<ModelsConfigResponse> | null = null;
+let lastModelsConfigTime = 0;
+
+let reposPromise: Promise<RepositoryRecord[]> | null = null;
+let lastReposTime = 0;
+
+let authPromise: Promise<any> | null = null;
+let lastAuthTime = 0;
+
 interface ChatState {
   conversations: Conversation[];
   activeConversationId: string | null;
@@ -52,15 +61,15 @@ interface ChatState {
   setModelModalOpen: (open: boolean) => void;
   setSidebarOpen: (open: boolean) => void;
   toggleSidebar: () => void;
-  loadModelsConfig: () => Promise<void>;
+  loadModelsConfig: (force?: boolean) => Promise<void>;
   saveModelConfig: (
     provider: string,
     model?: string,
     apiKey?: string,
     allowCloudCode?: boolean
   ) => Promise<void>;
-  loadRepositories: () => Promise<void>;
-  loadAuthStatus: () => Promise<void>;
+  loadRepositories: (force?: boolean) => Promise<void>;
+  loadAuthStatus: (force?: boolean) => Promise<void>;
   connectToken: (token: string, targetRepo?: string) => Promise<void>;
   disconnectAccount: () => Promise<void>;
   sendUserMessage: (content: string) => Promise<void>;
@@ -162,16 +171,38 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set((state) => ({ isSidebarOpen: !state.isSidebarOpen }));
   },
 
-  loadModelsConfig: async () => {
+  loadModelsConfig: async (force = false) => {
+    const now = Date.now();
+    if (!force && get().modelsConfig && now - lastModelsConfigTime < 15000) {
+      return;
+    }
+    if (modelsConfigPromise) {
+      try {
+        const config = await modelsConfigPromise;
+        set({
+          modelsConfig: config,
+          activeProvider: config.active_provider,
+          activeModel: config.active_model,
+        });
+      } catch {
+        // Handled in original invocation
+      }
+      return;
+    }
+
     try {
-      const config = await fetchModelsConfig();
+      modelsConfigPromise = fetchModelsConfig();
+      const config = await modelsConfigPromise;
+      lastModelsConfigTime = Date.now();
       set({
         modelsConfig: config,
         activeProvider: config.active_provider,
         activeModel: config.active_model,
       });
     } catch (err: any) {
-      console.error("Failed to load models configuration", err);
+      console.warn("Failed to load models configuration", err?.message || err);
+    } finally {
+      modelsConfigPromise = null;
     }
   },
 
@@ -203,9 +234,28 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
 
-  loadRepositories: async () => {
+  loadRepositories: async (force = false) => {
+    const now = Date.now();
+    if (!force && get().repositories.length > 0 && now - lastReposTime < 15000) {
+      return;
+    }
+    if (reposPromise) {
+      try {
+        const repos = await reposPromise;
+        const safeRepos = Array.isArray(repos)
+          ? repos.filter((r) => r.full_name !== "octocat/Hello-World")
+          : [];
+        set({ repositories: safeRepos });
+      } catch {
+        // Handled in original invocation
+      }
+      return;
+    }
+
     try {
-      const repos = await fetchRepositories();
+      reposPromise = fetchRepositories();
+      const repos = await reposPromise;
+      lastReposTime = Date.now();
       const safeRepos = Array.isArray(repos)
         ? repos.filter((r) => r.full_name !== "octocat/Hello-World")
         : [];
@@ -223,20 +273,42 @@ export const useChatStore = create<ChatState>((set, get) => ({
         set({ activeRepo: "" });
       }
     } catch (err: any) {
-      console.error("Failed to load repositories", err);
+      console.warn("Failed to load repositories", err?.message || err);
+    } finally {
+      reposPromise = null;
     }
   },
 
-  loadAuthStatus: async () => {
+  loadAuthStatus: async (force = false) => {
+    const now = Date.now();
+    if (!force && get().githubUser && now - lastAuthTime < 15000) {
+      return;
+    }
+    if (authPromise) {
+      try {
+        const status = await authPromise;
+        if (status?.is_connected && status.user) {
+          set({ githubUser: status.user });
+        }
+      } catch {
+        // Handled in original invocation
+      }
+      return;
+    }
+
     try {
-      const status = await fetchGitHubAuthStatus();
+      authPromise = fetchGitHubAuthStatus();
+      const status = await authPromise;
+      lastAuthTime = Date.now();
       if (status.is_connected && status.user) {
         set({ githubUser: status.user });
       } else {
         set({ githubUser: null });
       }
     } catch (err: any) {
-      console.error("Failed to load auth status", err);
+      console.warn("Failed to load auth status", err?.message || err);
+    } finally {
+      authPromise = null;
     }
   },
 
@@ -267,7 +339,19 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   sendUserMessage: async (content: string) => {
-    const { activeConversationId, activeRepo } = get();
+    let { activeConversationId, activeRepo } = get();
+    if (!activeConversationId) {
+      try {
+        const newId = await get().startNewConversation(
+          activeRepo ? `Session: ${activeRepo.split("/").pop()}` : "New Workspace Session"
+        );
+        activeConversationId = newId;
+      } catch (err: any) {
+        set({ error: err.message || "Failed to start conversation" });
+        return;
+      }
+    }
+
     if (!activeConversationId) return;
 
     // Optimistically add user message to active conversation

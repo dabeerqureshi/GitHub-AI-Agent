@@ -60,12 +60,12 @@ export default function ActivityPage() {
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="text-xs font-mono bg-[#252526] border border-[#2b2b2b] rounded-md px-3 py-1.5 text-[#ffffff] focus:outline-none focus:border-[#007acc]"
+              className="text-xs font-mono bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-white focus:outline-none focus:border-indigo-500 cursor-pointer shadow-sm"
             >
-              <option value="">All Events</option>
-              <option value="APPROVAL_REQUESTED">APPROVAL_REQUESTED</option>
-              <option value="APPROVAL_DECISION">APPROVAL_DECISION</option>
-              <option value="AGENT_EXECUTION_COMPLETED">AGENT_EXECUTION_COMPLETED</option>
+              <option value="" className="bg-slate-900 text-white">All Events</option>
+              <option value="APPROVAL_REQUESTED" className="bg-slate-900 text-white">APPROVAL_REQUESTED</option>
+              <option value="APPROVAL_DECISION" className="bg-slate-900 text-white">APPROVAL_DECISION</option>
+              <option value="AGENT_EXECUTION_COMPLETED" className="bg-slate-900 text-white">AGENT_EXECUTION_COMPLETED</option>
             </select>
 
             <button

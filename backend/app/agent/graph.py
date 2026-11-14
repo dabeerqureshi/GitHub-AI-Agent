@@ -379,7 +379,20 @@ class GitHubAgentWorkflow:
         ):
             return IntentAnalysis(intent="FIND_OPEN_ISSUES", target_repo=resolved_repo)
         elif any(
-            w in lower for w in ("latest commit", "explain the latest commit", "recent commit")
+            w in lower
+            for w in (
+                "last commit",
+                "latest commit",
+                "recent commit",
+                "recent commits",
+                "latest commits",
+                "what the last commit",
+                "what is the last commit",
+                "show last commit",
+                "explain the latest commit",
+                "get commit",
+                "list commits",
+            )
         ):
             return IntentAnalysis(intent="EXPLAIN_LATEST_COMMIT", target_repo=resolved_repo)
         elif any(
@@ -1133,6 +1146,16 @@ class GitHubAgentWorkflow:
                         f"**Diagnostic Summary:**\n"
                         f"- **Root Cause**: The test step encountered a failing assertion in Pytest.\n"
                         f"- **Recommended Fix**: Inspect the recent commits and resolve test failures before re-running CI."
+                    )
+                elif intent == "EXPLAIN_LATEST_COMMIT" or (tool and tool["name"] == "get_commit"):
+                    args = tool.get("arguments", {}) if tool else {}
+                    owner = args.get("owner", "")
+                    repo_name = args.get("repo", "")
+                    target = f"`{owner}/{repo_name}`" if owner and repo_name else "repository"
+                    response_text = (
+                        f"### Verified Latest Commit: {target}\n\n"
+                        f"```\n{formatted_content}\n```\n\n"
+                        f"Retrieved and verified directly from GitHub."
                     )
                 elif tool and tool["name"] == "repo_architecture_summary":
                     if hasattr(content, "markdown_report"):

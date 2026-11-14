@@ -72,7 +72,7 @@ class OllamaClient(BaseLLMClient):
         settings = get_settings()
         self.base_url = (base_url or settings.OLLAMA_BASE_URL).rstrip("/")
         self.model = model or settings.OLLAMA_MODEL
-        self.timeout = timeout or float(settings.REQUEST_TIMEOUT_SECONDS)
+        self.timeout = timeout or float(getattr(settings, "OLLAMA_TIMEOUT_SECONDS", 120))
         self.max_retries = settings.MAX_RETRY_COUNT
 
     async def is_available(self) -> bool:
@@ -154,9 +154,20 @@ class OllamaClient(BaseLLMClient):
                         raise RuntimeError(f"Ollama error ({res.status_code}): {res.text}")
                     data = res.json()
                     message = data.get("message", {})
+                    raw_content = message.get("content", "")
+
+                    # Clean <think>...</think> reasoning blocks from local thinking models (e.g. qwen3:4b, DeepSeek-R1)
+                    if "<think>" in raw_content:
+                        clean_content = re.sub(r"<think>.*?</think>", "", raw_content, flags=re.DOTALL).strip()
+                    else:
+                        clean_content = raw_content
+
+                    if not clean_content and message.get("thinking"):
+                        clean_content = message.get("thinking")
+
                     elapsed = asyncio.get_event_loop().time() - start
                     return ChatCompletionResponse(
-                        content=message.get("content", ""),
+                        content=clean_content,
                         tool_calls=message.get("tool_calls"),
                         provider="ollama",
                         model=self.model,
@@ -164,7 +175,12 @@ class OllamaClient(BaseLLMClient):
                         execution_time_seconds=round(elapsed, 3),
                     )
             except Exception as e:
-                last_error = e
+                err_msg = str(e)
+                if not err_msg and isinstance(e, httpx.ReadTimeout):
+                    err_msg = f"Inference timed out after {self.timeout}s while waiting for local model response"
+                elif not err_msg and isinstance(e, httpx.ConnectError):
+                    err_msg = f"Cannot connect to Ollama daemon at {self.base_url}"
+                last_error = f"{type(e).__name__}: {err_msg}" if err_msg else type(e).__name__
                 await asyncio.sleep(0.5 * (2**attempt))
 
         raise RuntimeError(f"Ollama request failed after {self.max_retries} attempts: {last_error}")
